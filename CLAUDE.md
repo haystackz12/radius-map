@@ -33,6 +33,18 @@ git add -A && git commit -m "your message" && git push origin main
 ```
 Vercel auto-deploys on every push to `main`. No build command. Output directory: `/` (root).
 
+### Adding new static files
+Whenever you add a new static file (CSS, JS, image, font, etc.) to the project, you **must** update `vercel.json`:
+
+1. Add an entry for the file to the `builds` array, e.g.
+   ```json
+   { "src": "new-file.css", "use": "@vercel/static" }
+   ```
+   Files not listed in `builds` are not deployed.
+2. Ensure `{ "handle": "filesystem" }` appears as the **first** entry in `routes`, before the SPA catch-all (`{ "src": "/(.*)", "dest": "/index.html" }`). Without the filesystem handler, the catch-all rewrites every request — including `/style.css` and `/app.js` — to `index.html`, and `X-Content-Type-Options: nosniff` then blocks the browser from interpreting them.
+
+This bit us once already — symptom was the map rendering as a "black circle" because CSS/JS 404'd silently.
+
 ## Session Protocol
 Always read SPRINT.md at the start of a session to understand current tickets.
 Always update NEXT_SESSION.md at the end of a session before closing.
@@ -40,7 +52,9 @@ Always update NEXT_SESSION.md at the end of a session before closing.
 ## Key Files
 | File | Purpose |
 |---|---|
-| `index.html` | Entire application |
+| `index.html` | Markup |
+| `style.css` | All styles |
+| `app.js` | All JavaScript |
 | `CLAUDE.md` | This file — project rules |
 | `SPRINT.md` | Active sprint tickets |
 | `NEXT_SESSION.md` | State handoff between sessions |

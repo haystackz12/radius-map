@@ -1,8 +1,9 @@
 # NEXT_SESSION.md — Radius Map
 
-## Session Closed
+## Session Closed ✅
 **Date:** 2026-04-09
-**Session:** 2 — File split + first feature batch
+**Session:** 2 — File split + first feature batch (CLOSED)
+**Next ticket:** RM-014 (share link)
 
 ---
 
@@ -21,6 +22,7 @@ https://radius-map-psi.vercel.app
 - **RM-018** — Radius presets (1/3/5/10/25), unit-aware, snaps slider and redraws
 - **RM-019** — Distance tool: secondary click mode, two points, dashed polyline, mi+km label at midpoint. Mutually exclusive with click-to-center mode.
 - **RM-020** — Mobile layout: panel becomes a bottom drawer below 768px with a drag handle (tap to open/close), map fills screen
+- **hotfix** — `vercel.json` was missing `style.css` / `app.js` from `builds` and lacked a `filesystem` route handler, so the SPA catch-all rewrote them to HTML and `nosniff` killed them (symptom: black circle, no map). Fixed in `bde4f5d`. See CLAUDE.md → Deploy → "Adding new static files".
 
 ---
 
