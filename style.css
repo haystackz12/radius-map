@@ -409,3 +409,15 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.distance-label {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}

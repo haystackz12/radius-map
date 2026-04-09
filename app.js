@@ -17,6 +17,11 @@ let currentUnit = 'mi';
 let currentColor = '#4f8ef7';
 let currentOpacity = 0.15;
 let clickModeActive = false;
+let distanceModeActive = false;
+let distancePoints = [];
+let distanceLine = null;
+let distanceMarkers = [];
+let distanceLabel = null;
 let debounceTimer;
 
 function initMap() {
@@ -29,6 +34,7 @@ function initMap() {
   drawCircle();
 
   map.on('click', function(e) {
+    if (distanceModeActive) { handleDistanceClick(e.latlng); return; }
     if (!clickModeActive) return;
     currentLat = e.latlng.lat;
     currentLng = e.latlng.lng;
@@ -245,8 +251,54 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function clearDistance() {
+  if (distanceLine) { map.removeLayer(distanceLine); distanceLine = null; }
+  if (distanceLabel) { map.removeLayer(distanceLabel); distanceLabel = null; }
+  distanceMarkers.forEach(m => map.removeLayer(m));
+  distanceMarkers = [];
+  distancePoints = [];
+}
+
+function toggleDistanceMode() {
+  distanceModeActive = !distanceModeActive;
+  if (distanceModeActive && clickModeActive) toggleClickMode();
+  document.getElementById('distance-mode-btn').classList.toggle('active', distanceModeActive);
+  map.getContainer().style.cursor = distanceModeActive ? 'crosshair' : '';
+  clearDistance();
+  setStatus(distanceModeActive ? 'Click two points to measure distance' : '', distanceModeActive ? 'loading' : '');
+}
+
+function handleDistanceClick(latlng) {
+  if (distancePoints.length >= 2) clearDistance();
+  distancePoints.push(latlng);
+  const dotIcon = L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:#4f8ef7;border:2px solid #fff;"></div>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 5]
+  });
+  distanceMarkers.push(L.marker(latlng, { icon: dotIcon }).addTo(map));
+  if (distancePoints.length === 2) {
+    distanceLine = L.polyline(distancePoints, { color: '#4f8ef7', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map);
+    const meters = distancePoints[0].distanceTo(distancePoints[1]);
+    const mi = (meters / 1609.344).toFixed(2);
+    const km = (meters / 1000).toFixed(2);
+    const mid = L.latLng((distancePoints[0].lat + distancePoints[1].lat) / 2, (distancePoints[0].lng + distancePoints[1].lng) / 2);
+    distanceLabel = L.marker(mid, {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="distance-label">${mi} mi · ${km} km</div>`,
+        iconSize: [120, 24],
+        iconAnchor: [60, 12]
+      })
+    }).addTo(map);
+    setStatus(`Distance: ${mi} mi (${km} km)`, 'success');
+  }
+}
+
 function toggleClickMode() {
   clickModeActive = !clickModeActive;
+  if (clickModeActive && distanceModeActive) toggleDistanceMode();
   const btn = document.getElementById('click-mode-btn');
   btn.classList.toggle('active', clickModeActive);
   btn.querySelector('span') && (btn.querySelector('span').textContent = '');
