@@ -41,6 +41,7 @@ function initMap() {
     drawCircle();
     updateStats();
     setStatus('Center set by click', 'success');
+    reverseGeocode(currentLat, currentLng);
   });
 }
 
@@ -201,6 +202,18 @@ async function searchAddress() {
     document.getElementById('search-icon').style.display = 'block';
     document.getElementById('spinner').style.display = 'none';
   }
+}
+
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await resp.json();
+    if (data && data.display_name) {
+      document.getElementById('address-input').value = data.display_name.split(',').slice(0,3).join(',');
+      setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
+    }
+  } catch {}
 }
 
 function applyResult(r) {
