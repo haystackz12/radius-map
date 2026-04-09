@@ -3,24 +3,19 @@
 ## Sprint 1 — Foundation ✅ COMPLETE
 All tickets done. App live at https://radius-map-psi.vercel.app
 
----
-
-## Sprint 2 — Features (Current)
-**Goal:** Ship all high-value UX improvements. Deploy after each ticket via `git push origin main`.
-
-File split complete: `index.html` / `style.css` / `app.js`.
+## Sprint 2 — Features ✅ COMPLETE
+All 8 tickets shipped. File split + 7 user-facing features deployed.
 
 ---
 
-### 🔲 IN QUEUE (work in this order)
+## Sprint 3 — TBD 🗓️ PLANNING
+**Status:** Backlog empty — pending planning session.
 
-| Ticket | Priority | Description |
-|---|---|---|
-| RM-014 | High | **Share link** — encode `lat`, `lng`, `radius`, `unit` as URL params (`?lat=39.739&lng=-104.984&r=5&unit=mi`). Restore state on load. Add "Copy share link" button to Export section. |
-| RM-015 | High | **Reverse geocode on click** — when user clicks map in click-to-center mode, call Nominatim `/reverse` and populate the address input with the result. |
-| RM-013 | High | **Multiple circles** — "Pin this location" button saves current circle to a `pins[]` array. Each pin renders on map with its own color, radius, label. Panel lists all pins with remove (×) buttons. |
-| RM-016 | Medium | **Tile layer switcher** — toggle Street (OSM), Satellite (Esri World Imagery), Topo (OpenTopoMap). Small control group in panel or above map. |
-| RM-017 | Medium | **Save as PNG** — export current map view + circle as downloadable PNG using `leaflet-image` or `html2canvas`. Button in Export section. |
+Suggested focus areas:
+- Polish & bug hunting (cross-browser, mobile, edge cases)
+- Accessibility audit (keyboard nav, ARIA, contrast)
+- Performance review
+- New feature ideas from user feedback
 
 ---
 
@@ -28,8 +23,14 @@ File split complete: `index.html` / `style.css` / `app.js`.
 
 | Ticket | Description |
 |---|---|
+| refactor | Split single-file `index.html` into `index.html` + `style.css` + `app.js` |
+| RM-013 | Multiple circles — pin locations with color/label/radius, removable list |
+| RM-014 | Share link — URL params (`?lat=&lng=&r=&unit=`) restored on load + copy button |
+| RM-015 | Reverse geocode on map click — populates address input via Nominatim `/reverse` |
+| RM-016 | Tile layer switcher — Street (OSM), Satellite (Esri), Topo (OpenTopoMap) |
+| RM-017 | Save as PNG — `leaflet-image` export, tile layers use `crossOrigin: true` |
 | RM-018 | Radius presets — 1/3/5/10/25 quick-select buttons, unit-aware |
-| RM-019 | Distance tool — click two points, dashed line + mi/km label |
+| RM-019 | Distance tool — click two points, dashed polyline + mi/km label |
 | RM-020 | Mobile layout — collapsible bottom drawer below 768px |
 
 ### ✅ DONE (Sprint 1)

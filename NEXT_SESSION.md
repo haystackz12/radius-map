@@ -2,55 +2,64 @@
 
 ## Session Closed ✅
 **Date:** 2026-04-09
-**Session:** 2 — File split + first feature batch (CLOSED)
-**Next ticket:** RM-014 (share link)
+**Session:** 3 — Sprint 2 finish (RM-014, RM-015, RM-013, RM-016, RM-017)
 
 ---
 
-## App is Live
+## App is Live & Feature-Complete
 https://radius-map-psi.vercel.app
 
-## Current State
-- File split complete: `index.html` (markup), `style.css`, `app.js` — all under 400 lines
-- Sprint 2 in progress: 3 of 8 tickets shipped
-- No known bugs
+**Sprint 2 is done.** All 8 tickets shipped. No known bugs.
 
 ---
 
 ## Completed This Session
-- **refactor** — split single-file `index.html` into `index.html` + `style.css` + `app.js`
-- **RM-018** — Radius presets (1/3/5/10/25), unit-aware, snaps slider and redraws
-- **RM-019** — Distance tool: secondary click mode, two points, dashed polyline, mi+km label at midpoint. Mutually exclusive with click-to-center mode.
-- **RM-020** — Mobile layout: panel becomes a bottom drawer below 768px with a drag handle (tap to open/close), map fills screen
-- **hotfix** — `vercel.json` was missing `style.css` / `app.js` from `builds` and lacked a `filesystem` route handler, so the SPA catch-all rewrote them to HTML and `nosniff` killed them (symptom: black circle, no map). Fixed in `bde4f5d`. See CLAUDE.md → Deploy → "Adding new static files".
+- **RM-014** — Share link: URL params (`?lat=&lng=&r=&unit=`) restored on page load, "Copy share link" button in Export
+- **RM-015** — Reverse geocode on map click: populates address input via Nominatim `/reverse`
+- **RM-013** — Multiple circles: "Pin this location" button, removable pin list with color dots, label, radius
+- **RM-016** — Tile layer switcher: Street (OSM) / Satellite (Esri) / Topo (OpenTopoMap), tiles use `crossOrigin: true`
+- **RM-017** — Save as PNG: exports current map view via `leaflet-image` (cdnjs)
 
 ---
 
-## Next Session — Start Here
+## Next Session — Focus Areas
 
-### First ticket: RM-014 — Share link
-- Encode state as URL params: `?lat=39.739&lng=-104.984&r=5&unit=mi`
-- On page load, parse `URLSearchParams` and restore lat/lng/radius/unit before `initMap()` draws
-- Add "Copy share link" button to the Export section in `index.html`
-- Handler builds the URL from current state and writes to clipboard via `navigator.clipboard.writeText`
-- Use `setStatus('Share link copied!', 'success')` for feedback
+No tickets queued. Sprint 3 needs a planning pass. Suggested directions:
 
-### Remaining Sprint 2 queue (in order)
-1. RM-014 — Share link (next)
-2. RM-015 — Reverse geocode on click
-3. RM-013 — Multiple circles / pinned locations
-4. RM-016 — Tile layer switcher (Street / Satellite / Topo)
-5. RM-017 — Save as PNG
+### 1. Polish & bug hunting
+- Cross-browser test (Chrome, Safari, Firefox, mobile Safari, Android Chrome)
+- Edge cases: very large/small radii, polar coordinates, antimeridian crossing
+- PNG export with Satellite + Topo layers (CORS check — Esri/OpenTopoMap may taint canvas)
+- Pin circles + radius circle interactions (overlapping, removing while in distance/click mode)
+- Share link round-trip with all units and edge values
+- Mobile drawer behavior with many pinned locations (scrolling)
+
+### 2. Accessibility audit
+- Keyboard navigation through all controls
+- ARIA labels on icon-only buttons
+- Color contrast (especially `--muted` text on `--surface2`)
+- Focus indicators
+
+### 3. Performance review
+- Bundle size of `app.js` (now ~430 lines — still single file, no minification)
+- Tile load behavior on slow connections
+- `flyToBounds` animation cost when rapidly dragging the radius slider
+
+### 4. Sprint 3 planning
+- Solicit user feedback on what to build next
+- Possible ideas: drawing tools (polygons/rectangles), elevation profile, multi-pin export, dark/light theme toggle, saved views in localStorage, geolocation button ("center on my location")
+
+**Recommended kickoff:** start with a 15-minute manual QA pass across all features in Chrome desktop + iOS Safari, log any bugs as RM-021+, then plan Sprint 3 from there.
 
 ---
 
 ## Key Technical Notes
-- Nominatim reverse endpoint: `https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}` — always send `Accept-Language: en`, debounce ≥400ms
-- Esri satellite tiles: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`
-- OpenTopoMap tiles: `https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png`
-- For PNG export: try `leaflet-image` from cdnjs first; fall back to `html2canvas` if canvas taint issues arise
-- Distance mode and click-to-center mode are mutually exclusive — toggling one disables the other (see `toggleDistanceMode` / `toggleClickMode` in `app.js`)
-- Mobile drawer toggled via `.panel.open` class on `<768px` — `toggleDrawer()` in `app.js`
+- Nominatim: always send `Accept-Language: en`, debounce ≥400ms, 1 req/sec hard limit
+- Tile layers must use `crossOrigin: true` for PNG export to work
+- `leaflet-image` is loaded from cdnjs in `index.html` — guard with `typeof leafletImage === 'undefined'`
+- Vercel: any new static file must be added to `vercel.json` `builds` array AND filesystem handler must precede SPA fallback (see CLAUDE.md)
+- Distance mode and click-to-center mode are mutually exclusive
+- Pin circles are independent Leaflet layers stored in `pins[]` with their own `layer` reference for removal
 
 ## Repo
 - **GitHub:** `haystackz12/radius-map`
