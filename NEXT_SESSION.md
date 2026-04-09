@@ -2,42 +2,63 @@
 
 ## Session Closed
 **Date:** 2026-04-09
-**Session:** 1 — Foundation / Project Setup
+**Session:** 1 — Foundation + Project Setup
 
 ---
 
-## What Was Built This Session
-- Full single-page radius map application (`index.html`)
-- Leaflet.js map with OpenStreetMap tiles
-- Nominatim address search with autocomplete
-- Radius slider, unit toggle, color picker, opacity control
-- Stats panel, coordinate copy, JSON export
-- Click-to-center mode
-- All project documentation scaffolded
-- Vercel deployment configured
+## App is Live
+https://radius-map-psi.vercel.app
 
 ## Current State
-- `index.html` is the complete working app — **~245 lines** (well under 400-line cap)
-- No bugs known
-- OSM tiles work correctly when served from Vercel (not from `file://`)
-- Vercel auto-deploy connected to `main` branch
+- `index.html` — single-file app, ~245 lines, fully working
+- OSM tiles working correctly from Vercel
+- No known bugs
+- All session docs in place
+- Vercel auto-deploy connected to `main` branch on `haystackz12/radius-map`
 
-## First Ticket Next Session
-**RM-013 — Multiple Circles**
-Allow the user to pin more than one address, each rendered as its own circle with independent radius, color, and label. Panel should list all pinned locations with remove buttons.
+---
 
-Implementation notes:
-- Replace single `circle`/`marker` vars with an array `pins = []`
-- Each pin: `{ id, lat, lng, radiusM, color, label, circleLayer, markerLayer }`
-- Panel list renders below the search section
-- "Add current" button saves the current search result to the pins array
-- Each pin row has: color dot, label, radius, remove (×) button
+## Sprint 2 Kickoff Instructions
 
-## Known Issues / Watch Points
-- Nominatim ToS: must include a valid `User-Agent` or contact email in production high-traffic use. Currently using browser default. If traffic grows, add `&email=michaelhastings771@gmail.com` to Nominatim query params.
-- OSM tile ToS: heavy usage (bulk/automated) requires switching to a commercial tile provider. Fine for personal/low-traffic use.
+### Step 1 — File split (do this before any features)
+`index.html` will exceed 400 lines during Sprint 2. Split it at the top of the session:
 
-## Repo Status
 ```
-main branch — clean, all files committed
+index.html   → markup only (link to style.css and app.js)
+style.css    → all <style> content extracted
+app.js       → all <script> content extracted
 ```
+
+Update `index.html` to reference:
+```html
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+```
+
+Commit the split before touching any features:
+```bash
+git add -A && git commit -m "refactor: split index.html into style.css + app.js"
+```
+
+### Step 2 — Work tickets in order
+See SPRINT.md. Order: RM-018 → RM-014 → RM-015 → RM-013 → RM-016 → RM-017 → RM-019 → RM-020
+
+Push after each ticket:
+```bash
+git add -A && git commit -m "feat: RM-0XX description" && git push origin main
+```
+
+---
+
+## Key Technical Notes
+- Nominatim reverse geocode endpoint: `https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}`
+- Esri satellite tiles: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`
+- OpenTopoMap tiles: `https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png`
+- For share links: use `URLSearchParams` to read/write — no library needed
+- For PNG export: try `leaflet-image` from cdnjs first; fall back to `html2canvas` if canvas taint issues arise
+- Nominatim rate limit: 1 req/sec — debounce at 400ms, do not lower
+
+## Repo
+- **GitHub:** `haystackz12/radius-map`
+- **Local:** `/Users/michaelhastings/Projects/radius-map`
+- **Live:** https://radius-map-psi.vercel.app
