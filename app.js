@@ -11,6 +11,13 @@ const COLORS = [
 
 const PRESETS_MI = [1, 3, 5, 10, 25];
 
+const TILE_LAYERS = {
+  street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
+  satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Tiles © Esri' },
+  topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)' }
+};
+let currentTileLayer;
+
 let map, circle, marker;
 let currentLat = 39.7392, currentLng = -104.9903;
 let currentUnit = 'mi';
@@ -27,10 +34,7 @@ let pins = [];
 
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView([currentLat, currentLng], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  }).addTo(map);
+  setTileLayer('street');
 
   drawCircle();
 
@@ -344,6 +348,14 @@ function exportData() {
   a.href = URL.createObjectURL(blob);
   a.download = 'radius-map.json';
   a.click();
+}
+
+function setTileLayer(name) {
+  const t = TILE_LAYERS[name];
+  if (!t) return;
+  if (currentTileLayer) map.removeLayer(currentTileLayer);
+  currentTileLayer = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19 }).addTo(map);
+  document.querySelectorAll('.tile-btn').forEach(b => b.classList.toggle('active', b.dataset.tile === name));
 }
 
 function pinCurrent() {

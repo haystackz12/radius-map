@@ -412,6 +412,28 @@ input[type=range]::-webkit-slider-thumb {
 
 .drawer-handle { display: none; }
 
+.tile-row {
+  display: flex;
+  gap: 6px;
+}
+
+.tile-btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 8px;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tile-btn:hover { border-color: var(--accent); color: var(--text); }
+.tile-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
 .pin-list {
   display: none;
   flex-direction: column;

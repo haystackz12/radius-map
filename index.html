@@ -58,6 +58,15 @@
     </div>
 
     <div class="section">
+      <div class="section-label">Map style</div>
+      <div class="tile-row">
+        <button class="tile-btn active" data-tile="street" onclick="setTileLayer('street')">Street</button>
+        <button class="tile-btn" data-tile="satellite" onclick="setTileLayer('satellite')">Satellite</button>
+        <button class="tile-btn" data-tile="topo" onclick="setTileLayer('topo')">Topo</button>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-label">Appearance</div>
       <div class="color-options" id="color-options"></div>
       <div class="opacity-row">
