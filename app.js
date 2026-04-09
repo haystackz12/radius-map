@@ -23,6 +23,7 @@ let distanceLine = null;
 let distanceMarkers = [];
 let distanceLabel = null;
 let debounceTimer;
+let pins = [];
 
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView([currentLat, currentLng], 11);
@@ -343,6 +344,47 @@ function exportData() {
   a.href = URL.createObjectURL(blob);
   a.download = 'radius-map.json';
   a.click();
+}
+
+function pinCurrent() {
+  const val = parseFloat(document.getElementById('radius-slider').value);
+  const label = document.getElementById('address-input').value.trim() ||
+                `${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+  const layer = L.circle([currentLat, currentLng], {
+    radius: getRadiusMeters(),
+    color: currentColor,
+    weight: 2, opacity: 0.9,
+    fillColor: currentColor, fillOpacity: currentOpacity
+  }).addTo(map);
+  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, layer });
+  renderPinList();
+  setStatus('Pinned: ' + label, 'success');
+}
+
+function removePin(id) {
+  const i = pins.findIndex(p => p.id === id);
+  if (i < 0) return;
+  map.removeLayer(pins[i].layer);
+  pins.splice(i, 1);
+  renderPinList();
+}
+
+function renderPinList() {
+  const list = document.getElementById('pin-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!pins.length) { list.style.display = 'none'; return; }
+  list.style.display = 'flex';
+  pins.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'pin-item';
+    item.innerHTML = `<span class="pin-dot" style="background:${p.color}"></span>` +
+      `<span class="pin-label" title="${p.label}">${p.label}</span>` +
+      `<span class="pin-meta">${p.radiusVal.toFixed(1)} ${p.unit}</span>` +
+      `<button class="pin-remove" aria-label="Remove">×</button>`;
+    item.querySelector('.pin-remove').onclick = () => removePin(p.id);
+    list.appendChild(item);
+  });
 }
 
 function restoreFromURL() {

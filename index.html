@@ -93,6 +93,15 @@
     </div>
 
     <div class="section">
+      <div class="section-label">Pinned locations</div>
+      <button class="export-btn" onclick="pinCurrent()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+        Pin this location
+      </button>
+      <div id="pin-list" class="pin-list"></div>
+    </div>
+
+    <div class="section">
       <div class="section-label">Export</div>
       <button class="export-btn" onclick="copyShareLink()">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 0-10z"/></svg>
