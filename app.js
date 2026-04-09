@@ -9,6 +9,8 @@ const COLORS = [
   { hex: '#f7e76f', name: 'Yellow' },
 ];
 
+const PRESETS_MI = [1, 3, 5, 10, 25];
+
 let map, circle, marker;
 let currentLat = 39.7392, currentLng = -104.9903;
 let currentUnit = 'mi';
@@ -74,6 +76,35 @@ function drawCircle() {
     `Lat: <b style="color:var(--text)">${currentLat.toFixed(6)}</b>&nbsp;&nbsp;Lng: <b style="color:var(--text)">${currentLng.toFixed(6)}</b>`;
 
   updateStats();
+  updatePresetActive();
+}
+
+function buildPresets() {
+  const row = document.getElementById('preset-row');
+  if (!row) return;
+  row.innerHTML = '';
+  PRESETS_MI.forEach(mi => {
+    const val = currentUnit === 'mi' ? mi : +(mi * 1.60934).toFixed(1);
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.value = val;
+    btn.textContent = (currentUnit === 'mi' ? mi : val) + ' ' + currentUnit;
+    btn.onclick = () => {
+      document.getElementById('radius-slider').value = val;
+      drawCircle();
+    };
+    row.appendChild(btn);
+  });
+  updatePresetActive();
+}
+
+function updatePresetActive() {
+  const slider = document.getElementById('radius-slider');
+  if (!slider) return;
+  const cur = parseFloat(slider.value);
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', Math.abs(parseFloat(b.dataset.value) - cur) < 0.05);
+  });
 }
 
 function updateStats() {
@@ -104,6 +135,7 @@ function setUnit(u) {
   }
   document.getElementById('btn-mi').classList.toggle('active', u === 'mi');
   document.getElementById('btn-km').classList.toggle('active', u === 'km');
+  buildPresets();
   drawCircle();
 }
 
@@ -245,4 +277,5 @@ function exportData() {
 }
 
 buildColorOptions();
+buildPresets();
 initMap();
