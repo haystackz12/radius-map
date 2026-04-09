@@ -334,6 +334,24 @@ function copyCoords() {
   navigator.clipboard.writeText(txt).then(() => setStatus('Coordinates copied!', 'success'));
 }
 
+function savePNG() {
+  if (typeof leafletImage === 'undefined') {
+    setStatus('PNG library not loaded', 'error');
+    return;
+  }
+  setStatus('Generating PNG…', 'loading');
+  leafletImage(map, function(err, canvas) {
+    if (err) { setStatus('PNG export failed (tile CORS)', 'error'); return; }
+    canvas.toBlob(function(blob) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radius-map.png';
+      a.click();
+      setStatus('PNG downloaded!', 'success');
+    });
+  });
+}
+
 function exportData() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const data = {
@@ -354,7 +372,7 @@ function setTileLayer(name) {
   const t = TILE_LAYERS[name];
   if (!t) return;
   if (currentTileLayer) map.removeLayer(currentTileLayer);
-  currentTileLayer = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19 }).addTo(map);
+  currentTileLayer = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19, crossOrigin: true }).addTo(map);
   document.querySelectorAll('.tile-btn').forEach(b => b.classList.toggle('active', b.dataset.tile === name));
 }
 
