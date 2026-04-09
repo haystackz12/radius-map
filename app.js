@@ -307,6 +307,10 @@ function toggleClickMode() {
   else setStatus('', '');
 }
 
+function toggleDrawer() {
+  document.querySelector('.panel').classList.toggle('open');
+}
+
 function copyCoords() {
   const txt = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
   navigator.clipboard.writeText(txt).then(() => setStatus('Coordinates copied!', 'success'));
