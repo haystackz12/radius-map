@@ -332,6 +332,29 @@ function exportData() {
   a.click();
 }
 
+function restoreFromURL() {
+  const params = new URLSearchParams(location.search);
+  const lat = parseFloat(params.get('lat'));
+  const lng = parseFloat(params.get('lng'));
+  const r = parseFloat(params.get('r'));
+  const unit = params.get('unit');
+  if (!isNaN(lat) && !isNaN(lng)) { currentLat = lat; currentLng = lng; }
+  if (unit === 'km' || unit === 'mi') {
+    currentUnit = unit;
+    document.getElementById('btn-mi').classList.toggle('active', unit === 'mi');
+    document.getElementById('btn-km').classList.toggle('active', unit === 'km');
+    document.getElementById('radius-slider').max = unit === 'km' ? 80 : 50;
+  }
+  if (!isNaN(r)) document.getElementById('radius-slider').value = r;
+}
+
+function copyShareLink() {
+  const val = parseFloat(document.getElementById('radius-slider').value);
+  const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
+  navigator.clipboard.writeText(url).then(() => setStatus('Share link copied!', 'success'));
+}
+
 buildColorOptions();
+restoreFromURL();
 buildPresets();
 initMap();
