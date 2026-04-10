@@ -297,26 +297,44 @@ function toggleConcentric() {
 function printMap() {
   const token = window.MAPBOX_TOKEN;
   if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
-  const zoom = Math.min(map.getZoom(), 17);
-  const pin = `pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`;
-  const geo = buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters());
-  const geojson = encodeURIComponent(JSON.stringify(geo));
-  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pin},geojson(${geojson})/auto/1200x800?access_token=${token}`;
+
+  // Build overlays — active circle + all pins
+  const overlays = [];
+
+  // Active circle center pin
+  overlays.push(`pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`);
+
+  // Active circle polygon
+  const activeGeo = buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters(), currentColor);
+  overlays.push(`geojson(${encodeURIComponent(JSON.stringify(activeGeo))})`);
+
+  // All pinned circles
+  pins.forEach(p => {
+    const pinColor = (p.color || '#4f8ef7').replace('#', '');
+    overlays.push(`pin-s+${pinColor}(${p.lng},${p.lat})`);
+    const radiusM = p.unit === 'mi' ? p.radiusVal * 1609.344 : p.unit === 'ft' ? p.radiusVal * 0.3048 : p.radiusVal * 1000;
+    const pinGeo = buildCircleGeoJSON(p.lat, p.lng, radiusM, p.color || '#4f8ef7');
+    overlays.push(`geojson(${encodeURIComponent(JSON.stringify(pinGeo))})`);
+  });
+
+  // Mapbox Static Images URL — max 100 chars per overlay, use auto zoom to fit all circles
+  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${overlays.join(',')}/auto/1200x800?access_token=${token}`;
   const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked', 'error'); return; }
-  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=padding:40px>Print failed.</p>'"></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=padding:40px>Print failed — too many pins or URL too long.</p>'"></body></html>`);
   w.document.close();
   setStatus('Print dialog opened', 'success');
 }
 
-function buildCircleGeoJSON(lat, lng, radiusM) {
+function buildCircleGeoJSON(lat, lng, radiusM, color) {
+  const c = color || currentColor;
   const coords = [];
   for (var i = 0; i < 64; i++) {
     var angle = (i / 64) * 2 * Math.PI;
     coords.push([lng + (radiusM * Math.sin(angle)) / (111320 * Math.cos(lat * Math.PI / 180)), lat + (radiusM * Math.cos(angle)) / 111320]);
   }
   coords.push(coords[0]);
-  return { type: 'Feature', properties: { stroke: currentColor, 'stroke-width': 3, fill: currentColor, 'fill-opacity': 0.2 }, geometry: { type: 'Polygon', coordinates: [coords] } };
+  return { type: 'Feature', properties: { stroke: c, 'stroke-width': 3, fill: c, 'fill-opacity': 0.2 }, geometry: { type: 'Polygon', coordinates: [coords] } };
 }
 
 function getRecentSearches() {
