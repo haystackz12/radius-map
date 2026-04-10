@@ -81,7 +81,7 @@ function stylePopoverHTML() {
     { id: 'satellite', swatch: '#182818', name: 'Satellite', desc: 'Aerial imagery' },
     { id: 'topo', swatch: '#c9d9a8', name: 'Topographic', desc: 'Terrain & elevation' }
   ];
-  const curStyle = document.querySelector('.tile-btn.active')?.dataset?.tile || 'street';
+  const curStyle = (typeof currentTileName !== 'undefined' ? currentTileName : null) || document.getElementById('map-style-badge')?.textContent?.toLowerCase() || 'street';
   return `<div class="pop-title">Map Style</div>` + styles.map(s => `<div class="style-opt ${curStyle === s.id ? 'active' : ''}" data-style="${s.id}"><div class="style-swatch" style="background:${s.swatch}"></div><div><div class="style-name">${s.name}</div><div class="style-desc">${s.desc}</div></div></div>`).join('');
 }
 
@@ -273,8 +273,8 @@ function drawSecondCircle() {
   removeSecondCircle();
   if (!concentricActive) return;
   secondCircle = L.circle([currentLat, currentLng], {
-    radius: getSecondRadiusMeters(), color: currentColor, weight: 2, opacity: 0.6,
-    fillColor: currentColor, fillOpacity: currentOpacity * 0.5, dashArray: '6,4'
+    radius: getSecondRadiusMeters(), color: '#34C759', weight: 2, opacity: 0.8,
+    fillColor: '#34C759', fillOpacity: 0.1, dashArray: '6,4'
   }).addTo(map);
 }
 
