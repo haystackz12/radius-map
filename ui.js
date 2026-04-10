@@ -68,13 +68,11 @@ function radiusPopoverHTML() {
   const hasRing2 = concentricActive;
   const r2 = parseFloat(document.getElementById('radius-slider-2').value);
   const ring2Sec = hasRing2 ? `<div class="ring2-box"><div class="ring2-label">2nd Ring · ${u === 'ft' ? Math.round(r2) : r2.toFixed(1)} ${u}</div><input class="pop-slider" id="ring2-slider" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r2}"></div>` : '';
-  const displayVal = u === 'ft' ? Math.round(r) : r.toFixed(1);
-  return `<div class="pop-title">Radius</div><div class="radius-input-row"><div class="pop-bignum" id="pop-bignum">${displayVal}</div><input class="radius-text-input" id="radius-text-input" type="number" value="${displayVal}" min="${minR}" max="${maxR}" step="${step}" title="Type exact radius"></div><div class="pop-unit-sub">${u}</div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
+  return `<div class="pop-title">Radius</div><div id="pop-bignum-wrap"><span class="pop-bignum" id="pop-bignum" data-action="edit-radius" title="Click to enter exact value" style="cursor:pointer;border-bottom:2px dashed rgba(0,122,255,0.3);">${u === 'ft' ? Math.round(r) : r.toFixed(1)}</span><span class="pop-unit-sub" style="margin-left:4px;">${u}</span></div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
 }
 
 function toolsPopoverHTML() {
-  const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-  return `<div class="pop-title">Tools</div><button class="action-btn ${isFS ? 'action-active' : ''}" data-action="fullscreen">⛶  ${isFS ? 'Exit Fullscreen' : 'Fullscreen'}</button><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><div class="pop-title">History</div><div style="display:flex;gap:4px;margin-bottom:4px;"><button class="action-btn" data-action="undo" style="flex:1;" ${typeof undoStack !== 'undefined' && undoStack.length ? '' : 'disabled'}>↩ Undo</button><button class="action-btn" data-action="redo" style="flex:1;" ${typeof redoStack !== 'undefined' && redoStack.length ? '' : 'disabled'}>↪ Redo</button></div><hr class="pop-divider"><button class="action-btn action-danger" data-action="reset">↻  Reset Everything</button>`;
+  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button>`;
 }
 
 function stylePopoverHTML() {
@@ -91,7 +89,7 @@ function settingsPopoverHTML() {
   const swatches = COLORS.map(c => `<div class="color-sw ${c.hex === currentColor ? 'active' : ''}" data-color="${c.hex}" style="background:${c.hex}" title="${c.name}"></div>`).join('');
   const opVal = Math.round(currentOpacity * 100);
   const pinItems = pins.map(p => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0;"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(0,0,0,0.7);">${p.name || p.label}</span><span style="cursor:pointer;color:rgba(0,0,0,0.3);font-size:14px;" data-action="remove-pin" data-pin-id="${p.id}">×</span></div>`).join('');
-  return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button><div style="font-size:9px;color:rgba(0,0,0,0.38);padding:2px 2px 6px;line-height:1.4;">Saves current circle. Search a new address to start a new radius.</div>${pinItems}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button><hr class="pop-divider"><div class="pop-title">Import</div>${_csvImporting ? `<button class="action-btn action-active" disabled>📄  ${_csvProgress}</button>` : `<button class="action-btn" data-action="csv">📄  Import CSV</button>`}<input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none"><button class="action-btn" data-action="csv-template">⬇  Download CSV Template</button>`;
+  return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button><div style="font-size:9px;color:rgba(0,0,0,0.38);padding:2px 2px 6px;line-height:1.4;">Saves current circle. Search a new address to start a new radius.</div>${pinItems}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button>`;
 }
 
 /* ── Floating tool cancel pill ── */
@@ -116,43 +114,44 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
   const seg = e.target.closest('.seg-btn'); if (seg) { setUnit(seg.dataset.unit); renderPopover('radius'); updateHUD(); return; }
   const pre = e.target.closest('.preset-btn'); if (pre) { document.getElementById('radius-slider').value = pre.dataset.preset; drawCircle(); updateHUD(); renderPopover('radius'); return; }
   const act = e.target.closest('[data-action]'); if (!act) return;
+  if (act.dataset.action === 'edit-radius') {
+    const wrap = document.getElementById('pop-bignum-wrap');
+    const cur = document.getElementById('radius-slider').value;
+    const u = currentUnit;
+    const minR = u === 'ft' ? 100 : 0.1;
+    const maxR = u === 'ft' ? 26400 : (u === 'km' ? 80 : 50);
+    wrap.innerHTML = `<input id="radius-exact-input" type="number" min="${minR}" max="${maxR}" step="${u === 'ft' ? 10 : 0.1}" value="${parseFloat(cur).toFixed(u === 'ft' ? 0 : 1)}" style="font-size:28px;font-weight:700;color:#007AFF;letter-spacing:-1px;border:none;border-bottom:2px solid #007AFF;background:transparent;outline:none;width:80px;font-family:system-ui,sans-serif;"><span class="pop-unit-sub" style="margin-left:4px;">${u}</span>`;
+    const inp = document.getElementById('radius-exact-input');
+    inp.focus(); inp.select();
+    inp.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') {
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val >= minR && val <= maxR) {
+          document.getElementById('radius-slider').value = val;
+          drawCircle(); updateHUD(); renderPopover('radius');
+        } else {
+          inp.style.borderBottomColor = '#E24B4A';
+          setTimeout(() => { inp.style.borderBottomColor = '#007AFF'; }, 800);
+        }
+      }
+      if (ev.key === 'Escape') renderPopover('radius');
+    });
+    inp.addEventListener('blur', () => {
+      const val = parseFloat(inp.value);
+      if (!isNaN(val) && val >= minR && val <= maxR) {
+        document.getElementById('radius-slider').value = val;
+        drawCircle(); updateHUD();
+      }
+      renderPopover('radius');
+    });
+    return;
+  }
   if (act.dataset.action === 'ring2') { toggleConcentric(); renderPopover('radius'); updateHUD(); }
   if (act.dataset.action === 'fit') fitCircle();
 });
 document.getElementById('pop-radius').addEventListener('input', function(e) {
-  if (e.target.id === 'radius-slider-new') {
-    document.getElementById('radius-slider').value = e.target.value;
-    drawCircle(); updateHUD();
-    const bn = document.getElementById('pop-bignum');
-    if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1);
-    const ti = document.getElementById('radius-text-input');
-    if (ti) ti.value = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1);
-  }
+  if (e.target.id === 'radius-slider-new') { document.getElementById('radius-slider').value = e.target.value; drawCircle(); updateHUD(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1); }
   if (e.target.id === 'ring2-slider') { document.getElementById('radius-slider-2').value = e.target.value; drawSecondCircle(); updateHUD(); }
-});
-
-document.getElementById('pop-radius').addEventListener('change', function(e) {
-  if (e.target.id !== 'radius-text-input') return;
-  const input = e.target;
-  const val = parseFloat(input.value);
-  const min = parseFloat(input.min);
-  const max = parseFloat(input.max);
-  if (isNaN(val) || val < min || val > max) {
-    input.classList.add('input-flash-error');
-    setTimeout(() => input.classList.remove('input-flash-error'), 600);
-    input.value = currentUnit === 'ft' ? Math.round(parseFloat(document.getElementById('radius-slider').value)) : parseFloat(document.getElementById('radius-slider').value).toFixed(1);
-    return;
-  }
-  document.getElementById('radius-slider').value = val;
-  const sliderNew = document.getElementById('radius-slider-new');
-  if (sliderNew) sliderNew.value = val;
-  const bn = document.getElementById('pop-bignum');
-  if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(val) : val.toFixed(1);
-  drawCircle(); updateHUD();
-});
-
-document.getElementById('pop-radius').addEventListener('keydown', function(e) {
-  if (e.target.id === 'radius-text-input' && e.key === 'Enter') { e.target.blur(); }
 });
 
 document.getElementById('pop-tools').addEventListener('click', function(e) {
@@ -180,13 +179,9 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
     }
     renderPopover('tools');
   }
-  if (act.dataset.action === 'undo') { undo(); return; }
-  if (act.dataset.action === 'redo') { redo(); return; }
-  if (act.dataset.action === 'fullscreen') toggleFullscreen();
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();
-  if (act.dataset.action === 'reset') resetEverything();
 });
 
 document.getElementById('pop-style').addEventListener('click', function(e) {
@@ -206,8 +201,6 @@ document.getElementById('pop-settings').addEventListener('click', function(e) {
   if (act.dataset.action === 'qr') generateQR();
   if (act.dataset.action === 'json') exportData();
   if (act.dataset.action === 'embed') copyEmbed();
-  if (act.dataset.action === 'csv') { document.getElementById('csv-file-input').click(); }
-  if (act.dataset.action === 'csv-template') { downloadCSVTemplate(); }
   if (act.dataset.action === 'remove-pin') { removePin(parseInt(act.dataset.pinId)); renderPopover('settings'); }
 });
 document.getElementById('pop-settings').addEventListener('input', function(e) {
@@ -286,8 +279,6 @@ document.addEventListener('keydown', e => {
     closeAll();
     return;
   }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); return; }
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
   if (e.key === '+' || e.key === '=') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.min(parseFloat(s.max), parseFloat(s.value) + 1); drawCircle(); updateHUD(); }
@@ -431,7 +422,7 @@ function computeOverlaps() {
 
 /* ── Hook drawCircle to auto-update HUD ── */
 const _origDrawCircle = drawCircle;
-drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); if (typeof pushUndo === 'function') pushUndo(); };
+drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
 
 /* ── Prevent Leaflet from intercepting overlay events ── */
 function disableMapPropagation() {
@@ -478,14 +469,6 @@ const _aboutBtn = document.getElementById('about-btn');
 if (_aboutBtn) _aboutBtn.addEventListener('click', () => {
   const overlay = document.getElementById('about-overlay');
   if (overlay) overlay.style.display = 'flex';
-});
-
-/* ── CSV file input listener ── */
-document.addEventListener('change', function(e) {
-  if (e.target.id === 'csv-file-input' && e.target.files.length) {
-    handleCSVImport(e.target.files[0]);
-    e.target.value = '';
-  }
 });
 
 /* ── Init ── */
