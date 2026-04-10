@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radius Map</title>
+<title>DrawRadius — Draw a radius. Know your area.</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="redesign.css">
 </head>
@@ -39,6 +39,14 @@
 
   <!-- Floating Search Bar -->
   <div id="search-bar" data-keep-open>
+    <div id="brand-mark" title="DrawRadius">
+      <svg width="28" height="28" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="36" r="26" stroke="#007AFF" stroke-width="3"/>
+        <circle cx="36" cy="36" r="4" fill="#007AFF"/>
+        <line x1="36" y1="36" x2="57" y2="22" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="57" cy="22" r="3.5" fill="#007AFF"/>
+      </svg>
+    </div>
     <input id="address-input" type="text" placeholder="Address or lat, lng coordinates…" autocomplete="off">
     <button id="search-clear" style="display:none">&times;</button>
     <button id="search-btn">&#8981;</button>
