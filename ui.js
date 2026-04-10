@@ -73,7 +73,8 @@ function radiusPopoverHTML() {
 }
 
 function toolsPopoverHTML() {
-  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn action-danger" data-action="reset">↻  Reset Everything</button>`;
+  const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  return `<div class="pop-title">Tools</div><button class="action-btn ${isFS ? 'action-active' : ''}" data-action="fullscreen">⛶  ${isFS ? 'Exit Fullscreen' : 'Fullscreen'}</button><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn action-danger" data-action="reset">↻  Reset Everything</button>`;
 }
 
 function stylePopoverHTML() {
@@ -179,6 +180,7 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
     }
     renderPopover('tools');
   }
+  if (act.dataset.action === 'fullscreen') toggleFullscreen();
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();

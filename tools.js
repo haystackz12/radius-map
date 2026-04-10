@@ -320,6 +320,16 @@ function removePin(id) {
   computeOverlaps();
 }
 
+function toggleFullscreen() {
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } else {
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  }
+  setTimeout(() => { if (typeof renderPopover === 'function') renderPopover('tools'); }, 300);
+}
+
 function resetEverything() {
   if (!confirm('Reset everything? This will clear all pins, rings, and settings.')) return;
   // Remove all pins
