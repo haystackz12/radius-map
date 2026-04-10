@@ -233,9 +233,12 @@ async function reverseGeocode(lat, lng) {
 function updateBreadcrumb(address) {
   let label = '';
   if (address) {
+    const houseNum = address.house_number || '';
+    const road = address.road || '';
+    const street = [houseNum, road].filter(Boolean).join(' ');
     const city = address.city || address.town || address.village || address.hamlet || '';
     const state = address.state || address.region || '';
-    label = [city, state].filter(Boolean).join(', ');
+    label = [street, city, state].filter(Boolean).join(', ');
   }
   currentLocationLabel = label;
   let el = document.getElementById('location-breadcrumb');
