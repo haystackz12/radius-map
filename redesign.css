@@ -270,11 +270,12 @@ body {
 /* ── Leaflet overrides ── */
 .leaflet-control-zoom { display: none !important; }
 .leaflet-control-attribution {
-  margin-bottom: 58px !important;
-  background: rgba(255,255,255,0.75) !important;
+  margin-bottom: 56px !important;
+  margin-right: 4px !important;
+  background: rgba(255,255,255,0.82) !important;
   font-size: 9px !important;
+  border-radius: 4px 0 0 0 !important;
 }
-.leaflet-control-attribution a { target: _blank; }
 
 /* ── Brand badge ── */
 #brand-badge {
