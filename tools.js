@@ -354,7 +354,7 @@ function renamePinLabel(id) {
   if (pin.labelMarker) {
     map.removeLayer(pin.labelMarker);
     pin.labelMarker = L.marker([pin.lat, pin.lng], {
-      icon: L.divIcon({ className: '', html: `<div class="pin-map-label">${newName}</div>`, iconSize: [140, 20], iconAnchor: [70, -10] })
+      icon: L.divIcon({ className: '', html: `<div class="pin-map-label" style="transform:translateX(-50%)">${newName}</div>`, iconSize: [0, 0], iconAnchor: [0, -14] })
     }).addTo(map);
   }
   renderPinList();
