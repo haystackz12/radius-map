@@ -271,7 +271,7 @@ async function searchAddress() {
   document.getElementById('spinner').style.display = 'block';
   document.getElementById('suggestions').style.display = 'none';
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=5`;
     const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     const data = await resp.json();
     if (!data.length) { setStatus('No results found', 'error'); return; }
@@ -300,8 +300,12 @@ function applyResult(r) {
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + r.display_name.split(',').slice(0,2).join(','), 'success');
   hideEmptyState();
-  const parts = r.display_name.split(',').map(s => s.trim());
-  updateBreadcrumb({ city: parts[0] || '', state: parts[1] || '' });
+  if (r.address) {
+    updateBreadcrumb(r.address);
+  } else {
+    const parts = r.display_name.split(',').map(s => s.trim());
+    updateBreadcrumb({ city: parts[0] || '', state: parts[1] || '' });
+  }
   drawCircle();
 }
 
@@ -361,7 +365,7 @@ document.getElementById('address-input').addEventListener('input', function() {
   if (q.length < 3) { document.getElementById('suggestions').style.display = 'none'; return; }
   debounceTimer = setTimeout(async () => {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=4`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=4`;
       const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
       const data = await resp.json();
       if (data.length) showSuggestions(data);
