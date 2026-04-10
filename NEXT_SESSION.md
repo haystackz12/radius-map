@@ -1,92 +1,126 @@
 # NEXT_SESSION.md — Radius Map
 
 ## Session Closed ✅
-**Date:** 2026-04-09
-**Session:** 6 — Sprint 6 UX Refinements (CLOSED)
-**Next ticket:** RM-046 (named circle labels)
+**Date:** 2026-04-10
+**Session:** 10 — Nav Redesign (Sprint 10) + extensive QA
 
 ---
 
 ## App is Live
-https://radius-map-psi.vercel.app
-
-## Current State
-- **Sprints 1–6 complete** — 45 tickets shipped (RM-001 through RM-045)
-- No known bugs
-- Full feature set: search, radius, pins, distance, tile switcher, export (JSON/PNG/QR/embed/share), stats (area/perimeter/elevation), help, onboarding, keyboard shortcuts, about modal, recent searches, collapsible sections, location breadcrumb
-
----
-
-## File Structure & Line Counts
-
-| File | Lines | Purpose |
-|---|---|---|
-| `index.html` | 249 | Markup — header, panel, modals (settings/help/about), script tags |
-| `style.css` | 383 | Base styles — layout, header, panel, forms, stats |
-| `components.css` | 227 | UI components — buttons, tiles, pins, collapsible sections, mobile drawer, breadcrumb, map badge |
-| `features.css` | 270 | Feature styles — modals, toast, onboarding, help, distance, empty state, recent searches |
-| `app.js` | 377 | Core — map, circle, radius, search, geocode, presets, colors, status, tile layers |
-| `tools.js` | 371 | Tools — distance, pins, export, modal, share, QR, embed, overlap geometry, elevation, reverse geocode, breadcrumb, recent searches |
-| `ui.js` | 107 | UI — collapsible sections, onboarding, keyboard shortcuts, init sequence |
-
-All files under 400-line hard cap.
-
----
-
-## Completed This Session
-- **RM-041** — Recent searches: last 8 stored in localStorage, dropdown on focus, clear button
-- **RM-042** — Collapsible panel sections: chevron toggle, localStorage persistence
-- **RM-043** — Active map style indicator: glow on button + persistent badge on map
-- **RM-044** — Range labels update dynamically on unit switch
-- **RM-045** — Location breadcrumb: city/state label on map from reverse geocode
-- **refactor** — Split tools.js → tools.js + ui.js, added ui.js to vercel.json
-
----
-
-## Next Session — Sprint 7
-
-### First ticket: RM-046 — Named circle labels
-- Prompt user for a name when pinning (default: first address segment)
-- Render as pill label on map via L.tooltip permanent
-- Editable inline in pins list
-
-### Full queue
-1. RM-046 — Named circle labels
-2. RM-047 — Search by coordinates (regex detection, skip Nominatim)
-3. RM-048 — Dark / light mode toggle (CSS vars + localStorage)
-4. RM-049 — Concentric circles (comparison mode, dual sliders)
-5. RM-050 — Print-friendly view (@media print CSS + Print button)
-
-See SPRINT.md for full specs and implementation notes.
-
----
-
-## Mapbox Token Setup (Vercel)
-The Print feature uses Mapbox Static Images API. The token is injected at build time via `build.sh`:
-1. Go to **Vercel dashboard** → `radius-map` project → **Settings** → **Environment Variables**
-2. Add variable: Name = `MAPBOX_TOKEN`, Value = your Mapbox public token
-3. Set scope to **Production** + **Preview** + **Development**
-4. Redeploy — `build.sh` writes `window.MAPBOX_TOKEN = '{token}';` into `config.js` at build time
-5. Locally: edit `config.js` directly with the real token (gitignored changes won't be committed)
-
-If `MAPBOX_TOKEN` is not set, Print button shows "configure Mapbox token in config.js" error.
-
----
-
-## Key Technical Notes
-- Nominatim: `Accept-Language: en`, debounce ≥400ms, 1 req/sec limit
-- Tile layers use `crossOrigin: true`
-- Print uses Mapbox Static Images API (token via `config.js` / Vercel env var). No `leaflet-image` or `html2canvas` — both removed
-- `qrcode.js` loaded from cdnjs; guard with typeof check
-- Vercel: new static files must go in `vercel.json` builds array + filesystem handler before SPA catch-all
-- Distance mode and click-to-center are mutually exclusive
-- Unit conversion via `convertRadius(from, to, val)` in app.js — supports mi, km, ft
-- Elevation: `fetchElevation(lat, lng)` in tools.js, called from `drawCircle()`
-- Overlap: `computeOverlaps()` in tools.js, called from `pinCurrent()` and `removePin()`
-- `initMap(skipInitialDraw)` — pass `true` when geolocation will run
-- localStorage keys: `rm_onboarded`, `rm_recent_searches`, `rm_collapsed`
-
-## Repo
+- **Vercel:** https://radius-map-psi.vercel.app
 - **GitHub:** `haystackz12/radius-map`
 - **Local:** `/Users/michaelhastings/Projects/radius-map`
-- **Live:** https://radius-map-psi.vercel.app
+
+---
+
+## Current State
+- Sprints 1–10 complete
+- Nav redesign shipped — Apple Maps FAB + popover UI, map fills full viewport
+- All core features working: search, radius, pins, distance, tile switcher, print, stats, elevation, QR, embed, share
+- Known working: print with all pins (capped at 4), elevation via Open-Meteo, floating cancel pill for tool modes
+- No known critical bugs as of session close
+
+---
+
+## Current File Structure
+
+| File | Purpose |
+|---|---|
+| `index.html` | Markup — FABs, popovers, stats HUD, floating search bar, hidden legacy inputs for JS compatibility |
+| `redesign.css` | All styles for new nav — FABs, popovers, HUD, search bar, satellite theme, responsive |
+| `app.js` | Core — map init, circle draw, radius, search, geocoding, tile layers, presets, colors, status |
+| `tools.js` | Tools — distance mode, pins, export (share/coords/QR/JSON/embed), elevation (Open-Meteo), reverse geocode, breadcrumb, recent searches, print |
+| `ui.js` | FAB toggle, 4 popover renderers (radius/tools/style/settings), HUD compute + update, event delegation, backdrop, floating pill |
+| `config.js` | Mapbox token — placeholder committed, real token in gitignored local change |
+| `build.sh` | Vercel build script — injects MAPBOX_TOKEN env var into config.js at deploy time |
+
+---
+
+## Critical Technical Notes
+
+**Mapbox token (print feature):**
+- Local: run `sed -i '' 's/REPLACE_ME/YOUR_TOKEN/' config.js` after every `git pull`
+- Vercel: token set as environment variable `MAPBOX_TOKEN` in Vercel dashboard → injected by build.sh
+- Never commit real token — GitHub push protection will block it
+
+**Backdrop pattern (popovers):**
+- `#popover-backdrop` div sits at z-index 998, behind popovers (999) and FABs (1000)
+- When popover opens → backdrop shows. Clicking backdrop → closeAll()
+- When Measure/Set Center activated → backdrop hides so map clicks pass through
+- DO NOT add a document-level click listener to close popovers — this was the root cause of the detached DOM bug
+
+**userHasSearched flag:**
+- Set to true in applyResult(), map click handler, coordinate detection
+- detectLocation() checks this flag before overwriting currentLat/currentLng
+- Prevents geolocation race condition from snapping circle away from searched location
+
+**vercel.json:**
+- `{ "handle": "filesystem" }` MUST appear before SPA catch-all route
+- Any new .js or .css file must be added to the builds array
+- Removing this causes 404 on static assets (past bug that broke the app)
+
+**Event delegation pattern:**
+- All popover button clicks handled via event delegation on popover containers
+- renderPopover() rebuilds innerHTML — listeners on child elements are lost
+- Listeners on the CONTAINER survive innerHTML changes — this is why delegation works
+- disableMapPropagation() called after every renderPopover() to prevent Leaflet intercepting slider drags
+
+**Distance mode 400ms guard:**
+- handleDistanceClick() ignores clicks within 400ms of mode activation
+- Prevents the button click itself from registering as first measurement point
+
+**Elevation:**
+- API: `https://api.open-meteo.com/v1/elevation?latitude={lat}&longitude={lng}`
+- Called from drawCircle() → fetchElevation() in tools.js
+- updateHUD() called again after elevation resolves so HUD shows real value
+- HUD reads ft value from elevation-box textContent via regex `/([\d,]+)\s*ft/`
+
+**Print:**
+- Mapbox Static Images URL — active circle + up to 4 pinned circles
+- 32-point polygon per circle (reduced from 64 to stay under URL limit)
+- auto zoom fits all circles in viewport
+- Opens new tab → img onload → window.print() → window.close()
+
+---
+
+## Next Session — Sprint 11
+
+### Step 1 — QA pass first
+Before any new features, verify the Sprint 10 acceptance criteria in RADIUS_MAP_NAV_REDESIGN_v2.md. Check every item on the list against the live site.
+
+### Step 2 — Fix any remaining issues from QA
+
+### Step 3 — Plan Sprint 11 features
+Candidates (discuss with Mike before committing):
+- Drive time zones (Sprint 9 plan — needs OpenRouteService API key)
+- Undo/redo (RM-051)
+- CSV address import (RM-053)
+- Fullscreen mode (RM-054)
+- Population estimate via WorldPop (RM-055)
+- drawradius.com custom domain setup
+
+---
+
+## Custom Domain
+`drawradius.com` purchased on Namecheap. Not yet connected to Vercel.
+
+To connect:
+1. `vercel domains add drawradius.com`
+2. Add DNS records Vercel provides to Namecheap Advanced DNS
+3. SSL auto-provisioned by Vercel
+
+---
+
+## Repo Commands Reference
+```bash
+# Start session
+cd /Users/michaelhastings/Projects/radius-map
+git pull origin main
+sed -i '' 's/REPLACE_ME/YOUR_MAPBOX_TOKEN/' config.js
+
+# Deploy
+git add -A && git commit -m "feat: description" && git push origin main
+
+# Local dev server (needed for OSM tiles)
+npx serve . -p 3000
+```
