@@ -157,6 +157,9 @@
   text-overflow: ellipsis;
 }
 
+.pin-name-edit { cursor: pointer; }
+.pin-name-edit:hover { color: var(--accent); }
+
 .pin-meta {
   font-family: 'DM Mono', monospace;
   font-size: 10px;

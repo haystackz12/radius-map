@@ -323,25 +323,41 @@ function pinCurrent() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const label = document.getElementById('address-input').value.trim() ||
                 `${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+  const defaultName = label.split(',')[0].trim();
+  const name = prompt('Name this pin:', defaultName) || defaultName;
   const layer = L.circle([currentLat, currentLng], {
     radius: getRadiusMeters(),
     color: currentColor,
     weight: 2, opacity: 0.9,
     fillColor: currentColor, fillOpacity: currentOpacity
   }).addTo(map);
-  const shortLabel = label.split(',').slice(0, 2).join(',').trim();
   const labelMarker = L.marker([currentLat, currentLng], {
     icon: L.divIcon({
       className: '',
-      html: `<div class="pin-map-label">${shortLabel}</div>`,
-      iconSize: [120, 20],
-      iconAnchor: [60, -10]
+      html: `<div class="pin-map-label">${name}</div>`,
+      iconSize: [140, 20],
+      iconAnchor: [70, -10]
     })
   }).addTo(map);
-  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, layer, labelMarker });
+  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker });
   renderPinList();
   computeOverlaps();
-  setStatus('Pinned: ' + label, 'success');
+  setStatus('Pinned: ' + name, 'success');
+}
+
+function renamePinLabel(id) {
+  const pin = pins.find(p => p.id === id);
+  if (!pin) return;
+  const newName = prompt('Rename pin:', pin.name);
+  if (!newName || newName === pin.name) return;
+  pin.name = newName;
+  if (pin.labelMarker) {
+    map.removeLayer(pin.labelMarker);
+    pin.labelMarker = L.marker([pin.lat, pin.lng], {
+      icon: L.divIcon({ className: '', html: `<div class="pin-map-label">${newName}</div>`, iconSize: [140, 20], iconAnchor: [70, -10] })
+    }).addTo(map);
+  }
+  renderPinList();
 }
 
 function removePin(id) {
@@ -364,10 +380,11 @@ function renderPinList() {
     const item = document.createElement('div');
     item.className = 'pin-item';
     item.innerHTML = `<span class="pin-dot" style="background:${p.color}"></span>` +
-      `<span class="pin-label" title="${p.label}">${p.label}</span>` +
+      `<span class="pin-label pin-name-edit" title="Click to rename" data-id="${p.id}">${p.name || p.label}</span>` +
       `<span class="pin-meta">${p.radiusVal.toFixed(1)} ${p.unit}</span>` +
       `<button class="pin-remove" aria-label="Remove">×</button>`;
     item.querySelector('.pin-remove').onclick = () => removePin(p.id);
+    item.querySelector('.pin-name-edit').onclick = () => renamePinLabel(p.id);
     list.appendChild(item);
   });
 }
