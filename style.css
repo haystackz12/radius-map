@@ -19,6 +19,21 @@
   --radius-sm: 8px;
 }
 
+[data-theme="light"] {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #e8eaef;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.16);
+  --text: #1a1a2e;
+  --muted: #5a5e78;
+  --accent: #3a6fd8;
+  --accent2: #2a5ab8;
+  --accent-glow: rgba(58,111,216,0.2);
+  --danger: #d94444;
+  --success: #2a8f5f;
+}
+
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);

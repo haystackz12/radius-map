@@ -14,7 +14,8 @@ const PRESETS_MI = [1, 3, 5, 10, 25];
 const TILE_LAYERS = {
   street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
   satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Tiles © Esri' },
-  topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)' }
+  topo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)' },
+  dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '© <a href="https://carto.com">CARTO</a>' }
 };
 let currentTileLayer;
 
