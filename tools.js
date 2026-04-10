@@ -159,7 +159,16 @@ function pinCurrent() {
     weight: 2, opacity: 0.9,
     fillColor: currentColor, fillOpacity: currentOpacity
   }).addTo(map);
-  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, layer });
+  const shortLabel = label.split(',').slice(0, 2).join(',').trim();
+  const labelMarker = L.marker([currentLat, currentLng], {
+    icon: L.divIcon({
+      className: '',
+      html: `<div class="pin-map-label">${shortLabel}</div>`,
+      iconSize: [120, 20],
+      iconAnchor: [60, -10]
+    })
+  }).addTo(map);
+  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, layer, labelMarker });
   renderPinList();
   setStatus('Pinned: ' + label, 'success');
 }
@@ -168,6 +177,7 @@ function removePin(id) {
   const i = pins.findIndex(p => p.id === id);
   if (i < 0) return;
   map.removeLayer(pins[i].layer);
+  if (pins[i].labelMarker) map.removeLayer(pins[i].labelMarker);
   pins.splice(i, 1);
   renderPinList();
 }
