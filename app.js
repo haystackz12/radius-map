@@ -80,7 +80,9 @@ function initMap() {
 
 function getRadiusMeters() {
   const val = parseFloat(document.getElementById('radius-slider').value);
-  return currentUnit === 'mi' ? val * 1609.344 : val * 1000;
+  if (currentUnit === 'mi') return val * 1609.344;
+  if (currentUnit === 'ft') return val * 0.3048;
+  return val * 1000;
 }
 
 function drawCircle() {
@@ -119,12 +121,13 @@ function buildPresets() {
   const row = document.getElementById('preset-row');
   if (!row) return;
   row.innerHTML = '';
-  PRESETS_MI.forEach(mi => {
-    const val = currentUnit === 'mi' ? mi : +(mi * 1.60934).toFixed(1);
+  const presets = currentUnit === 'ft' ? [250, 500, 1000, 2640, 5280] : PRESETS_MI;
+  presets.forEach(base => {
+    const val = currentUnit === 'mi' ? base : (currentUnit === 'ft' ? base : +(base * 1.60934).toFixed(1));
     const btn = document.createElement('button');
     btn.className = 'preset-btn';
     btn.dataset.value = val;
-    btn.textContent = (currentUnit === 'mi' ? mi : val) + ' ' + currentUnit;
+    btn.textContent = val + ' ' + currentUnit;
     btn.onclick = () => {
       document.getElementById('radius-slider').value = val;
       drawCircle();
@@ -146,31 +149,37 @@ function updatePresetActive() {
 function updateStats() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const unit = currentUnit;
-  const radiusMi = unit === 'mi' ? val : val / 1.60934;
-  const radiusKm = unit === 'km' ? val : val * 1.60934;
+  const radiusMi = convertRadius(unit, 'mi', val);
+  const radiusKm = convertRadius(unit, 'km', val);
   const areaMi = Math.PI * radiusMi * radiusMi;
   const areaKm = Math.PI * radiusKm * radiusKm;
-  document.getElementById('stat-radius').textContent = val.toFixed(1) + ' ' + unit;
-  document.getElementById('stat-diameter').textContent = (val * 2).toFixed(1) + ' ' + unit;
+  const displayVal = unit === 'ft' ? Math.round(val) : val.toFixed(1);
+  document.getElementById('stat-radius').textContent = displayVal + ' ' + unit;
+  document.getElementById('stat-diameter').textContent = (unit === 'ft' ? Math.round(val * 2) : (val * 2).toFixed(1)) + ' ' + unit;
   document.getElementById('stat-area-mi').textContent = areaMi.toFixed(2);
   document.getElementById('stat-area-km').textContent = areaKm.toFixed(2);
-  document.getElementById('radius-display').textContent = val.toFixed(1);
+  document.getElementById('radius-display').textContent = displayVal;
+}
+
+function convertRadius(from, to, val) {
+  const toMi = { mi: val, km: val / 1.60934, ft: val / 5280 };
+  const mi = toMi[from];
+  const fromMi = { mi: mi, km: mi * 1.60934, ft: mi * 5280 };
+  return fromMi[to];
 }
 
 function setUnit(u) {
   const slider = document.getElementById('radius-slider');
   const cur = parseFloat(slider.value);
   if (u === currentUnit) return;
+  const converted = convertRadius(currentUnit, u, cur);
   currentUnit = u;
-  if (u === 'km') {
-    slider.value = (cur * 1.60934).toFixed(1);
-    slider.max = 80;
-  } else {
-    slider.value = (cur / 1.60934).toFixed(1);
-    slider.max = 50;
-  }
-  document.getElementById('btn-mi').classList.toggle('active', u === 'mi');
-  document.getElementById('btn-km').classList.toggle('active', u === 'km');
+  const ranges = { mi: { max: 50, step: 0.1 }, km: { max: 80, step: 0.1 }, ft: { max: 5280, step: 10 } };
+  slider.max = ranges[u].max;
+  slider.step = ranges[u].step;
+  slider.min = u === 'ft' ? 100 : 0.1;
+  slider.value = u === 'ft' ? Math.round(converted) : converted.toFixed(1);
+  document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === u));
   buildPresets();
   drawCircle();
 }
@@ -295,11 +304,13 @@ function restoreFromURL() {
   const r = parseFloat(params.get('r'));
   const unit = params.get('unit');
   if (!isNaN(lat) && !isNaN(lng)) { currentLat = lat; currentLng = lng; }
-  if (unit === 'km' || unit === 'mi') {
+  if (unit === 'km' || unit === 'mi' || unit === 'ft') {
     currentUnit = unit;
-    document.getElementById('btn-mi').classList.toggle('active', unit === 'mi');
-    document.getElementById('btn-km').classList.toggle('active', unit === 'km');
-    document.getElementById('radius-slider').max = unit === 'km' ? 80 : 50;
+    document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === unit));
+    const ranges = { mi: { max: 50, step: 0.1, min: 0.1 }, km: { max: 80, step: 0.1, min: 0.1 }, ft: { max: 5280, step: 10, min: 100 } };
+    document.getElementById('radius-slider').max = ranges[unit].max;
+    document.getElementById('radius-slider').step = ranges[unit].step;
+    document.getElementById('radius-slider').min = ranges[unit].min;
   }
   if (!isNaN(r)) document.getElementById('radius-slider').value = r;
 }
