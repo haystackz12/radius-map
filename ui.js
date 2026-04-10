@@ -117,6 +117,11 @@ function restoreTheme() {
 
 /* --- Init --- */
 restoreTheme();
+
+document.addEventListener('DOMContentLoaded', function() {
+  const slider2 = document.getElementById('radius-slider-2');
+  if (slider2) slider2.addEventListener('input', function() { drawSecondCircle(); });
+});
 buildColorOptions();
 restoreFromURL();
 buildPresets();
