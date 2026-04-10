@@ -164,8 +164,11 @@ function toggleConcentric() {
 
 function printMap() {
   setStatus('Preparing print view…', 'loading');
-  if (circle) map.flyToBounds(circle.getBounds(), { padding: [60, 60], animate: false });
   map.invalidateSize();
+  if (circle) {
+    const zoom = map.getBoundsZoom(circle.getBounds(), false, [60, 60]);
+    map.setView([currentLat, currentLng], zoom, { animate: false });
+  }
   setTimeout(function() {
     if (typeof leafletImage !== 'undefined') {
       leafletImage(map, function(err, canvas) {
