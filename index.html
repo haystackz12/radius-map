@@ -31,7 +31,7 @@
   <button class="gear-btn" onclick="confirmReset()" aria-label="Reset">
     <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
   </button>
-  <button class="gear-btn" onclick="printMap()" aria-label="Print">
+  <button class="gear-btn" onclick="printMap()" aria-label="Print / Save PDF">
     <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
   </button>
   <button class="gear-btn" onclick="toggleTheme()" aria-label="Toggle theme" id="theme-btn">
@@ -188,7 +188,8 @@
       <div class="help-section"><h3>Map Styles</h3><p>Switch between Street, Satellite, and Topo views in the panel.</p></div>
       <div class="help-section"><h3>Distance Tool</h3><p>Click "Measure distance" in the Tools section, then click two points on the map. A dashed line shows the straight-line distance in miles and kilometers.</p></div>
       <div class="help-section"><h3>Concentric Circles</h3><p>Click "Add comparison ring" below the radius slider to add a second concentric circle from the same center. Each ring has its own radius slider and color. Useful for primary/secondary zone planning.</p></div>
-      <div class="help-section"><h3>Export</h3><p>Open Settings to copy a share link, copy coordinates, save the map as PNG, or download circle data as JSON.</p></div>
+      <div class="help-section"><h3>Print / Save PDF</h3><p>Click the printer icon in the header to open a print-ready map view. In the print dialog, choose your printer or select "Save as PDF" to save a copy.</p></div>
+      <div class="help-section"><h3>Export</h3><p>Open Settings to copy a share link, copy coordinates, generate a QR code, or download circle data as JSON.</p></div>
       <div class="help-section"><h3>Keyboard Shortcuts</h3>
         <div class="shortcut-list">
           <div><kbd>Enter</kbd> Search address</div>
@@ -239,10 +240,6 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
           Copy coordinates
         </button>
-        <button class="export-btn" onclick="savePNG()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          Save as PNG
-        </button>
         <button class="export-btn" onclick="generateQR()">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h2v-3zm2 0h2v3h-2v-3zm-2 5h2v3h-2v-3zm2 0h2v3h-2v-3z"/></svg>
           Generate QR code
@@ -267,8 +264,6 @@
 
 <script src="config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-image/0.4.0/leaflet-image.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="app.js" defer></script>
 <script src="tools.js" defer></script>

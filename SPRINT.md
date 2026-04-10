@@ -70,6 +70,14 @@ All 5 tickets + 1 refactor shipped. Panel smarter, search history, breadcrumb.
 
 ---
 
+## Export Simplification (Sprint 7 QA)
+- Removed Save as PNG button and all `leaflet-image` / `html2canvas` code
+- Print button renamed to "Print / Save PDF" — uses Mapbox Static Images API
+- Users print or save as PDF via browser's native print dialog
+- Removed 2 CDN dependencies (`leaflet-image`, `html2canvas`)
+
+---
+
 ## Sprint 7 — Power Features (Next)
 **Goal:** Add features that make the app genuinely more powerful for repeat and advanced users.
 

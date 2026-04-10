@@ -75,8 +75,9 @@ If `MAPBOX_TOKEN` is not set, Print button shows "configure Mapbox token in conf
 
 ## Key Technical Notes
 - Nominatim: `Accept-Language: en`, debounce ≥400ms, 1 req/sec limit
-- Tile layers use `crossOrigin: true` for PNG export
-- `leaflet-image` + `html2canvas` + `qrcode.js` loaded from cdnjs; guard with typeof checks
+- Tile layers use `crossOrigin: true`
+- Print uses Mapbox Static Images API (token via `config.js` / Vercel env var). No `leaflet-image` or `html2canvas` — both removed
+- `qrcode.js` loaded from cdnjs; guard with typeof check
 - Vercel: new static files must go in `vercel.json` builds array + filesystem handler before SPA catch-all
 - Distance mode and click-to-center are mutually exclusive
 - Unit conversion via `convertRadius(from, to, val)` in app.js — supports mi, km, ft

@@ -155,57 +155,6 @@ function copyShareLink() {
   navigator.clipboard.writeText(url).then(() => { showToast('Share link copied!'); setStatus('Share link copied!', 'success'); });
 }
 
-function downloadBlob(canvas) {
-  try {
-    canvas.toBlob(function(blob) {
-      if (!blob) { setStatus('PNG export failed — canvas tainted', 'error'); return; }
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'radius-map.png';
-      a.click();
-      setStatus('PNG downloaded!', 'success');
-    });
-  } catch (e) {
-    setStatus('PNG export failed — ' + e.message, 'error');
-  }
-}
-
-function savePNG() {
-  setStatus('Generating PNG…', 'loading');
-  map.invalidateSize();
-
-  setTimeout(function() {
-    if (typeof leafletImage !== 'undefined') {
-      leafletImage(map, function(err, canvas) {
-        if (!err && canvas) {
-          try {
-            canvas.toDataURL();
-            downloadBlob(canvas);
-            return;
-          } catch (e) { /* tainted — fall through to html2canvas */ }
-        }
-        savePNGFallback();
-      });
-    } else {
-      savePNGFallback();
-    }
-  }, 100);
-}
-
-function savePNGFallback() {
-  if (typeof html2canvas === 'undefined') {
-    setStatus('PNG export unavailable — libraries failed to load', 'error');
-    return;
-  }
-  setStatus('Generating PNG (fallback)…', 'loading');
-  map.invalidateSize();
-  setTimeout(function() {
-    html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
-      .then(canvas => downloadBlob(canvas))
-      .catch(e => setStatus('PNG export failed — ' + e.message, 'error'));
-  }, 100);
-}
-
 function exportData() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const data = {
