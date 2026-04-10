@@ -168,6 +168,9 @@ function updateStats() {
   document.getElementById('stat-diameter').textContent = (unit === 'ft' ? Math.round(val * 2) : (val * 2).toFixed(1)) + ' ' + unit;
   document.getElementById('stat-area-mi').textContent = areaMi.toFixed(2);
   document.getElementById('stat-area-km').textContent = areaKm.toFixed(2);
+  const perimeterVal = 2 * Math.PI * val;
+  const perimeterDisplay = unit === 'ft' ? Math.round(perimeterVal).toLocaleString() : perimeterVal.toFixed(2);
+  document.getElementById('stat-perimeter').textContent = perimeterDisplay + ' ' + unit;
   document.getElementById('radius-display').textContent = displayVal;
 }
 
