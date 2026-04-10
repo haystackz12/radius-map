@@ -1,113 +1,90 @@
-# NEXT_SESSION.md — Radius Map
+# NEXT_SESSION.md — DrawRadius
 
 ## Session Closed ✅
 **Date:** 2026-04-10
-**Session:** 10 — Nav Redesign (Sprint 10) + extensive QA
+**Session:** Sprint 12 — Unfinished Business (fully closed)
 
 ---
 
 ## App is Live
+- **Live:** https://drawradius.com
 - **Vercel:** https://radius-map-psi.vercel.app
 - **GitHub:** `haystackz12/radius-map`
 - **Local:** `/Users/michaelhastings/Projects/radius-map`
 
 ---
 
-## Current State
-- Sprints 1–10 complete
-- Nav redesign shipped — Apple Maps FAB + popover UI, map fills full viewport
-- All core features working: search, radius, pins, distance, tile switcher, print, stats, elevation, QR, embed, share
-- Known working: print with all pins (capped at 4), elevation via Open-Meteo, floating cancel pill for tool modes
-- No known critical bugs as of session close
+## What Was Done This Session
+
+### Sprint 12 features (all committed & pushed)
+- **RM-057** Reset button — Tools popover, confirmation dialog, full state reset + geolocation re-run
+- **RM-052** Custom radius text input — editable number input in Radius popover, validation with red flash
+- **RM-054** Fullscreen mode — Fullscreen API toggle in Tools popover
+- **RM-051** Undo/redo — 10-state stack, Ctrl+Z/Y, buttons in Tools popover
+- **RM-053** CSV address import — file picker + download template link, 1 req/sec geocoding, 20 row cap
+- **RM-055** Population estimate — built then removed (WorldPop CORS blocks browser calls)
+
+### Sprint 12 QA fixes
+- **RM-051 fix** — pushUndo captured state after change, not before. Fixed with _lastState + _skipUndo guard.
+- **RM-053 fix** — Added download template link (drawradius-import-template.csv)
+- **RM-055 fix** — Removed WorldPop entirely, reverted HUD to 7 columns
 
 ---
 
-## Current File Structure
+## File Sizes (action needed)
+| File | Lines | Status |
+|---|---|---|
+| `app.js` | 351 | OK |
+| `tools.js` | ~490 | **OVER 400 — needs split** |
+| `ui.js` | ~500 | **OVER 400 — needs split** |
+| `redesign.css` | 444 | **OVER 400 — needs split** |
+| `index.html` | 152 | OK |
 
-| File | Purpose |
-|---|---|
-| `index.html` | Markup — FABs, popovers, stats HUD, floating search bar, hidden legacy inputs for JS compatibility |
-| `redesign.css` | All styles for new nav — FABs, popovers, HUD, search bar, satellite theme, responsive |
-| `app.js` | Core — map init, circle draw, radius, search, geocoding, tile layers, presets, colors, status |
-| `tools.js` | Tools — distance mode, pins, export (share/coords/QR/JSON/embed), elevation (Open-Meteo), reverse geocode, breadcrumb, recent searches, print |
-| `ui.js` | FAB toggle, 4 popover renderers (radius/tools/style/settings), HUD compute + update, event delegation, backdrop, floating pill |
-| `config.js` | Mapbox token — placeholder committed, real token in gitignored local change |
-| `build.sh` | Vercel build script — injects MAPBOX_TOKEN env var into config.js at deploy time |
+---
+
+## Next Session — Sprint 13
+
+### Step 1 — File splits (mandatory before new features)
+- `tools.js` → split into `tools.js` + `pins.js` (pin/overlap/CSV logic)
+- `ui.js` → split into `ui.js` + `popovers.js` (popover renderers + event delegation)
+- `redesign.css` → split into `redesign.css` + `components.css` (modals, toast, splash, about)
+- Update `index.html` script/link tags
+- Update `vercel.json` builds array + ensure filesystem handler before catch-all
+
+### Step 2 — RM-055 population estimate with backend proxy
+- WorldPop API needs server-side proxy (Vercel serverless function or similar)
+- Re-add HUD column when proxy is ready
+
+### Step 3 — Drive time zones (RM-058 through RM-062)
+- OpenRouteService API key already obtained
+- See SPRINT.md Sprint 13 section for ticket details
+- RM-058: ORS isochrone API, driving profile, travel time slider
+- RM-059: Walking and cycling modes
+- RM-060: Side-by-side radius + isochrone
+- RM-061: Isochrone per pinned location
+- RM-062: Nearest place finder (Overpass API)
 
 ---
 
 ## Critical Technical Notes
 
+**Undo/redo implementation:**
+- `_lastState` tracks the previous state; `pushUndo()` pushes it before updating to current
+- `_skipUndo` flag prevents re-entry when `applyState()` calls `drawCircle()`
+- Stack capped at 10 states; redo stack cleared on new actions
+
 **Mapbox token (print feature):**
-- Local: run `sed -i '' 's/REPLACE_ME/YOUR_TOKEN/' config.js` after every `git pull`
-- Vercel: token set as environment variable `MAPBOX_TOKEN` in Vercel dashboard → injected by build.sh
-- Never commit real token — GitHub push protection will block it
+- Local: real token in config.js (gitignored local change)
+- Vercel: `MAPBOX_TOKEN` env var → injected by build.sh at deploy
+- Never commit real token — GitHub push protection blocks it
 
-**Backdrop pattern (popovers):**
-- `#popover-backdrop` div sits at z-index 998, behind popovers (999) and FABs (1000)
-- When popover opens → backdrop shows. Clicking backdrop → closeAll()
-- When Measure/Set Center activated → backdrop hides so map clicks pass through
-- DO NOT add a document-level click listener to close popovers — this was the root cause of the detached DOM bug
-
-**userHasSearched flag:**
-- Set to true in applyResult(), map click handler, coordinate detection
-- detectLocation() checks this flag before overwriting currentLat/currentLng
-- Prevents geolocation race condition from snapping circle away from searched location
+**Backdrop pattern:**
+- `#popover-backdrop` at z-index 998, behind popovers (999) and FABs (1000)
+- DO NOT add document-level click listener for closing popovers
 
 **vercel.json:**
 - `{ "handle": "filesystem" }` MUST appear before SPA catch-all route
-- Any new .js or .css file must be added to the builds array
-- Removing this causes 404 on static assets (past bug that broke the app)
-
-**Event delegation pattern:**
-- All popover button clicks handled via event delegation on popover containers
-- renderPopover() rebuilds innerHTML — listeners on child elements are lost
-- Listeners on the CONTAINER survive innerHTML changes — this is why delegation works
-- disableMapPropagation() called after every renderPopover() to prevent Leaflet intercepting slider drags
-
-**Distance mode 400ms guard:**
-- handleDistanceClick() ignores clicks within 400ms of mode activation
-- Prevents the button click itself from registering as first measurement point
-
-**Elevation:**
-- API: `https://api.open-meteo.com/v1/elevation?latitude={lat}&longitude={lng}`
-- Called from drawCircle() → fetchElevation() in tools.js
-- updateHUD() called again after elevation resolves so HUD shows real value
-- HUD reads ft value from elevation-box textContent via regex `/([\d,]+)\s*ft/`
-
-**Print:**
-- Mapbox Static Images URL — active circle + up to 4 pinned circles
-- 32-point polygon per circle (reduced from 64 to stay under URL limit)
-- auto zoom fits all circles in viewport
-- Opens new tab → img onload → window.print() → window.close()
-
----
-
-## Next Session — Sprint 11
-
-### Step 1 — QA pass first
-Before any new features, verify the Sprint 10 acceptance criteria in RADIUS_MAP_NAV_REDESIGN_v2.md. Check every item on the list against the live site.
-
-### Step 2 — Fix any remaining issues from QA
-
-### Step 3 — Plan Sprint 11 features
-Candidates (discuss with Mike before committing):
-- Drive time zones (Sprint 9 plan — needs OpenRouteService API key)
-- Undo/redo (RM-051)
-- CSV address import (RM-053)
-- Fullscreen mode (RM-054)
-- Population estimate via WorldPop (RM-055)
-- drawradius.com custom domain setup
-
----
-
-## Custom Domain
-`drawradius.com` purchased on Namecheap. Not yet connected to Vercel.
-
-To connect:
-1. `vercel domains add drawradius.com`
-2. Add DNS records Vercel provides to Namecheap Advanced DNS
-3. SSL auto-provisioned by Vercel
+- New .js/.css files must be added to builds array
 
 ---
 
@@ -116,7 +93,6 @@ To connect:
 # Start session
 cd /Users/michaelhastings/Projects/radius-map
 git pull origin main
-sed -i '' 's/REPLACE_ME/YOUR_MAPBOX_TOKEN/' config.js
 
 # Deploy
 git add -A && git commit -m "feat: description" && git push origin main

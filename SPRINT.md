@@ -70,19 +70,25 @@ Replaced left sidebar with Apple Maps–style FAB + popover interface. Map fills
 
 ---
 
-## Sprint 12 — Unfinished Business (Current)
+## Sprint 12 — Unfinished Business ✅ COMPLETE
 **Goal:** Build the tickets falsely marked done in Sprint 7, then move to drive time zones.
 
-### Priority order
-
-| Ticket | Priority | Description |
+### All tickets built
+| Ticket | Status | Description |
 |---|---|---|
-| RM-057 | High | **Reset button** — circular arrow icon in Tools popover. Confirmation dialog. Clears all pins, 2nd ring, resets radius to 5mi, color to blue, opacity to 15%, tile to Street, clears search bar, re-runs geolocation. |
-| RM-052 | High | **Custom radius text input** — small editable input next to the big radius number in the Radius popover. Click to edit, type exact value, Enter to apply. Validates against unit min/max. Red flash if out of range. |
-| RM-054 | Medium | **Fullscreen mode** — button in Tools popover. `document.documentElement.requestFullscreen()`. FABs and HUD stay visible. Escape exits. |
-| RM-051 | Medium | **Undo / redo** — in-memory state stack (last 10 states). Each state captures lat, lng, radiusVal, unit, color, opacity. Ctrl+Z / Ctrl+Y. Buttons in Tools popover. |
-| RM-053 | Low | **CSV address import** — Import CSV button in Settings popover. Reads first column as addresses. Geocodes via Nominatim at 1/sec. Progress indicator. Cap at 20 rows. |
-| RM-055 | Low | **Population estimate** — WorldPop API. Build 64-point GeoJSON polygon, POST it. Show result in HUD elevation slot or below stats. Spinner while loading (3-8s). |
+| RM-057 | ✅ | **Reset button** — circular arrow icon in Tools popover. Confirmation dialog. Clears all pins, 2nd ring, resets radius to 5mi, color to blue, opacity to 15%, tile to Street, clears search bar, re-runs geolocation. |
+| RM-052 | ✅ | **Custom radius text input** — editable input next to big radius number. Type exact value, Enter to apply. Validates against unit min/max. Red flash if out of range. |
+| RM-054 | ✅ | **Fullscreen mode** — button in Tools popover. Fullscreen API. FABs and HUD stay visible. Escape exits. |
+| RM-051 | ✅ | **Undo / redo** — 10-state stack. Captures lat, lng, radiusVal, unit, color, opacity. Ctrl+Z / Ctrl+Y. Buttons in Tools popover. |
+| RM-053 | ✅ | **CSV address import** — Import CSV button in Settings popover. Download template link. Geocodes via Nominatim at 1/sec. Progress indicator. Cap at 20 rows. |
+| RM-055 | ⛔ | **Population estimate** — Removed. WorldPop API blocked by CORS from browser. Will re-add in Sprint 13 with backend proxy. |
+
+### Sprint 12 QA fixes
+| Fix | Description |
+|---|---|
+| RM-051 fix | Undo/redo was broken — pushUndo() captured state after change instead of before. Fixed with _lastState tracking and _skipUndo re-entry guard. |
+| RM-053 fix | Added "Download template" link below Import CSV button. Generates drawradius-import-template.csv with header + 3 example addresses. |
+| RM-055 fix | Removed WorldPop population estimate entirely — CORS blocks browser-side calls. HUD reverted to 7 columns. Will re-add with backend proxy in Sprint 13. |
 
 ---
 
