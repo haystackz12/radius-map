@@ -87,9 +87,7 @@ function toggleDistanceMode() {
   setStatus(distanceModeActive ? 'Click two points to measure distance' : '', distanceModeActive ? 'loading' : '');
 }
 
-function handleDistanceClick(e) {
-  // Use map.mouseEventToLatLng to correctly account for map container offset
-  const latlng = e.latlng || map.mouseEventToLatLng(e.originalEvent || e);
+function handleDistanceClick(latlng) {
   if (distancePoints.length >= 2) clearDistance();
   distancePoints.push(latlng);
   const dotIcon = L.divIcon({

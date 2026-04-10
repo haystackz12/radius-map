@@ -147,9 +147,12 @@ function computeStats() {
     areaKm: (Math.PI * rKm * rKm).toFixed(2),
     perim: (u === 'ft' ? Math.round(2 * Math.PI * r).toLocaleString() : (2 * Math.PI * r).toFixed(2)) + ' ' + u,
     elev: (() => {
-      const raw = document.getElementById('elevation-box')?.textContent || '';
-      if (!raw || raw.includes('loading') || raw === 'Elevation: ') return '—';
-      return raw.replace('Elevation: ', '').trim();
+      const el = document.getElementById('elevation-box');
+      if (!el) return '—';
+      const raw = el.textContent || '';
+      if (!raw || raw.includes('loading') || raw.includes('Unavailable') || raw.trim() === 'Elevation:' || raw.trim() === '') return '—';
+      const match = raw.match(/(\d[\d,]+\s*ft)/);
+      return match ? match[1] : '—';
     })(),
     ring2: concentricActive ? ((u === 'ft' ? Math.round(parseFloat(document.getElementById('radius-slider-2').value)) : parseFloat(document.getElementById('radius-slider-2').value).toFixed(1)) + ' ' + u) : '—'
   };
