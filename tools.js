@@ -190,6 +190,46 @@ function renderPinList() {
   });
 }
 
+function startOnboarding() {
+  if (localStorage.getItem('rm_onboarded')) return;
+  const steps = [
+    { target: '.header-search', title: 'Search an address', text: 'Type any address, city, or place to center the map.' },
+    { target: '#radius-slider', title: 'Set your radius', text: 'Drag the slider or pick a preset to adjust the circle size.' },
+    { target: '.gear-btn[aria-label="Settings"]', title: 'Explore the tools', text: 'Open Settings to pin locations, change colors, and export your map.' }
+  ];
+  let step = 0;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'onboard-overlay';
+  document.body.appendChild(overlay);
+
+  function show() {
+    overlay.innerHTML = '';
+    if (step >= steps.length) { finish(); return; }
+    const s = steps[step];
+    const el = document.querySelector(s.target);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const card = document.createElement('div');
+    card.className = 'onboard-card';
+    card.innerHTML = `<div class="onboard-step">Step ${step + 1} of ${steps.length}</div>` +
+      `<h3>${s.title}</h3><p>${s.text}</p>` +
+      `<div class="onboard-actions">` +
+      `<button class="onboard-skip">Skip</button>` +
+      `<button class="onboard-next">${step < steps.length - 1 ? 'Next' : 'Done'}</button></div>`;
+    card.querySelector('.onboard-skip').onclick = finish;
+    card.querySelector('.onboard-next').onclick = () => { step++; show(); };
+    overlay.appendChild(card);
+  }
+
+  function finish() {
+    localStorage.setItem('rm_onboarded', 'true');
+    overlay.remove();
+  }
+
+  show();
+}
+
 /* --- Init --- */
 buildColorOptions();
 restoreFromURL();
@@ -198,3 +238,4 @@ initMap();
 
 const urlParams = new URLSearchParams(location.search);
 if (!urlParams.has('lat')) detectLocation();
+setTimeout(startOnboarding, 800);
