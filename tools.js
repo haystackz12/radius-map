@@ -475,6 +475,15 @@ function resetEverything() {
 }
 
 /* ── CSV Import ── */
+function downloadCSVTemplate() {
+  const csv = 'Address\n1600 Pennsylvania Ave NW Washington DC\n221B Baker Street London\n1 Infinite Loop Cupertino CA\n';
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'drawradius-import-template.csv';
+  a.click();
+}
+
 function handleCSVImport(file) {
   const reader = new FileReader();
   reader.onload = async function(e) {
