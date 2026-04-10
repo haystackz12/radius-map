@@ -141,8 +141,13 @@ function printMap() {
     const area = document.getElementById('stat-area-mi').textContent + ' mi² / ' + document.getElementById('stat-area-km').textContent + ' km²';
     footer.innerHTML = `<strong>${addr}</strong> · Radius: ${radius} · Area: ${area} · ${new Date().toLocaleDateString()}`;
   }
-  window.print();
+  map.invalidateSize();
+  setTimeout(() => window.print(), 200);
 }
+
+window.onbeforeprint = function() {
+  if (map) map.invalidateSize();
+};
 
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
