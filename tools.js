@@ -153,6 +153,51 @@ function exportData() {
   a.click();
 }
 
+function computeOverlaps() {
+  overlapLayers.forEach(l => map.removeLayer(l));
+  overlapLayers = [];
+  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
+  if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
+  for (let i = 0; i < allCircles.length; i++) {
+    for (let j = i + 1; j < allCircles.length; j++) {
+      const a = allCircles[i], b = allCircles[j];
+      const dist = L.latLng(a.lat, a.lng).distanceTo(L.latLng(b.lat, b.lng));
+      if (dist < a.r + b.r && dist > Math.abs(a.r - b.r)) {
+        const pts = circleIntersectionPolygon(a, b, dist);
+        if (pts.length > 2) {
+          const poly = L.polygon(pts, { color: '#f5a623', weight: 0, fillColor: '#f5a623', fillOpacity: 0.25 }).addTo(map);
+          overlapLayers.push(poly);
+        }
+      }
+    }
+  }
+}
+
+function circleIntersectionPolygon(a, b, dist) {
+  const R = a.r, r = b.r, d = dist;
+  const aCenter = L.latLng(a.lat, a.lng), bCenter = L.latLng(b.lat, b.lng);
+  const angleA = Math.acos(Math.max(-1, Math.min(1, (R*R + d*d - r*r) / (2*R*d))));
+  const angleB = Math.acos(Math.max(-1, Math.min(1, (r*r + d*d - R*R) / (2*r*d))));
+  const bearing = getBearing(aCenter, bCenter);
+  const pts = [];
+  for (let i = 0; i <= 20; i++) pts.push(destinationPoint(aCenter, R, bearing - angleA + (2*angleA*i/20)));
+  for (let i = 0; i <= 20; i++) pts.push(destinationPoint(bCenter, r, (bearing+Math.PI) + angleB - (2*angleB*i/20)));
+  return pts;
+}
+
+function getBearing(from, to) {
+  const dLng = (to.lng - from.lng) * Math.PI / 180;
+  const lat1 = from.lat * Math.PI / 180, lat2 = to.lat * Math.PI / 180;
+  return Math.atan2(Math.sin(dLng) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng));
+}
+
+function destinationPoint(origin, distM, bearing) {
+  const R = 6371000, lat1 = origin.lat * Math.PI / 180, lng1 = origin.lng * Math.PI / 180, d = distM / R;
+  const lat2 = Math.asin(Math.sin(lat1)*Math.cos(d) + Math.cos(lat1)*Math.sin(d)*Math.cos(bearing));
+  const lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(d)*Math.cos(lat1), Math.cos(d) - Math.sin(lat1)*Math.sin(lat2));
+  return [lat2 * 180 / Math.PI, lng2 * 180 / Math.PI];
+}
+
 function copyEmbed() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const shareUrl = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
