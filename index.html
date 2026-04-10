@@ -5,261 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Radius Map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="components.css">
-<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="redesign.css">
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-  </div>
-  <h1>Radius Map</h1>
-  <span class="tagline">Worldwide coverage · No account required</span>
-  <div class="header-search">
-    <div class="search-wrap">
-      <input type="text" id="address-input" placeholder="Address or lat, lng coordinates…" autocomplete="off">
-      <button class="clear-input-btn" id="clear-input-btn" onclick="clearSearchInput()" aria-label="Clear">&times;</button>
-      <button class="search-btn" id="search-btn" onclick="searchAddress()">
-        <div class="loading-spinner" id="spinner"></div>
-        <svg id="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      </button>
-      <div class="suggestions" id="suggestions"></div>
-    </div>
-  </div>
-  <button class="gear-btn" onclick="confirmReset()" aria-label="Reset">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-  </button>
-  <button class="gear-btn" onclick="printMap()" aria-label="Print / Save PDF">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
-  </button>
-  <button class="gear-btn" onclick="toggleTheme()" aria-label="Toggle theme" id="theme-btn">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
-  </button>
-  <button class="gear-btn" onclick="toggleHelp()" aria-label="Help">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-  </button>
-  <button class="gear-btn" onclick="toggleModal()" aria-label="Settings">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
-  </button>
-  <button class="gear-btn" onclick="toggleAbout()" aria-label="About">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-  </button>
-</header>
-
-<div class="layout">
-  <div class="panel">
-
-    <div class="drawer-handle" onclick="toggleDrawer()"><span>Controls</span></div>
-
-    <div class="section" data-section="tools">
-      <div class="section-label collapsible" onclick="toggleSection('tools')"><span>Tools</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
-      <div class="status-bar" id="status"></div>
-      <button class="crosshair-btn" id="click-mode-btn" onclick="toggleClickMode()">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-        Click map to set center
-      </button>
-      <button class="crosshair-btn" id="distance-mode-btn" onclick="toggleDistanceMode()">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M21.59 11.59l-9.17-9.17a2 2 0 0 0-2.83 0L2.41 9.59a2 2 0 0 0 0 2.83l9.17 9.17a2 2 0 0 0 2.83 0l7.18-7.17a2 2 0 0 0 0-2.83zM13 17l-2-2 1.5-1.5L14 15l1.5-1.5L17 15l-2 2-1-1-1 1z"/></svg>
-        Measure distance
-      </button>
-    </div>
-
-    <div class="section" data-section="radius">
-      <div class="section-label collapsible" onclick="toggleSection('radius')"><span>Radius</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
-      <div class="radius-row">
-        <div class="radius-value" id="radius-display">5.0</div>
-        <div class="unit-toggle">
-          <button class="unit-btn active" data-unit="mi" onclick="setUnit('mi')">mi</button>
-          <button class="unit-btn" data-unit="km" onclick="setUnit('km')">km</button>
-          <button class="unit-btn" data-unit="ft" onclick="setUnit('ft')">ft</button>
-        </div>
-      </div>
-      <input type="range" id="radius-slider" min="0.1" max="50" step="0.1" value="5">
-      <div class="range-labels"><span>0.1</span><span>25</span><span>50</span></div>
-      <div class="preset-row" id="preset-row"></div>
-      <button class="crosshair-btn" id="concentric-btn" onclick="toggleConcentric()" style="margin-top:10px">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>
-        Add 2nd Ring
-      </button>
-      <div id="concentric-wrap" style="display:none;margin-top:10px;">
-        <div class="section-label" style="margin-bottom:6px;">2nd Ring</div>
-        <div class="radius-row">
-          <div class="radius-value" id="radius-display-2">2.5</div>
-          <span style="font-size:12px;color:var(--muted);" id="radius-unit-2">mi</span>
-        </div>
-        <input type="range" id="radius-slider-2" min="0.1" max="50" step="0.1" value="10">
-      </div>
-      <button class="crosshair-btn" onclick="fitCircle()" style="margin-top:10px">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-        Fit circle in view
-      </button>
-    </div>
-
-    <div class="section" data-section="mapstyle">
-      <div class="section-label collapsible" onclick="toggleSection('mapstyle')"><span>Map style</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
-      <div class="tile-row">
-        <button class="tile-btn active" data-tile="street" onclick="setTileLayer('street')">Street</button>
-        <button class="tile-btn" data-tile="satellite" onclick="setTileLayer('satellite')">Satellite</button>
-        <button class="tile-btn" data-tile="topo" onclick="setTileLayer('topo')">Topo</button>
-      </div>
-    </div>
-
-    <div class="section" data-section="statistics">
-      <div class="section-label collapsible" onclick="toggleSection('statistics')"><span>Statistics</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="label">Radius</div>
-          <div class="value" id="stat-radius">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Diameter</div>
-          <div class="value" id="stat-diameter">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Area (mi²)</div>
-          <div class="value" id="stat-area-mi">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Area (km²)</div>
-          <div class="value" id="stat-area-km">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Perimeter</div>
-          <div class="value" id="stat-perimeter">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">2nd Ring</div>
-          <div class="value" id="stat-second">—</div>
-        </div>
-      </div>
-      <div class="coords-box" id="coords-box">
-        Lat: —&nbsp;&nbsp;Lng: —
-      </div>
-      <div class="coords-box" id="elevation-box" style="margin-top:6px;">
-        Elevation: —
-      </div>
-    </div>
-
-  </div>
-
-  <div id="map">
-    <div class="empty-state" id="empty-state">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-      <h2>Search an address to get started</h2>
-      <p>Enter any address, city, or place in the search bar above.</p>
-    </div>
-  </div>
+<!-- Hidden sliders — existing JS reads these -->
+<div style="display:none">
+  <input type="range" id="radius-slider" min="0.1" max="50" step="0.1" value="5">
+  <input type="range" id="radius-slider-2" min="0.1" max="50" step="0.1" value="10">
+  <input type="range" id="opacity-slider" min="0" max="40" step="1" value="15">
+  <div id="status"></div>
+  <div id="color-options"></div>
+  <div id="pin-list"></div>
+  <div id="qr-container"></div>
+  <div id="opacity-val">15%</div>
+  <div id="radius-display">5.0</div>
+  <div id="stat-radius">—</div>
+  <div id="stat-diameter">—</div>
+  <div id="stat-area-mi">—</div>
+  <div id="stat-area-km">—</div>
+  <div id="stat-perimeter">—</div>
+  <div id="stat-second">—</div>
+  <div id="coords-box"></div>
+  <div id="elevation-box"></div>
+  <div id="radius-display-2">2.5</div>
+  <div id="radius-unit-2">mi</div>
+  <div id="preset-row"></div>
 </div>
 
-<div class="modal-overlay" id="about-overlay" onclick="toggleAbout()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2>About Radius Map</h2>
-      <button class="modal-close" onclick="toggleAbout()" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body help-body">
-      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">Radius Map is a free, open-source tool for drawing configurable radius circles on an interactive map. No account required, no data collected. Built for quick distance visualization, property boundaries, coverage areas, and planning.</p>
-      <div class="help-section"><h3>Version</h3><p>v2.0 — Sprint 5</p></div>
-      <div class="help-section"><h3>Built With</h3>
-        <p><a href="https://leafletjs.com" target="_blank" style="color:var(--accent)">Leaflet.js</a> — Interactive map engine<br>
-        <a href="https://www.openstreetmap.org" target="_blank" style="color:var(--accent)">OpenStreetMap</a> — Street map tiles<br>
-        <a href="https://nominatim.openstreetmap.org" target="_blank" style="color:var(--accent)">Nominatim</a> — Geocoding<br>
-        <a href="https://www.arcgis.com" target="_blank" style="color:var(--accent)">Esri</a> — Satellite imagery<br>
-        <a href="https://opentopomap.org" target="_blank" style="color:var(--accent)">OpenTopoMap</a> — Topographic tiles<br>
-        <a href="https://open-elevation.com" target="_blank" style="color:var(--accent)">Open-Elevation</a> — Elevation data</p>
-      </div>
-      <div class="help-section"><h3>Source Code</h3><p><a href="https://github.com/haystackz12/radius-map" target="_blank" style="color:var(--accent)">github.com/haystackz12/radius-map</a></p></div>
-    </div>
+<div id="map">
+  <!-- Floating Search Bar -->
+  <div id="search-bar">
+    <input id="address-input" type="text" placeholder="Address or lat, lng coordinates…" autocomplete="off">
+    <button id="search-clear" style="display:none">&times;</button>
+    <button id="search-btn">&#8981;</button>
+    <div id="suggestions"></div>
   </div>
-</div>
 
-<div class="modal-overlay" id="help-overlay" onclick="toggleHelp()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Help</h2>
-      <button class="modal-close" onclick="toggleHelp()" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body help-body">
-      <div class="help-section"><h3>Search</h3><p>Type any address, city, or place in the header search bar. Results appear as you type. Press Enter or click the search icon to search. You can also enter coordinates directly (e.g. <code>39.7392, -104.9903</code>) to plot a point without geocoding.</p></div>
-      <div class="help-section"><h3>Radius</h3><p>Use the slider to adjust the circle radius. Toggle between miles and kilometers. Click preset buttons (1, 3, 5, 10, 25) for quick sizing.</p></div>
-      <div class="help-section"><h3>Pins</h3><p>Open Settings (gear icon) and click "Pin this location" to save the current circle. Each pin persists on the map with its own color and radius. Remove pins with the x button.</p></div>
-      <div class="help-section"><h3>Map Styles</h3><p>Switch between Street, Satellite, and Topo views in the panel.</p></div>
-      <div class="help-section"><h3>Distance Tool</h3><p>Click "Measure distance" in the Tools section, then click two points on the map. A dashed line shows the straight-line distance in miles and kilometers.</p></div>
-      <div class="help-section"><h3>Concentric Circles</h3><p>Click "Add comparison ring" below the radius slider to add a second concentric circle from the same center. Each ring has its own radius slider and color. Useful for primary/secondary zone planning.</p></div>
-      <div class="help-section"><h3>Print / Save PDF</h3><p>Click the printer icon in the header to open a print-ready map view. In the print dialog, choose your printer or select "Save as PDF" to save a copy.</p></div>
-      <div class="help-section"><h3>Export</h3><p>Open Settings to copy a share link, copy coordinates, generate a QR code, or download circle data as JSON.</p></div>
-      <div class="help-section"><h3>Keyboard Shortcuts</h3>
-        <div class="shortcut-list">
-          <div><kbd>Enter</kbd> Search address</div>
-          <div><kbd>?</kbd> Open help</div>
-          <div><kbd>Esc</kbd> Close modals</div>
-          <div><kbd>+</kbd> Increase radius by 1</div>
-          <div><kbd>-</kbd> Decrease radius by 1</div>
-        </div>
-      </div>
-    </div>
+  <!-- FAB Stack -->
+  <div id="fab-stack">
+    <div class="fab fab-active" id="fab-radius" role="button" tabindex="0">&#8857;</div>
+    <div class="fab" id="fab-tools" role="button" tabindex="0">&#128295;</div>
+    <div class="fab" id="fab-style" role="button" tabindex="0">&#128506;</div>
+    <div class="fab" id="fab-settings" role="button" tabindex="0">&#9881;</div>
   </div>
-</div>
 
-<div class="modal-overlay" id="modal-overlay" onclick="toggleModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Settings</h2>
-      <button class="modal-close" onclick="toggleModal()" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-tabs">
-      <button class="modal-tab active" data-tab="appearance" onclick="switchTab('appearance')">Appearance</button>
-      <button class="modal-tab" data-tab="pins" onclick="switchTab('pins')">Pins</button>
-      <button class="modal-tab" data-tab="export" onclick="switchTab('export')">Export</button>
-    </div>
-    <div class="modal-body">
-      <div class="tab-content active" id="tab-appearance">
-        <div class="section-label">Circle color</div>
-        <div class="color-options" id="color-options"></div>
-        <div class="opacity-row" style="margin-top:16px;">
-          <span class="opacity-label">Fill opacity</span>
-          <input type="range" id="opacity-slider" min="0" max="40" step="1" value="15" style="flex:1;">
-          <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);width:30px;text-align:right;" id="opacity-val">15%</span>
-        </div>
-      </div>
-      <div class="tab-content" id="tab-pins">
-        <button class="export-btn" onclick="pinCurrent()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-          Pin this location
-        </button>
-        <div id="pin-list" class="pin-list"></div>
-      </div>
-      <div class="tab-content" id="tab-export">
-        <button class="export-btn" onclick="copyShareLink()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 0-10z"/></svg>
-          Copy share link
-        </button>
-        <button class="export-btn" onclick="copyCoords()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-          Copy coordinates
-        </button>
-        <button class="export-btn" onclick="generateQR()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h2v-3zm2 0h2v3h-2v-3zm-2 5h2v3h-2v-3zm2 0h2v3h-2v-3z"/></svg>
-          Generate QR code
-        </button>
-        <div id="qr-container" style="display:none;text-align:center;margin-bottom:8px;"></div>
-        <button class="export-btn" id="qr-download-btn" style="display:none" onclick="downloadQR()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          Download QR as PNG
-        </button>
-        <button class="export-btn" onclick="exportData()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          Download as JSON
-        </button>
-        <button class="export-btn" onclick="copyEmbed()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
-          Copy embed code
-        </button>
-      </div>
-    </div>
+  <!-- Popovers -->
+  <div class="popover" id="pop-radius" style="top:12px;"></div>
+  <div class="popover" id="pop-tools" style="top:64px;"></div>
+  <div class="popover" id="pop-style" style="top:116px;"></div>
+  <div class="popover" id="pop-settings" style="top:168px;"></div>
+
+  <!-- Stats HUD -->
+  <div id="stats-hud">
+    <div class="hud-stat"><span class="hud-val" id="hud-radius">—</span><span class="hud-key">Radius</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-diameter">—</span><span class="hud-key">Diameter</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-area-mi">—</span><span class="hud-key">Area mi²</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-area-km">—</span><span class="hud-key">Area km²</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-perim">—</span><span class="hud-key">Perimeter</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-elev">—</span><span class="hud-key">Elevation</span></div>
+    <div class="hud-stat"><span class="hud-val" id="hud-ring2">—</span><span class="hud-key">2nd Ring</span></div>
   </div>
+
+  <!-- Coordinates label -->
+  <div id="coords-label">Lat: — &nbsp; Lng: —</div>
 </div>
 
 <script src="config.js"></script>
