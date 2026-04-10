@@ -120,20 +120,25 @@
   opacity: 1;
 }
 
+.pin-label-icon {
+  overflow: visible !important;
+  background: transparent !important;
+  border: none !important;
+}
+
 .pin-map-label {
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border2);
+  background: #1a1d27;
+  color: #f0f2ff;
+  border: none;
   border-radius: 4px;
-  padding: 3px 8px;
+  padding: 3px 6px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
   text-align: center;
-  max-width: none;
-  overflow: visible;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transform: translateX(-50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   pointer-events: none;
 }
 

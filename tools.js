@@ -333,10 +333,10 @@ function pinCurrent() {
   }).addTo(map);
   const labelMarker = L.marker([currentLat, currentLng], {
     icon: L.divIcon({
-      className: '',
-      html: `<div class="pin-map-label" style="transform:translateX(-50%)">${name}</div>`,
+      className: 'pin-label-icon',
+      html: `<div class="pin-map-label">${name}</div>`,
       iconSize: [0, 0],
-      iconAnchor: [0, -14]
+      iconAnchor: [0, 6]
     })
   }).addTo(map);
   pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker });
@@ -354,7 +354,7 @@ function renamePinLabel(id) {
   if (pin.labelMarker) {
     map.removeLayer(pin.labelMarker);
     pin.labelMarker = L.marker([pin.lat, pin.lng], {
-      icon: L.divIcon({ className: '', html: `<div class="pin-map-label" style="transform:translateX(-50%)">${newName}</div>`, iconSize: [0, 0], iconAnchor: [0, -14] })
+      icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${newName}</div>`, iconSize: [0, 0], iconAnchor: [0, 6] })
     }).addTo(map);
   }
   renderPinList();
