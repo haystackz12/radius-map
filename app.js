@@ -130,7 +130,6 @@ function drawCircle() {
   updateStats();
   updatePresetActive();
   fetchElevation(currentLat, currentLng);
-  drawSecondCircle();
 }
 
 function buildPresets() {
@@ -198,9 +197,6 @@ function setUnit(u) {
   slider.step = ranges[u].step;
   slider.min = u === 'ft' ? 100 : 0.1;
   slider.value = u === 'ft' ? Math.round(converted) : converted.toFixed(1);
-  document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === u));
-  const labels = document.querySelector('.range-labels');
-  if (labels) labels.innerHTML = `<span>${slider.min}</span><span>${Math.round(slider.max / 2)}</span><span>${slider.max}</span>`;
   buildPresets();
   drawCircle();
 }

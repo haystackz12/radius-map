@@ -40,13 +40,14 @@ async function searchAddress() {
 function clearSearchInput() {
   document.getElementById('address-input').value = '';
   document.getElementById('suggestions').style.display = 'none';
-  document.getElementById('clear-input-btn').style.display = 'none';
+  const cb = document.getElementById('search-clear') || document.getElementById('clear-input-btn');
+  if (cb) cb.style.display = 'none';
   setStatus('', '');
 }
 
 function updateClearBtn() {
-  const btn = document.getElementById('clear-input-btn');
-  if (btn) btn.style.display = document.getElementById('address-input').value.trim() ? 'flex' : 'none';
+  const btn = document.getElementById('search-clear') || document.getElementById('clear-input-btn');
+  if (btn) btn.style.display = document.getElementById('address-input').value.trim() ? 'block' : 'none';
 }
 
 function hideEmptyState() {
@@ -78,7 +79,8 @@ function clearDistance() {
 function toggleDistanceMode() {
   distanceModeActive = !distanceModeActive;
   if (distanceModeActive && clickModeActive) toggleClickMode();
-  document.getElementById('distance-mode-btn').classList.toggle('active', distanceModeActive);
+  const btn = document.getElementById('distance-mode-btn');
+  if (btn) btn.classList.toggle('active', distanceModeActive);
   map.getContainer().style.cursor = distanceModeActive ? 'crosshair' : '';
   clearDistance();
   setStatus(distanceModeActive ? 'Click two points to measure distance' : '', distanceModeActive ? 'loading' : '');
@@ -116,8 +118,7 @@ function toggleClickMode() {
   clickModeActive = !clickModeActive;
   if (clickModeActive && distanceModeActive) toggleDistanceMode();
   const btn = document.getElementById('click-mode-btn');
-  btn.classList.toggle('active', clickModeActive);
-  btn.querySelector('span') && (btn.querySelector('span').textContent = '');
+  if (btn) btn.classList.toggle('active', clickModeActive);
   map.getContainer().style.cursor = clickModeActive ? 'crosshair' : '';
   if (clickModeActive) setStatus('Click anywhere on the map to set center', 'loading');
   else setStatus('', '');

@@ -183,9 +183,127 @@ document.addEventListener('keydown', e => {
   if (e.key === '-') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.max(parseFloat(s.min), parseFloat(s.value) - 1); drawCircle(); updateHUD(); }
 });
 
+/* ── Missing functions restored from pre-redesign ── */
+function fitCircle() {
+  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
+}
+
+function getSecondRadiusMeters() {
+  const val = parseFloat(document.getElementById('radius-slider-2').value);
+  if (currentUnit === 'mi') return val * 1609.344;
+  if (currentUnit === 'ft') return val * 0.3048;
+  return val * 1000;
+}
+
+function removeSecondCircle() {
+  if (secondCircle) { if (map.hasLayer(secondCircle)) map.removeLayer(secondCircle); secondCircle = null; }
+}
+
+function drawSecondCircle() {
+  removeSecondCircle();
+  if (!concentricActive) return;
+  secondCircle = L.circle([currentLat, currentLng], {
+    radius: getSecondRadiusMeters(), color: currentColor, weight: 2, opacity: 0.6,
+    fillColor: currentColor, fillOpacity: currentOpacity * 0.5, dashArray: '6,4'
+  }).addTo(map);
+}
+
+function toggleConcentric() {
+  concentricActive = !concentricActive;
+  if (!concentricActive) { removeSecondCircle(); }
+  else {
+    const primaryVal = parseFloat(document.getElementById('radius-slider').value);
+    const slider2 = document.getElementById('radius-slider-2');
+    if (slider2) {
+      slider2.max = document.getElementById('radius-slider').max;
+      slider2.step = document.getElementById('radius-slider').step;
+      slider2.min = document.getElementById('radius-slider').min;
+      slider2.value = currentUnit === 'ft' ? Math.round(primaryVal * 0.5) : (primaryVal * 0.5).toFixed(1);
+    }
+    drawSecondCircle();
+  }
+}
+
+function printMap() {
+  const token = window.MAPBOX_TOKEN;
+  if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
+  const zoom = Math.min(map.getZoom(), 17);
+  const pin = `pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`;
+  const geo = buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters());
+  const geojson = encodeURIComponent(JSON.stringify(geo));
+  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pin},geojson(${geojson})/auto/1200x800?access_token=${token}`;
+  const w = window.open('', '_blank');
+  if (!w) { setStatus('Pop-up blocked', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=padding:40px>Print failed.</p>'"></body></html>`);
+  w.document.close();
+  setStatus('Print dialog opened', 'success');
+}
+
+function buildCircleGeoJSON(lat, lng, radiusM) {
+  const coords = [];
+  for (var i = 0; i < 64; i++) {
+    var angle = (i / 64) * 2 * Math.PI;
+    coords.push([lng + (radiusM * Math.sin(angle)) / (111320 * Math.cos(lat * Math.PI / 180)), lat + (radiusM * Math.cos(angle)) / 111320]);
+  }
+  coords.push(coords[0]);
+  return { type: 'Feature', properties: { stroke: currentColor, 'stroke-width': 3, fill: currentColor, 'fill-opacity': 0.2 }, geometry: { type: 'Polygon', coordinates: [coords] } };
+}
+
+function getRecentSearches() {
+  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
+}
+
+function saveRecentSearch(query) {
+  let recent = getRecentSearches().filter(q => q !== query);
+  recent.unshift(query);
+  if (recent.length > 8) recent = recent.slice(0, 8);
+  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
+}
+
+function showRecentSearches() {
+  const recent = getRecentSearches();
+  if (!recent.length) return;
+  const box = document.getElementById('suggestions');
+  box.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'recent-header';
+  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
+  box.appendChild(header);
+  recent.forEach(q => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.textContent = q;
+    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function clearRecentSearches(e) {
+  if (e) e.stopPropagation();
+  localStorage.removeItem('rm_recent_searches');
+  document.getElementById('suggestions').style.display = 'none';
+}
+
+function computeOverlaps() {
+  overlapLayers.forEach(l => map.removeLayer(l));
+  overlapLayers = [];
+  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
+  if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
+  for (let i = 0; i < allCircles.length; i++) {
+    for (let j = i + 1; j < allCircles.length; j++) {
+      const a = allCircles[i], b = allCircles[j];
+      const dist = L.latLng(a.lat, a.lng).distanceTo(L.latLng(b.lat, b.lng));
+      if (dist < a.r + b.r && dist > Math.abs(a.r - b.r)) {
+        overlapLayers.push(L.polygon([], { color: '#f5a623', weight: 0, fillColor: '#f5a623', fillOpacity: 0.25 }).addTo(map));
+      }
+    }
+  }
+}
+
 /* ── Hook drawCircle to auto-update HUD ── */
 const _origDrawCircle = drawCircle;
-drawCircle = function() { _origDrawCircle(); updateHUD(); };
+drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
 
 /* ── Init ── */
 restoreFromURL();
