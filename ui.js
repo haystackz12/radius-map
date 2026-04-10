@@ -28,9 +28,19 @@ document.getElementById('fab-tools').addEventListener('click', () => toggleFab('
 document.getElementById('fab-style').addEventListener('click', () => toggleFab('style'));
 document.getElementById('fab-settings').addEventListener('click', () => toggleFab('settings'));
 
-/* ── Backdrop closes all popovers ── */
+/* ── Backdrop closes all popovers (unless a tool mode is active) ── */
 const _backdrop = document.getElementById('popover-backdrop');
-if (_backdrop) _backdrop.addEventListener('click', () => closeAll());
+if (_backdrop) _backdrop.addEventListener('click', (e) => {
+  if (distanceModeActive || clickModeActive) {
+    // Pass click through to map for tool modes
+    _backdrop.style.display = 'none';
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: e.clientX, clientY: e.clientY }));
+    _backdrop.style.display = 'block';
+    return;
+  }
+  closeAll();
+});
 
 /* ── Popover Renderers ── */
 function renderPopover(name) {
@@ -98,8 +108,18 @@ document.getElementById('pop-radius').addEventListener('input', function(e) {
 document.getElementById('pop-tools').addEventListener('click', function(e) {
   const act = e.target.closest('[data-action]'); if (!act) return;
   if (act.dataset.action === 'print') printMap();
-  if (act.dataset.action === 'setctr') { toggleClickMode(); closeAll(); }
-  if (act.dataset.action === 'measure') { toggleDistanceMode(); closeAll(); }
+  if (act.dataset.action === 'setctr') {
+    toggleClickMode();
+    const bd = document.getElementById('popover-backdrop');
+    if (bd) bd.style.display = 'none';
+    renderPopover('tools');
+  }
+  if (act.dataset.action === 'measure') {
+    toggleDistanceMode();
+    const bd = document.getElementById('popover-backdrop');
+    if (bd) bd.style.display = 'none';
+    renderPopover('tools');
+  }
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();
