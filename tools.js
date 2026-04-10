@@ -277,8 +277,9 @@ document.addEventListener('keydown', function(e) {
 buildColorOptions();
 restoreFromURL();
 buildPresets();
-initMap();
 
 const urlParams = new URLSearchParams(location.search);
-if (!urlParams.has('lat')) detectLocation();
+const willDetect = !urlParams.has('lat');
+initMap(willDetect);
+if (willDetect) detectLocation();
 setTimeout(startOnboarding, 800);

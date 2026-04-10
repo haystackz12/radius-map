@@ -31,39 +31,49 @@ let distanceMarkers = [];
 let distanceLabel = null;
 let debounceTimer;
 let pins = [];
+let locationResolved = false;
 
 async function detectLocation() {
-  setStatus('Detecting location…', 'loading');
+  setStatus('Detecting your location…', 'loading');
   try {
     const pos = await new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject();
+      if (!navigator.geolocation) return reject(new Error('not supported'));
       navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
     });
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
+    console.log('[RM-027] Geolocation succeeded:', currentLat, currentLng);
     setStatus('Location detected', 'success');
-  } catch {
+  } catch (geoErr) {
+    console.log('[RM-027] Geolocation failed:', geoErr?.message || geoErr);
     try {
       const resp = await fetch('https://ipapi.co/json/');
       const data = await resp.json();
       if (data.latitude && data.longitude) {
         currentLat = data.latitude;
         currentLng = data.longitude;
+        console.log('[RM-027] IP fallback succeeded:', currentLat, currentLng, data.city, data.region);
         setStatus('Location estimated from IP', 'success');
+      } else {
+        console.log('[RM-027] IP fallback returned no coords, using US center');
+        setStatus('Using default location', '');
       }
-    } catch {
+    } catch (ipErr) {
+      console.log('[RM-027] IP fallback failed:', ipErr?.message || ipErr);
       setStatus('Using default location', '');
     }
   }
+  locationResolved = true;
+  hideEmptyState();
   map.setView([currentLat, currentLng], 11);
   drawCircle();
 }
 
-function initMap() {
+function initMap(skipInitialDraw) {
   map = L.map('map', { zoomControl: true }).setView([currentLat, currentLng], 4);
   setTileLayer('street');
 
-  drawCircle();
+  if (!skipInitialDraw) drawCircle();
 
   map.on('click', function(e) {
     if (distanceModeActive) { handleDistanceClick(e.latlng); return; }
