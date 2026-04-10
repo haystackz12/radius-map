@@ -19,7 +19,7 @@ const TILE_LAYERS = {
 let currentTileLayer;
 
 let map, circle, marker;
-let currentLat = 39.7392, currentLng = -104.9903;
+let currentLat = 39.5, currentLng = -98.35;
 let currentUnit = 'mi';
 let currentColor = '#4f8ef7';
 let currentOpacity = 0.15;
@@ -32,8 +32,35 @@ let distanceLabel = null;
 let debounceTimer;
 let pins = [];
 
+async function detectLocation() {
+  setStatus('Detecting location…', 'loading');
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject();
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+    });
+    currentLat = pos.coords.latitude;
+    currentLng = pos.coords.longitude;
+    setStatus('Location detected', 'success');
+  } catch {
+    try {
+      const resp = await fetch('https://ipapi.co/json/');
+      const data = await resp.json();
+      if (data.latitude && data.longitude) {
+        currentLat = data.latitude;
+        currentLng = data.longitude;
+        setStatus('Location estimated from IP', 'success');
+      }
+    } catch {
+      setStatus('Using default location', '');
+    }
+  }
+  map.setView([currentLat, currentLng], 11);
+  drawCircle();
+}
+
 function initMap() {
-  map = L.map('map', { zoomControl: true }).setView([currentLat, currentLng], 11);
+  map = L.map('map', { zoomControl: true }).setView([currentLat, currentLng], 4);
   setTileLayer('street');
 
   drawCircle();

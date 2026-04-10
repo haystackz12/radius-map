@@ -191,3 +191,6 @@ buildColorOptions();
 restoreFromURL();
 buildPresets();
 initMap();
+
+const urlParams = new URLSearchParams(location.search);
+if (!urlParams.has('lat')) detectLocation();
