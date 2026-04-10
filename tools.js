@@ -320,6 +320,54 @@ function removePin(id) {
   computeOverlaps();
 }
 
+/* ── Undo / Redo ── */
+let undoStack = [];
+let redoStack = [];
+const MAX_UNDO = 10;
+
+function captureState() {
+  return {
+    lat: currentLat, lng: currentLng,
+    radiusVal: parseFloat(document.getElementById('radius-slider').value),
+    unit: currentUnit, color: currentColor, opacity: currentOpacity
+  };
+}
+
+function pushUndo() {
+  const state = captureState();
+  // Don't push if identical to top of stack
+  if (undoStack.length) {
+    const top = undoStack[undoStack.length - 1];
+    if (top.lat === state.lat && top.lng === state.lng && top.radiusVal === state.radiusVal && top.unit === state.unit && top.color === state.color && top.opacity === state.opacity) return;
+  }
+  undoStack.push(state);
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack = [];
+}
+
+function applyState(s) {
+  currentLat = s.lat; currentLng = s.lng;
+  currentColor = s.color; currentOpacity = s.opacity;
+  if (s.unit !== currentUnit) setUnit(s.unit);
+  document.getElementById('radius-slider').value = s.radiusVal;
+  document.getElementById('opacity-slider').value = Math.round(s.opacity * 100);
+  drawCircle();
+  if (typeof updateHUD === 'function') updateHUD();
+  if (typeof renderPopover === 'function' && activeFab === 'tools') renderPopover('tools');
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(captureState());
+  applyState(undoStack.pop());
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(captureState());
+  applyState(redoStack.pop());
+}
+
 function toggleFullscreen() {
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     (document.exitFullscreen || document.webkitExitFullscreen).call(document);

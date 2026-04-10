@@ -74,7 +74,7 @@ function radiusPopoverHTML() {
 
 function toolsPopoverHTML() {
   const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-  return `<div class="pop-title">Tools</div><button class="action-btn ${isFS ? 'action-active' : ''}" data-action="fullscreen">⛶  ${isFS ? 'Exit Fullscreen' : 'Fullscreen'}</button><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn action-danger" data-action="reset">↻  Reset Everything</button>`;
+  return `<div class="pop-title">Tools</div><button class="action-btn ${isFS ? 'action-active' : ''}" data-action="fullscreen">⛶  ${isFS ? 'Exit Fullscreen' : 'Fullscreen'}</button><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><div class="pop-title">History</div><div style="display:flex;gap:4px;margin-bottom:4px;"><button class="action-btn" data-action="undo" style="flex:1;" ${typeof undoStack !== 'undefined' && undoStack.length ? '' : 'disabled'}>↩ Undo</button><button class="action-btn" data-action="redo" style="flex:1;" ${typeof redoStack !== 'undefined' && redoStack.length ? '' : 'disabled'}>↪ Redo</button></div><hr class="pop-divider"><button class="action-btn action-danger" data-action="reset">↻  Reset Everything</button>`;
 }
 
 function stylePopoverHTML() {
@@ -180,6 +180,8 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
     }
     renderPopover('tools');
   }
+  if (act.dataset.action === 'undo') { undo(); return; }
+  if (act.dataset.action === 'redo') { redo(); return; }
   if (act.dataset.action === 'fullscreen') toggleFullscreen();
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
@@ -282,6 +284,8 @@ document.addEventListener('keydown', e => {
     closeAll();
     return;
   }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); return; }
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
   if (e.key === '+' || e.key === '=') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.min(parseFloat(s.max), parseFloat(s.value) + 1); drawCircle(); updateHUD(); }
@@ -425,7 +429,7 @@ function computeOverlaps() {
 
 /* ── Hook drawCircle to auto-update HUD ── */
 const _origDrawCircle = drawCircle;
-drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
+drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); if (typeof pushUndo === 'function') pushUndo(); };
 
 /* ── Prevent Leaflet from intercepting overlay events ── */
 function disableMapPropagation() {
