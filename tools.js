@@ -437,6 +437,9 @@ function downloadCSVTemplate() {
   a.click();
 }
 
+let _csvImporting = false;
+let _csvProgress = '';
+
 function handleCSVImport(file) {
   const reader = new FileReader();
   reader.onload = async function(e) {
@@ -445,11 +448,12 @@ function handleCSVImport(file) {
     const start = /^(address|name|location|city)/i.test(lines[0]) ? 1 : 0;
     const addresses = lines.slice(start).map(l => l.split(',')[0].trim()).filter(Boolean).slice(0, 20);
     if (!addresses.length) { setStatus('No addresses found in CSV', 'error'); return; }
-    const prog = document.getElementById('csv-progress');
-    if (prog) { prog.style.display = 'block'; prog.textContent = `Importing 0/${addresses.length}…`; }
+    _csvImporting = true;
     let imported = 0;
+    const bounds = L.latLngBounds([]);
     for (let i = 0; i < addresses.length; i++) {
-      if (prog) prog.textContent = `Importing ${i + 1}/${addresses.length}…`;
+      _csvProgress = `Geocoding ${i + 1} of ${addresses.length}…`;
+      if (typeof renderPopover === 'function' && activeFab === 'settings') renderPopover('settings');
       try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(addresses[i])}&limit=1`;
         const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
@@ -457,6 +461,7 @@ function handleCSVImport(file) {
         if (data.length) {
           const r = data[0];
           const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+          const radiusVal = parseFloat(document.getElementById('radius-slider').value);
           const radiusM = getRadiusMeters();
           const layer = L.circle([lat, lng], {
             radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
@@ -466,17 +471,20 @@ function handleCSVImport(file) {
           const labelMarker = L.marker([lat, lng], {
             icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${name}</div>`, iconSize: null, iconAnchor: null })
           }).addTo(map);
-          pins.push({ id: Date.now() + i, lat, lng, radiusVal: parseFloat(document.getElementById('radius-slider').value), unit: currentUnit, color: currentColor, label: addresses[i], name, layer, labelMarker });
+          pins.push({ id: Date.now() + i, lat, lng, radiusVal, unit: currentUnit, color: currentColor, label: addresses[i], name, layer, labelMarker });
+          bounds.extend(layer.getBounds());
           imported++;
         }
       } catch {}
       // Respect Nominatim 1 req/sec
       if (i < addresses.length - 1) await new Promise(res => setTimeout(res, 1100));
     }
+    _csvImporting = false;
+    _csvProgress = '';
     renderPinList();
     computeOverlaps();
-    if (prog) { prog.textContent = `Done — imported ${imported}/${addresses.length} addresses`; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
-    setStatus(`Imported ${imported} locations from CSV`, 'success');
+    if (bounds.isValid()) map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    setStatus(`Imported ${imported} of ${addresses.length} locations`, 'success');
     if (typeof renderPopover === 'function') renderPopover('settings');
   };
   reader.readAsText(file);
