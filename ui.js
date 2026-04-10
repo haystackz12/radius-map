@@ -171,7 +171,8 @@ document.getElementById('search-clear').addEventListener('click', () => { clearS
 /* ── Global click: close suggestions + popovers ── */
 document.addEventListener('click', e => {
   if (!e.target.closest('#suggestions') && !e.target.closest('#search-bar')) document.getElementById('suggestions').style.display = 'none';
-  if (!e.target.closest('#fab-stack') && !e.target.closest('.popover') && !e.target.closest('#search-bar')) closeAll();
+  if (e.target.closest('#fab-stack') || e.target.closest('.popover') || e.target.closest('#search-bar') || e.target.closest('#stats-hud')) return;
+  closeAll();
 });
 
 /* ── Keyboard shortcuts ── */
@@ -304,6 +305,15 @@ function computeOverlaps() {
 /* ── Hook drawCircle to auto-update HUD ── */
 const _origDrawCircle = drawCircle;
 drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
+
+/* ── Prevent Leaflet from intercepting overlay events ── */
+['fab-stack', 'pop-radius', 'pop-tools', 'pop-style', 'pop-settings', 'search-bar', 'stats-hud'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }
+});
 
 /* ── Init ── */
 restoreFromURL();
