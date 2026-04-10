@@ -61,6 +61,18 @@ See SPRINT.md for full specs and implementation notes.
 
 ---
 
+## Mapbox Token Setup (Vercel)
+The Print feature uses Mapbox Static Images API. The token is injected at build time via `build.sh`:
+1. Go to **Vercel dashboard** → `radius-map` project → **Settings** → **Environment Variables**
+2. Add variable: Name = `MAPBOX_TOKEN`, Value = your Mapbox public token
+3. Set scope to **Production** + **Preview** + **Development**
+4. Redeploy — `build.sh` writes `window.MAPBOX_TOKEN = '{token}';` into `config.js` at build time
+5. Locally: edit `config.js` directly with the real token (gitignored changes won't be committed)
+
+If `MAPBOX_TOKEN` is not set, Print button shows "configure Mapbox token in config.js" error.
+
+---
+
 ## Key Technical Notes
 - Nominatim: `Accept-Language: en`, debounce ≥400ms, 1 req/sec limit
 - Tile layers use `crossOrigin: true` for PNG export

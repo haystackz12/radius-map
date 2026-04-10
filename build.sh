@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "window.MAPBOX_TOKEN = '${MAPBOX_TOKEN}';" > config.js
