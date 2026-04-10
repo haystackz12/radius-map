@@ -7,7 +7,7 @@ function closeAll() {
   activeFab = null;
   const bd = document.getElementById('popover-backdrop');
   if (bd) bd.style.display = 'none';
-  document.getElementById('suggestions').style.display = 'none';
+  // Note: do NOT hide suggestions here — handled separately
 }
 
 function toggleFab(name) {
@@ -98,8 +98,8 @@ document.getElementById('pop-radius').addEventListener('input', function(e) {
 document.getElementById('pop-tools').addEventListener('click', function(e) {
   const act = e.target.closest('[data-action]'); if (!act) return;
   if (act.dataset.action === 'print') printMap();
-  if (act.dataset.action === 'setctr') { toggleClickMode(); renderPopover('tools'); }
-  if (act.dataset.action === 'measure') { toggleDistanceMode(); renderPopover('tools'); }
+  if (act.dataset.action === 'setctr') { toggleClickMode(); closeAll(); }
+  if (act.dataset.action === 'measure') { toggleDistanceMode(); closeAll(); }
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();
