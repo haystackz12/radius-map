@@ -35,7 +35,7 @@
 
 <div id="map">
   <!-- Floating Search Bar -->
-  <div id="search-bar">
+  <div id="search-bar" data-keep-open>
     <input id="address-input" type="text" placeholder="Address or lat, lng coordinates…" autocomplete="off">
     <button id="search-clear" style="display:none">&times;</button>
     <button id="search-btn">&#8981;</button>
@@ -43,7 +43,7 @@
   </div>
 
   <!-- FAB Stack -->
-  <div id="fab-stack">
+  <div id="fab-stack" data-keep-open>
     <div class="fab fab-active" id="fab-radius" role="button" tabindex="0">&#8857;</div>
     <div class="fab" id="fab-tools" role="button" tabindex="0">&#128295;</div>
     <div class="fab" id="fab-style" role="button" tabindex="0">&#128506;</div>
@@ -51,10 +51,10 @@
   </div>
 
   <!-- Popovers -->
-  <div class="popover" id="pop-radius" style="top:12px;"></div>
-  <div class="popover" id="pop-tools" style="top:64px;"></div>
-  <div class="popover" id="pop-style" style="top:116px;"></div>
-  <div class="popover" id="pop-settings" style="top:168px;"></div>
+  <div class="popover" id="pop-radius" data-keep-open style="top:12px;"></div>
+  <div class="popover" id="pop-tools" data-keep-open style="top:64px;"></div>
+  <div class="popover" id="pop-style" data-keep-open style="top:116px;"></div>
+  <div class="popover" id="pop-settings" data-keep-open style="top:168px;"></div>
 
   <!-- Stats HUD -->
   <div id="stats-hud">

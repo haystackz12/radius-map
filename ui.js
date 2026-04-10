@@ -171,10 +171,8 @@ document.getElementById('search-clear').addEventListener('click', () => { clearS
 
 /* ── Global click: close suggestions + popovers ── */
 document.addEventListener('click', e => {
-  console.log('[DOC CLICK]', e.target.tagName, e.target.id, e.target.className, 'closest-popover:', !!e.target.closest('.popover'), 'closest-fab:', !!e.target.closest('#fab-stack'));
-  if (!e.target.closest('#suggestions') && !e.target.closest('#search-bar')) document.getElementById('suggestions').style.display = 'none';
-  if (e.target.closest('#fab-stack') || e.target.closest('.popover') || e.target.closest('#search-bar') || e.target.closest('#stats-hud')) return;
-  console.log('[DOC CLICK] → closing all popovers');
+  if (!e.target.closest('#suggestions') && !e.target.closest('[data-keep-open]')) document.getElementById('suggestions').style.display = 'none';
+  if (e.target.closest('[data-keep-open]') || e.target.closest('#stats-hud')) return;
   closeAll();
 });
 
