@@ -80,7 +80,25 @@
 }
 
 .tile-btn:hover { border-color: var(--accent); color: var(--text); }
-.tile-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.tile-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+.map-style-badge {
+  position: absolute;
+  bottom: 28px;
+  left: 10px;
+  z-index: 500;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  opacity: 0.8;
+}
 
 .pin-list {
   display: none;

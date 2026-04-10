@@ -224,6 +224,19 @@ function setTileLayer(name) {
   if (currentTileLayer) map.removeLayer(currentTileLayer);
   currentTileLayer = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19, crossOrigin: true }).addTo(map);
   document.querySelectorAll('.tile-btn').forEach(b => b.classList.toggle('active', b.dataset.tile === name));
+  updateMapBadge(name);
+}
+
+function updateMapBadge(name) {
+  let badge = document.getElementById('map-style-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'map-style-badge';
+    badge.className = 'map-style-badge';
+    document.getElementById('map').appendChild(badge);
+  }
+  const labels = { street: 'Street', satellite: 'Satellite', topo: 'Topo' };
+  badge.textContent = labels[name] || name;
 }
 
 function buildColorOptions() {
