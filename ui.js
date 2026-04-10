@@ -29,6 +29,7 @@ function renderPopover(name) {
   if (!el || !el.classList.contains('pop-open')) return;
   const renderers = { radius: radiusPopoverHTML, tools: toolsPopoverHTML, style: stylePopoverHTML, settings: settingsPopoverHTML };
   el.innerHTML = renderers[name]();
+  disableMapPropagation();
 }
 
 function radiusPopoverHTML() {
@@ -307,13 +308,26 @@ const _origDrawCircle = drawCircle;
 drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
 
 /* ── Prevent Leaflet from intercepting overlay events ── */
-['fab-stack', 'pop-radius', 'pop-tools', 'pop-style', 'pop-settings', 'search-bar', 'stats-hud'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    L.DomEvent.disableClickPropagation(el);
-    L.DomEvent.disableScrollPropagation(el);
-  }
-});
+function disableMapPropagation() {
+  ['fab-stack', 'pop-radius', 'pop-tools', 'pop-style', 'pop-settings', 'search-bar', 'stats-hud'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+    }
+  });
+}
+disableMapPropagation();
+
+/* ── Prevent search input drag from moving map ── */
+const _searchInput = document.getElementById('address-input');
+if (_searchInput) {
+  _searchInput.addEventListener('mousedown', () => map.dragging.disable());
+  _searchInput.addEventListener('mouseup', () => map.dragging.enable());
+  _searchInput.addEventListener('mouseleave', () => map.dragging.enable());
+  _searchInput.addEventListener('touchstart', () => map.dragging.disable());
+  _searchInput.addEventListener('touchend', () => map.dragging.enable());
+}
 
 /* ── Init ── */
 restoreFromURL();
