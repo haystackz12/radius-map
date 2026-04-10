@@ -163,42 +163,13 @@ function toggleConcentric() {
 }
 
 function printMap() {
-  setStatus('Preparing print view…', 'loading');
-  map.invalidateSize();
-  if (circle) {
-    const zoom = map.getBoundsZoom(circle.getBounds(), false, [60, 60]);
-    map.setView([currentLat, currentLng], zoom, { animate: false });
-  }
-  setTimeout(function() {
-    if (typeof leafletImage !== 'undefined') {
-      leafletImage(map, function(err, canvas) {
-        if (!err && canvas) {
-          try { canvas.toDataURL(); openPrintTab(canvas); return; } catch {}
-        }
-        printFallback();
-      });
-    } else {
-      printFallback();
-    }
-  }, 300);
-}
-
-function printFallback() {
-  if (typeof html2canvas === 'undefined') { setStatus('Print unavailable — export libraries not loaded', 'error'); return; }
-  html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
-    .then(canvas => openPrintTab(canvas))
-    .catch(() => setStatus('Print failed — try Save as PNG instead', 'error'));
-}
-
-function openPrintTab(canvas) {
-  const addr = document.getElementById('address-input').value || 'Radius Map';
-  const radius = document.getElementById('stat-radius').textContent;
-  const dataUrl = canvas.toDataURL('image/png');
-  const w = window.open('');
+  const val = parseFloat(document.getElementById('radius-slider').value);
+  const zoom = map.getZoom();
+  const color = encodeURIComponent(currentColor);
+  const addr = encodeURIComponent(document.getElementById('address-input').value || '');
+  const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}&zoom=${zoom}&color=${color}&addr=${addr}&print=1`;
+  const w = window.open(url, '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  w.document.write(`<html><head><title>Print — ${addr}</title><style>body{margin:0;text-align:center;font-family:sans-serif}img{max-width:100%;height:auto}p{margin:8px;font-size:12px;color:#666}</style></head><body><img src="${dataUrl}"><p>${addr} · Radius: ${radius} · ${new Date().toLocaleDateString()}</p></body></html>`);
-  w.document.close();
-  w.onload = function() { w.print(); };
   setStatus('Print view opened', 'success');
 }
 
@@ -240,8 +211,26 @@ buildPresets();
 restoreCollapsed();
 
 const urlParams = new URLSearchParams(location.search);
-const willDetect = !urlParams.has('lat');
-const savedTheme = localStorage.getItem('rm_theme');
-initMap(willDetect);
-if (willDetect) detectLocation();
-setTimeout(startOnboarding, 800);
+const isPrintMode = urlParams.get('print') === '1';
+const willDetect = !urlParams.has('lat') && !isPrintMode;
+
+if (isPrintMode) {
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('.panel').style.display = 'none';
+  document.querySelector('.layout').style.display = 'block';
+  document.getElementById('map').style.width = '100vw';
+  document.getElementById('map').style.height = '100vh';
+  const printColor = decodeURIComponent(urlParams.get('color') || '#4f8ef7');
+  const printZoom = parseInt(urlParams.get('zoom') || '11');
+  currentColor = printColor;
+  restoreFromURL();
+  initMap(false);
+  map.setView([currentLat, currentLng], printZoom, { animate: false });
+  map.invalidateSize();
+  setTimeout(function() { map.invalidateSize(); drawCircle(); }, 500);
+  setTimeout(function() { window.print(); }, 1500);
+} else {
+  initMap(willDetect);
+  if (willDetect) detectLocation();
+  setTimeout(startOnboarding, 800);
+}
