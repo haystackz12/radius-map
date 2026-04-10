@@ -385,19 +385,22 @@ if (isPrintMode) {
   map.setView([currentLat, currentLng], zoom, { animate: false });
   map.invalidateSize();
 
-  const debug = document.createElement('div');
-  debug.id = 'print-debug';
-  debug.style.cssText = 'position:fixed;bottom:10px;left:10px;z-index:9999;background:#1a1d27;color:#f0f2ff;padding:10px 14px;border-radius:6px;font-family:monospace;font-size:11px;line-height:1.6;box-shadow:0 2px 8px rgba(0,0,0,0.5);';
-  debug.innerHTML = `lat: ${currentLat}<br>lng: ${currentLng}<br>r: ${printR} ${printUnit}<br>radiusM: ${radiusM.toFixed(1)}<br>color: ${currentColor}<br>zoom: ${zoom}`;
-  document.body.appendChild(debug);
-
-  msg.textContent = 'Print ready — circle should be visible';
-
   let tileTimer;
   map.on('tileload', function() {
     clearTimeout(tileTimer);
-    tileTimer = setTimeout(function() { msg.textContent = 'Tiles loaded — ready to print'; }, 500);
+    tileTimer = setTimeout(function() {
+      msg.remove();
+      const badge = document.getElementById('map-style-badge');
+      if (badge) badge.style.display = 'none';
+      const breadcrumb = document.getElementById('location-breadcrumb');
+      if (breadcrumb) breadcrumb.style.display = 'none';
+      setTimeout(function() { window.print(); window.close(); }, 800);
+    }, 500);
   });
+  setTimeout(function() {
+    msg.remove();
+    window.print(); window.close();
+  }, 5000);
 } else {
   initMap(willDetect);
   if (willDetect) detectLocation();
