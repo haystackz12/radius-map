@@ -206,22 +206,31 @@ function toggleConcentric() {
 
 function printMap() {
   setStatus('Preparing print…', 'loading');
+  const panel = document.querySelector('.panel');
+  if (panel) panel.style.display = 'none';
   map.invalidateSize();
+  if (circle) map.fitBounds(circle.getBounds(), { padding: [60, 60], animate: false });
   setTimeout(function() {
     if (typeof leafletImage !== 'undefined') {
       leafletImage(map, function(err, canvas) {
+        restorePanel(panel);
         if (!err && canvas) { try { canvas.toDataURL(); openPrintWindow(canvas); return; } catch {} }
-        printViaHtml2canvas();
+        printViaHtml2canvas(panel);
       });
-    } else { printViaHtml2canvas(); }
-  }, 100);
+    } else { printViaHtml2canvas(panel); }
+  }, 600);
 }
 
-function printViaHtml2canvas() {
-  if (typeof html2canvas === 'undefined') { setStatus('Print unavailable — libraries not loaded', 'error'); return; }
+function restorePanel(panel) {
+  if (panel) panel.style.display = '';
+  map.invalidateSize();
+}
+
+function printViaHtml2canvas(panel) {
+  if (typeof html2canvas === 'undefined') { restorePanel(panel); setStatus('Print unavailable — libraries not loaded', 'error'); return; }
   html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
-    .then(function(canvas) { openPrintWindow(canvas); })
-    .catch(function() { setStatus('Print failed', 'error'); });
+    .then(function(canvas) { restorePanel(panel); openPrintWindow(canvas); })
+    .catch(function() { restorePanel(panel); setStatus('Print failed', 'error'); });
 }
 
 function openPrintWindow(canvas) {
