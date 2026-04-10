@@ -320,6 +320,47 @@ function removePin(id) {
   computeOverlaps();
 }
 
+function resetEverything() {
+  if (!confirm('Reset everything? This will clear all pins, rings, and settings.')) return;
+  // Remove all pins
+  pins.forEach(p => { map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
+  pins = [];
+  renderPinList();
+  // Remove 2nd ring
+  if (concentricActive) { concentricActive = false; removeSecondCircle(); }
+  // Reset radius to 5 mi
+  currentUnit = 'mi';
+  const slider = document.getElementById('radius-slider');
+  slider.min = 0.1; slider.max = 50; slider.step = 0.1; slider.value = 5;
+  // Reset color, opacity
+  currentColor = '#4f8ef7';
+  currentOpacity = 0.15;
+  document.getElementById('opacity-slider').value = 15;
+  // Reset tile to street
+  setTileLayer('street');
+  document.getElementById('map').classList.remove('satellite-theme');
+  // Clear search bar
+  document.getElementById('address-input').value = '';
+  document.getElementById('suggestions').style.display = 'none';
+  const cb = document.getElementById('search-clear');
+  if (cb) cb.style.display = 'none';
+  // Clear distance tool
+  if (distanceModeActive) toggleDistanceMode();
+  if (clickModeActive) toggleClickMode();
+  clearDistance();
+  hideToolPill();
+  // Clear overlaps
+  overlapLayers.forEach(l => map.removeLayer(l));
+  overlapLayers = [];
+  // Re-run geolocation
+  userHasSearched = false;
+  locationResolved = false;
+  detectLocation();
+  setStatus('Reset complete', 'success');
+  if (typeof updateHUD === 'function') updateHUD();
+  if (typeof renderPopover === 'function') renderPopover('tools');
+}
+
 function renderPinList() {
   const list = document.getElementById('pin-list');
   if (!list) return;
