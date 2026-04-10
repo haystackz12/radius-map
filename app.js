@@ -32,6 +32,7 @@ let distanceLabel = null;
 let debounceTimer;
 let pins = [];
 let locationResolved = false;
+let overlapLayers = [];
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -299,6 +300,67 @@ async function reverseGeocode(lat, lng) {
       setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
     }
   } catch {}
+}
+
+function computeOverlaps() {
+  overlapLayers.forEach(l => map.removeLayer(l));
+  overlapLayers = [];
+  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
+  if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
+  for (let i = 0; i < allCircles.length; i++) {
+    for (let j = i + 1; j < allCircles.length; j++) {
+      const a = allCircles[i], b = allCircles[j];
+      const dist = L.latLng(a.lat, a.lng).distanceTo(L.latLng(b.lat, b.lng));
+      if (dist < a.r + b.r && dist > Math.abs(a.r - b.r)) {
+        const pts = circleIntersectionPolygon(a, b, dist);
+        if (pts.length > 2) {
+          const poly = L.polygon(pts, { color: '#f5a623', weight: 0, fillColor: '#f5a623', fillOpacity: 0.25 }).addTo(map);
+          overlapLayers.push(poly);
+        }
+      }
+    }
+  }
+}
+
+function circleIntersectionPolygon(a, b, dist) {
+  const R = a.r, r = b.r, d = dist;
+  const aCenter = L.latLng(a.lat, a.lng);
+  const bCenter = L.latLng(b.lat, b.lng);
+  const cosA = (R * R + d * d - r * r) / (2 * R * d);
+  const cosB = (r * r + d * d - R * R) / (2 * r * d);
+  const angleA = Math.acos(Math.max(-1, Math.min(1, cosA)));
+  const angleB = Math.acos(Math.max(-1, Math.min(1, cosB)));
+  const bearing = getBearing(aCenter, bCenter);
+  const pts = [];
+  const stepsA = 20;
+  for (let i = 0; i <= stepsA; i++) {
+    const ang = bearing - angleA + (2 * angleA * i / stepsA);
+    pts.push(destinationPoint(aCenter, R, ang));
+  }
+  const stepsB = 20;
+  for (let i = 0; i <= stepsB; i++) {
+    const ang = (bearing + Math.PI) + angleB - (2 * angleB * i / stepsB);
+    pts.push(destinationPoint(bCenter, r, ang));
+  }
+  return pts;
+}
+
+function getBearing(from, to) {
+  const dLng = (to.lng - from.lng) * Math.PI / 180;
+  const lat1 = from.lat * Math.PI / 180, lat2 = to.lat * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return Math.atan2(y, x);
+}
+
+function destinationPoint(origin, distMeters, bearing) {
+  const R = 6371000;
+  const lat1 = origin.lat * Math.PI / 180;
+  const lng1 = origin.lng * Math.PI / 180;
+  const d = distMeters / R;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(bearing));
+  const lng2 = lng1 + Math.atan2(Math.sin(bearing) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return [lat2 * 180 / Math.PI, lng2 * 180 / Math.PI];
 }
 
 function hideEmptyState() {

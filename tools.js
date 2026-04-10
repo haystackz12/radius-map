@@ -174,6 +174,7 @@ function pinCurrent() {
   }).addTo(map);
   pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, layer, labelMarker });
   renderPinList();
+  computeOverlaps();
   setStatus('Pinned: ' + label, 'success');
 }
 
@@ -184,6 +185,7 @@ function removePin(id) {
   if (pins[i].labelMarker) map.removeLayer(pins[i].labelMarker);
   pins.splice(i, 1);
   renderPinList();
+  computeOverlaps();
 }
 
 function renderPinList() {
