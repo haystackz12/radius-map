@@ -224,11 +224,12 @@ function buildCircleGeoJSON(lat, lng, radiusM, steps) {
 function printMap() {
   const token = window.MAPBOX_TOKEN;
   if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
+  const pin = `pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`;
   const geojson = encodeURIComponent(JSON.stringify(buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters())));
-  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/geojson(${geojson})/auto/1200x800?access_token=${token}`;
+  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pin},geojson(${geojson})/auto/1200x800?access_token=${token}`;
   const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}body{margin:0}img{width:100%;height:100vh;object-fit:contain}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=\\'padding:40px;font-family:sans-serif\\'>Print failed — try Save as PNG instead.</p>'"></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=\\'padding:40px;font-family:sans-serif\\'>Print failed — try Save as PNG instead.</p>'"></body></html>`);
   w.document.close();
   setStatus('Print dialog opened', 'success');
 }
