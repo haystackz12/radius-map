@@ -37,6 +37,7 @@ let overlapLayers = [];
 let secondCircle = null;
 let concentricActive = false;
 let currentLocationLabel = '';
+let userHasSearched = false;
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -45,6 +46,7 @@ async function detectLocation() {
       if (!navigator.geolocation) return reject(new Error('not supported'));
       navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
     });
+    if (userHasSearched) return;
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
     setStatus('Location detected', 'success');
@@ -52,7 +54,7 @@ async function detectLocation() {
     try {
       const resp = await fetch('https://ipapi.co/json/');
       const data = await resp.json();
-      if (data.latitude && data.longitude) {
+      if (data.latitude && data.longitude && !userHasSearched) {
         currentLat = data.latitude;
         currentLng = data.longitude;
         setStatus('Approximate location detected — search an address for precision', 'success');
@@ -63,6 +65,7 @@ async function detectLocation() {
       setStatus('Using default location', '');
     }
   }
+  if (userHasSearched) return;
   locationResolved = true;
   hideEmptyState();
   map.setView([currentLat, currentLng], 11);
@@ -78,6 +81,7 @@ function initMap(skipInitialDraw) {
   map.on('click', function(e) {
     if (distanceModeActive) { handleDistanceClick(e.latlng); return; }
     if (!clickModeActive) return;
+    userHasSearched = true;
     currentLat = e.latlng.lat;
     currentLng = e.latlng.lng;
     drawCircle();
@@ -262,6 +266,7 @@ function setStatus(msg, type = '') {
 }
 
 function applyResult(r) {
+  userHasSearched = true;
   currentLat = parseFloat(r.lat);
   currentLng = parseFloat(r.lon);
   const addr = formatAddress(r.address, r.display_name);

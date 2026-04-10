@@ -11,6 +11,7 @@ async function searchAddress() {
   const coords = tryParseCoords(query);
   if (coords) {
     saveRecentSearch(query);
+    userHasSearched = true;
     currentLat = coords.lat; currentLng = coords.lng;
     document.getElementById('address-input').value = `${coords.lat}, ${coords.lng}`;
     document.getElementById('suggestions').style.display = 'none';
