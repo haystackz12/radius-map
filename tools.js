@@ -76,8 +76,11 @@ function clearDistance() {
   distancePoints = [];
 }
 
+let distanceModeActivatedAt = 0;
+
 function toggleDistanceMode() {
   distanceModeActive = !distanceModeActive;
+  if (distanceModeActive) distanceModeActivatedAt = Date.now();
   if (distanceModeActive && clickModeActive) toggleClickMode();
   const btn = document.getElementById('distance-mode-btn');
   if (btn) btn.classList.toggle('active', distanceModeActive);
@@ -88,6 +91,8 @@ function toggleDistanceMode() {
 }
 
 function handleDistanceClick(latlng) {
+  // Ignore clicks within 400ms of activation — prevents the button click from registering as first point
+  if (Date.now() - distanceModeActivatedAt < 400) return;
   if (distancePoints.length >= 2) clearDistance();
   distancePoints.push(latlng);
   const dotIcon = L.divIcon({
