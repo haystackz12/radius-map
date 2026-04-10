@@ -278,9 +278,9 @@ kbd {
   .drawer-handle, .modal-overlay, .empty-state,
   .leaflet-control-zoom, .map-style-badge, .location-breadcrumb,
   .onboard-overlay, .toast { display: none !important; }
-  body { overflow: visible !important; height: auto !important; }
-  .layout { display: block !important; overflow: visible !important; }
-  #map { width: 100vw !important; height: 90vh !important; position: relative !important; }
+  html, body { height: 100% !important; overflow: visible !important; }
+  .layout { display: block !important; overflow: visible !important; height: 100% !important; }
+  #map { width: 100% !important; height: 85vh !important; position: relative !important; }
   .print-footer { display: block !important; }
 }
 

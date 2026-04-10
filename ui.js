@@ -151,12 +151,16 @@ function printMap() {
     const area = document.getElementById('stat-area-mi').textContent + ' mi² / ' + document.getElementById('stat-area-km').textContent + ' km²';
     footer.innerHTML = `<strong>${addr}</strong> · Radius: ${radius} · Area: ${area} · ${new Date().toLocaleDateString()}`;
   }
+  if (circle) map.fitBounds(circle.getBounds(), { padding: [20, 20], animate: false });
   map.invalidateSize();
-  setTimeout(() => window.print(), 200);
+  setTimeout(() => window.print(), 800);
 }
 
 window.onbeforeprint = function() {
-  if (map) map.invalidateSize();
+  if (map) {
+    map.invalidateSize();
+    if (circle) map.fitBounds(circle.getBounds(), { padding: [20, 20], animate: false });
+  }
 };
 
 function toggleTheme() {
