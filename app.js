@@ -133,7 +133,7 @@ function buildPresets() {
   const row = document.getElementById('preset-row');
   if (!row) return;
   row.innerHTML = '';
-  const presets = currentUnit === 'ft' ? [250, 500, 1000, 2640, 5280] : PRESETS_MI;
+  const presets = currentUnit === 'ft' ? [500, 1000, 2640, 5280, 26400] : PRESETS_MI;
   presets.forEach(base => {
     const val = currentUnit === 'mi' ? base : (currentUnit === 'ft' ? base : +(base * 1.60934).toFixed(1));
     const btn = document.createElement('button');
@@ -189,7 +189,7 @@ function setUnit(u) {
   if (u === currentUnit) return;
   const converted = convertRadius(currentUnit, u, cur);
   currentUnit = u;
-  const ranges = { mi: { max: 50, step: 0.1 }, km: { max: 80, step: 0.1 }, ft: { max: 5280, step: 10 } };
+  const ranges = { mi: { max: 50, step: 0.1 }, km: { max: 80, step: 0.1 }, ft: { max: 26400, step: 10 } };
   slider.max = ranges[u].max;
   slider.step = ranges[u].step;
   slider.min = u === 'ft' ? 100 : 0.1;
@@ -365,7 +365,7 @@ function restoreFromURL() {
   if (unit === 'km' || unit === 'mi' || unit === 'ft') {
     currentUnit = unit;
     document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === unit));
-    const ranges = { mi: { max: 50, step: 0.1, min: 0.1 }, km: { max: 80, step: 0.1, min: 0.1 }, ft: { max: 5280, step: 10, min: 100 } };
+    const ranges = { mi: { max: 50, step: 0.1, min: 0.1 }, km: { max: 80, step: 0.1, min: 0.1 }, ft: { max: 26400, step: 10, min: 100 } };
     document.getElementById('radius-slider').max = ranges[unit].max;
     document.getElementById('radius-slider').step = ranges[unit].step;
     document.getElementById('radius-slider').min = ranges[unit].min;
