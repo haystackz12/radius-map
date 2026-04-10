@@ -130,25 +130,6 @@ function drawCircle() {
   fetchElevation(currentLat, currentLng);
 }
 
-async function fetchElevation(lat, lng) {
-  const el = document.getElementById('elevation-box');
-  if (!el) return;
-  el.innerHTML = 'Elevation: <i style="color:var(--accent)">loading…</i>';
-  try {
-    const resp = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
-    const data = await resp.json();
-    if (data.results && data.results[0] && data.results[0].elevation != null) {
-      const m = data.results[0].elevation;
-      const ft = Math.round(m * 3.28084);
-      el.innerHTML = `Elevation: <b style="color:var(--text)">${ft.toLocaleString()} ft</b> / <b style="color:var(--text)">${Math.round(m).toLocaleString()} m</b>`;
-    } else {
-      el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
-    }
-  } catch {
-    el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
-  }
-}
-
 function buildPresets() {
   const row = document.getElementById('preset-row');
   if (!row) return;
@@ -281,42 +262,6 @@ function setStatus(msg, type = '') {
   el.className = 'status-bar ' + type;
 }
 
-function getRecentSearches() {
-  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
-}
-
-function saveRecentSearch(query) {
-  let recent = getRecentSearches().filter(q => q !== query);
-  recent.unshift(query);
-  if (recent.length > 8) recent = recent.slice(0, 8);
-  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
-}
-
-function showRecentSearches() {
-  const recent = getRecentSearches();
-  if (!recent.length) return;
-  const box = document.getElementById('suggestions');
-  box.innerHTML = '';
-  const header = document.createElement('div');
-  header.className = 'recent-header';
-  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
-  box.appendChild(header);
-  recent.forEach(q => {
-    const item = document.createElement('div');
-    item.className = 'suggestion-item';
-    item.textContent = q;
-    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
-    box.appendChild(item);
-  });
-  box.style.display = 'block';
-}
-
-function clearRecentSearches(e) {
-  e.stopPropagation();
-  localStorage.removeItem('rm_recent_searches');
-  document.getElementById('suggestions').style.display = 'none';
-}
-
 async function searchAddress() {
   const query = document.getElementById('address-input').value.trim();
   if (!query) return;
@@ -341,38 +286,6 @@ async function searchAddress() {
     document.getElementById('search-icon').style.display = 'block';
     document.getElementById('spinner').style.display = 'none';
   }
-}
-
-async function reverseGeocode(lat, lng) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
-    const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-    const data = await resp.json();
-    if (data && data.display_name) {
-      document.getElementById('address-input').value = data.display_name.split(',').slice(0,3).join(',');
-      setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
-      updateBreadcrumb(data.address);
-    }
-  } catch {}
-}
-
-function updateBreadcrumb(address) {
-  let label = '';
-  if (address) {
-    const city = address.city || address.town || address.village || address.hamlet || '';
-    const state = address.state || address.region || '';
-    label = [city, state].filter(Boolean).join(', ');
-  }
-  currentLocationLabel = label;
-  let el = document.getElementById('location-breadcrumb');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'location-breadcrumb';
-    el.className = 'location-breadcrumb';
-    document.getElementById('map').appendChild(el);
-  }
-  if (label) { el.textContent = label; el.style.display = 'block'; }
-  else { el.style.display = 'none'; }
 }
 
 function hideEmptyState() {

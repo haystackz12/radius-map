@@ -198,6 +198,93 @@ function destinationPoint(origin, distM, bearing) {
   return [lat2 * 180 / Math.PI, lng2 * 180 / Math.PI];
 }
 
+async function fetchElevation(lat, lng) {
+  const el = document.getElementById('elevation-box');
+  if (!el) return;
+  el.innerHTML = 'Elevation: <i style="color:var(--accent)">loading…</i>';
+  try {
+    const resp = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
+    const data = await resp.json();
+    if (data.results && data.results[0] && data.results[0].elevation != null) {
+      const m = data.results[0].elevation;
+      const ft = Math.round(m * 3.28084);
+      el.innerHTML = `Elevation: <b style="color:var(--text)">${ft.toLocaleString()} ft</b> / <b style="color:var(--text)">${Math.round(m).toLocaleString()} m</b>`;
+    } else {
+      el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
+    }
+  } catch {
+    el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
+  }
+}
+
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await resp.json();
+    if (data && data.display_name) {
+      document.getElementById('address-input').value = data.display_name.split(',').slice(0,3).join(',');
+      setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
+      updateBreadcrumb(data.address);
+    }
+  } catch {}
+}
+
+function updateBreadcrumb(address) {
+  let label = '';
+  if (address) {
+    const city = address.city || address.town || address.village || address.hamlet || '';
+    const state = address.state || address.region || '';
+    label = [city, state].filter(Boolean).join(', ');
+  }
+  currentLocationLabel = label;
+  let el = document.getElementById('location-breadcrumb');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'location-breadcrumb';
+    el.className = 'location-breadcrumb';
+    document.getElementById('map').appendChild(el);
+  }
+  if (label) { el.textContent = label; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function getRecentSearches() {
+  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
+}
+
+function saveRecentSearch(query) {
+  let recent = getRecentSearches().filter(q => q !== query);
+  recent.unshift(query);
+  if (recent.length > 8) recent = recent.slice(0, 8);
+  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
+}
+
+function showRecentSearches() {
+  const recent = getRecentSearches();
+  if (!recent.length) return;
+  const box = document.getElementById('suggestions');
+  box.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'recent-header';
+  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
+  box.appendChild(header);
+  recent.forEach(q => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.textContent = q;
+    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function clearRecentSearches(e) {
+  e.stopPropagation();
+  localStorage.removeItem('rm_recent_searches');
+  document.getElementById('suggestions').style.display = 'none';
+}
+
 function copyEmbed() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const shareUrl = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
@@ -282,109 +369,3 @@ function renderPinList() {
   });
 }
 
-function toggleSection(name) {
-  const section = document.querySelector(`[data-section="${name}"]`);
-  if (!section) return;
-  section.classList.toggle('collapsed');
-  let collapsed = {};
-  try { collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}'); } catch {}
-  collapsed[name] = section.classList.contains('collapsed');
-  localStorage.setItem('rm_collapsed', JSON.stringify(collapsed));
-}
-
-function restoreCollapsed() {
-  try {
-    const collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}');
-    Object.keys(collapsed).forEach(name => {
-      if (collapsed[name]) {
-        const section = document.querySelector(`[data-section="${name}"]`);
-        if (section) section.classList.add('collapsed');
-      }
-    });
-  } catch {}
-}
-
-function fitCircle() {
-  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
-}
-
-function startOnboarding() {
-  if (localStorage.getItem('rm_onboarded')) return;
-  const steps = [
-    { target: '.header-search', title: 'Search an address', text: 'Type any address, city, or place to center the map.' },
-    { target: '#radius-slider', title: 'Set your radius', text: 'Drag the slider or pick a preset to adjust the circle size.' },
-    { target: '.gear-btn[aria-label="Settings"]', title: 'Explore the tools', text: 'Open Settings to pin locations, change colors, and export your map.' }
-  ];
-  let step = 0;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'onboard-overlay';
-  document.body.appendChild(overlay);
-
-  function show() {
-    overlay.innerHTML = '';
-    if (step >= steps.length) { finish(); return; }
-    const s = steps[step];
-    const el = document.querySelector(s.target);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    const card = document.createElement('div');
-    card.className = 'onboard-card';
-    card.innerHTML = `<div class="onboard-step">Step ${step + 1} of ${steps.length}</div>` +
-      `<h3>${s.title}</h3><p>${s.text}</p>` +
-      `<div class="onboard-actions">` +
-      `<button class="onboard-skip">Skip</button>` +
-      `<button class="onboard-next">${step < steps.length - 1 ? 'Next' : 'Done'}</button></div>`;
-    card.querySelector('.onboard-skip').onclick = finish;
-    card.querySelector('.onboard-next').onclick = () => { step++; show(); };
-    overlay.appendChild(card);
-  }
-
-  function finish() {
-    localStorage.setItem('rm_onboarded', 'true');
-    overlay.remove();
-  }
-
-  show();
-}
-
-document.addEventListener('keydown', function(e) {
-  const tag = (e.target.tagName || '').toLowerCase();
-  const inInput = tag === 'input' || tag === 'textarea';
-
-  if (e.key === 'Escape') {
-    if (document.getElementById('help-overlay').classList.contains('open')) toggleHelp();
-    else if (document.getElementById('modal-overlay').classList.contains('open')) toggleModal();
-    return;
-  }
-
-  if (inInput) return;
-
-  if (e.key === '?' || e.key === '/') { e.preventDefault(); toggleHelp(); return; }
-  if (e.key === '+' || e.key === '=') {
-    e.preventDefault();
-    const slider = document.getElementById('radius-slider');
-    slider.value = Math.min(parseFloat(slider.max), parseFloat(slider.value) + 1);
-    drawCircle();
-    return;
-  }
-  if (e.key === '-') {
-    e.preventDefault();
-    const slider = document.getElementById('radius-slider');
-    slider.value = Math.max(parseFloat(slider.min), parseFloat(slider.value) - 1);
-    drawCircle();
-    return;
-  }
-});
-
-/* --- Init --- */
-buildColorOptions();
-restoreFromURL();
-buildPresets();
-restoreCollapsed();
-
-const urlParams = new URLSearchParams(location.search);
-const willDetect = !urlParams.has('lat');
-initMap(willDetect);
-if (willDetect) detectLocation();
-setTimeout(startOnboarding, 800);

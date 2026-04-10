@@ -6,7 +6,8 @@
     { "src": "app.js", "use": "@vercel/static" },
     { "src": "components.css", "use": "@vercel/static" },
     { "src": "tools.js", "use": "@vercel/static" },
-    { "src": "features.css", "use": "@vercel/static" }
+    { "src": "features.css", "use": "@vercel/static" },
+    { "src": "ui.js", "use": "@vercel/static" }
   ],
   "routes": [
     { "handle": "filesystem" },
