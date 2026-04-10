@@ -170,7 +170,16 @@ document.getElementById('search-btn').addEventListener('click', () => searchAddr
 document.getElementById('search-clear').addEventListener('click', () => { clearSearchInput(); document.getElementById('search-clear').style.display = 'none'; });
 
 /* ── Global click: close suggestions + popovers ── */
-document.addEventListener('click', e => {
+document.addEventListener('click', function(e) {
+  let el = e.target;
+  const path = [];
+  while (el) {
+    path.push(el.tagName + (el.id ? '#'+el.id : '') + (el.className ? '.'+el.className : ''));
+    el = el.parentElement;
+  }
+  console.log('[CLICK PATH]', path.join(' → '));
+  console.log('[keep-open match]', !!e.target.closest('[data-keep-open]'));
+
   if (!e.target.closest('#suggestions') && !e.target.closest('[data-keep-open]')) document.getElementById('suggestions').style.display = 'none';
   if (e.target.closest('[data-keep-open]') || e.target.closest('#stats-hud')) return;
   closeAll();
