@@ -344,17 +344,55 @@ if (isPrintMode) {
   document.querySelector('header').style.display = 'none';
   document.querySelector('.panel').style.display = 'none';
   document.querySelector('.layout').style.display = 'block';
-  document.getElementById('map').style.width = '100vw';
-  document.getElementById('map').style.height = '100vh';
+  const mapEl = document.getElementById('map');
+  mapEl.style.width = '100vw';
+  mapEl.style.height = '100vh';
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) emptyState.style.display = 'none';
+
+  const msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:var(--surface);color:var(--text);padding:16px 28px;border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+  msg.textContent = 'Preparing print…';
+  document.body.appendChild(msg);
+
   const printColor = decodeURIComponent(urlParams.get('color') || '#4f8ef7');
-  const printZoom = parseInt(urlParams.get('zoom') || '11');
   currentColor = printColor;
   restoreFromURL();
-  initMap(false);
-  map.setView([currentLat, currentLng], printZoom, { animate: false });
+
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 4, { animate: false });
+  setTileLayer('street');
+
+  const radiusM = getRadiusMeters();
+  circle = L.circle([currentLat, currentLng], {
+    radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
+    fillColor: currentColor, fillOpacity: currentOpacity
+  }).addTo(map);
+
+  const zoom = map.getBoundsZoom(circle.getBounds(), false, [60, 60]);
+  map.setView([currentLat, currentLng], zoom, { animate: false });
   map.invalidateSize();
-  setTimeout(function() { map.invalidateSize(); drawCircle(); }, 500);
-  setTimeout(function() { window.print(); }, 1500);
+
+  let tilesReady = false, mapLoaded = false, printed = false;
+  function tryPrint() {
+    if (!tilesReady || !mapLoaded || printed) return;
+    printed = true;
+    setTimeout(function() {
+      msg.remove();
+      const badge = document.getElementById('map-style-badge');
+      if (badge) badge.style.display = 'none';
+      const breadcrumb = document.getElementById('location-breadcrumb');
+      if (breadcrumb) breadcrumb.style.display = 'none';
+      window.print();
+    }, 1000);
+  }
+  map.on('load', function() { mapLoaded = true; tryPrint(); });
+  map.whenReady(function() { mapLoaded = true; tryPrint(); });
+  let tileTimer;
+  map.on('tileload', function() {
+    clearTimeout(tileTimer);
+    tileTimer = setTimeout(function() { tilesReady = true; tryPrint(); }, 500);
+  });
+  setTimeout(function() { tilesReady = true; mapLoaded = true; tryPrint(); }, 5000);
 } else {
   initMap(willDetect);
   if (willDetect) detectLocation();
