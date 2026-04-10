@@ -265,9 +265,46 @@ function setStatus(msg, type = '') {
   el.className = 'status-bar ' + type;
 }
 
+function getRecentSearches() {
+  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
+}
+
+function saveRecentSearch(query) {
+  let recent = getRecentSearches().filter(q => q !== query);
+  recent.unshift(query);
+  if (recent.length > 8) recent = recent.slice(0, 8);
+  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
+}
+
+function showRecentSearches() {
+  const recent = getRecentSearches();
+  if (!recent.length) return;
+  const box = document.getElementById('suggestions');
+  box.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'recent-header';
+  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
+  box.appendChild(header);
+  recent.forEach(q => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.textContent = q;
+    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function clearRecentSearches(e) {
+  e.stopPropagation();
+  localStorage.removeItem('rm_recent_searches');
+  document.getElementById('suggestions').style.display = 'none';
+}
+
 async function searchAddress() {
   const query = document.getElementById('address-input').value.trim();
   if (!query) return;
+  saveRecentSearch(query);
   setStatus('Searching…', 'loading');
   document.getElementById('search-icon').style.display = 'none';
   document.getElementById('spinner').style.display = 'block';
@@ -360,7 +397,11 @@ document.getElementById('opacity-slider').addEventListener('input', function() {
 });
 
 document.getElementById('address-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') searchAddress();
+  if (e.key === 'Enter') { document.getElementById('suggestions').style.display = 'none'; searchAddress(); }
+});
+
+document.getElementById('address-input').addEventListener('focus', function() {
+  if (!this.value.trim()) showRecentSearches();
 });
 
 document.getElementById('address-input').addEventListener('input', function() {
