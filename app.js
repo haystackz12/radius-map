@@ -125,6 +125,26 @@ function drawCircle() {
 
   updateStats();
   updatePresetActive();
+  fetchElevation(currentLat, currentLng);
+}
+
+async function fetchElevation(lat, lng) {
+  const el = document.getElementById('elevation-box');
+  if (!el) return;
+  el.innerHTML = 'Elevation: <i style="color:var(--accent)">loading…</i>';
+  try {
+    const resp = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
+    const data = await resp.json();
+    if (data.results && data.results[0] && data.results[0].elevation != null) {
+      const m = data.results[0].elevation;
+      const ft = Math.round(m * 3.28084);
+      el.innerHTML = `Elevation: <b style="color:var(--text)">${ft.toLocaleString()} ft</b> / <b style="color:var(--text)">${Math.round(m).toLocaleString()} m</b>`;
+    } else {
+      el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
+    }
+  } catch {
+    el.innerHTML = 'Elevation: <span style="color:var(--muted)">Unavailable</span>';
+  }
 }
 
 function buildPresets() {
