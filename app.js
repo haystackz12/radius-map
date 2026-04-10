@@ -341,6 +341,15 @@ function toggleClickMode() {
   else setStatus('', '');
 }
 
+function toggleModal() {
+  document.getElementById('modal-overlay').classList.toggle('open');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + name));
+}
+
 function toggleDrawer() {
   document.querySelector('.panel').classList.toggle('open');
 }
