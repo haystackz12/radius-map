@@ -334,9 +334,9 @@ function pinCurrent() {
   const labelMarker = L.marker([currentLat, currentLng], {
     icon: L.divIcon({
       className: '',
-      html: `<div class="pin-map-label">${name}</div>`,
-      iconSize: [140, 20],
-      iconAnchor: [70, -10]
+      html: `<div class="pin-map-label" style="transform:translateX(-50%)">${name}</div>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, -14]
     })
   }).addTo(map);
   pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker });
