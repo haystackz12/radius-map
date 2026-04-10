@@ -244,6 +244,35 @@ function startOnboarding() {
   show();
 }
 
+document.addEventListener('keydown', function(e) {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const inInput = tag === 'input' || tag === 'textarea';
+
+  if (e.key === 'Escape') {
+    if (document.getElementById('help-overlay').classList.contains('open')) toggleHelp();
+    else if (document.getElementById('modal-overlay').classList.contains('open')) toggleModal();
+    return;
+  }
+
+  if (inInput) return;
+
+  if (e.key === '?' || e.key === '/') { e.preventDefault(); toggleHelp(); return; }
+  if (e.key === '+' || e.key === '=') {
+    e.preventDefault();
+    const slider = document.getElementById('radius-slider');
+    slider.value = Math.min(parseFloat(slider.max), parseFloat(slider.value) + 1);
+    drawCircle();
+    return;
+  }
+  if (e.key === '-') {
+    e.preventDefault();
+    const slider = document.getElementById('radius-slider');
+    slider.value = Math.max(parseFloat(slider.min), parseFloat(slider.value) - 1);
+    drawCircle();
+    return;
+  }
+});
+
 /* --- Init --- */
 buildColorOptions();
 restoreFromURL();
