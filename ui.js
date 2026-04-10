@@ -68,7 +68,8 @@ function radiusPopoverHTML() {
   const hasRing2 = concentricActive;
   const r2 = parseFloat(document.getElementById('radius-slider-2').value);
   const ring2Sec = hasRing2 ? `<div class="ring2-box"><div class="ring2-label">2nd Ring · ${u === 'ft' ? Math.round(r2) : r2.toFixed(1)} ${u}</div><input class="pop-slider" id="ring2-slider" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r2}"></div>` : '';
-  return `<div class="pop-title">Radius</div><div class="pop-bignum" id="pop-bignum">${u === 'ft' ? Math.round(r) : r.toFixed(1)}</div><div class="pop-unit-sub">${u}</div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
+  const displayVal = u === 'ft' ? Math.round(r) : r.toFixed(1);
+  return `<div class="pop-title">Radius</div><div class="radius-input-row"><div class="pop-bignum" id="pop-bignum">${displayVal}</div><input class="radius-text-input" id="radius-text-input" type="number" value="${displayVal}" min="${minR}" max="${maxR}" step="${step}" title="Type exact radius"></div><div class="pop-unit-sub">${u}</div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
 }
 
 function toolsPopoverHTML() {
@@ -118,8 +119,39 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
   if (act.dataset.action === 'fit') fitCircle();
 });
 document.getElementById('pop-radius').addEventListener('input', function(e) {
-  if (e.target.id === 'radius-slider-new') { document.getElementById('radius-slider').value = e.target.value; drawCircle(); updateHUD(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1); }
+  if (e.target.id === 'radius-slider-new') {
+    document.getElementById('radius-slider').value = e.target.value;
+    drawCircle(); updateHUD();
+    const bn = document.getElementById('pop-bignum');
+    if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1);
+    const ti = document.getElementById('radius-text-input');
+    if (ti) ti.value = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1);
+  }
   if (e.target.id === 'ring2-slider') { document.getElementById('radius-slider-2').value = e.target.value; drawSecondCircle(); updateHUD(); }
+});
+
+document.getElementById('pop-radius').addEventListener('change', function(e) {
+  if (e.target.id !== 'radius-text-input') return;
+  const input = e.target;
+  const val = parseFloat(input.value);
+  const min = parseFloat(input.min);
+  const max = parseFloat(input.max);
+  if (isNaN(val) || val < min || val > max) {
+    input.classList.add('input-flash-error');
+    setTimeout(() => input.classList.remove('input-flash-error'), 600);
+    input.value = currentUnit === 'ft' ? Math.round(parseFloat(document.getElementById('radius-slider').value)) : parseFloat(document.getElementById('radius-slider').value).toFixed(1);
+    return;
+  }
+  document.getElementById('radius-slider').value = val;
+  const sliderNew = document.getElementById('radius-slider-new');
+  if (sliderNew) sliderNew.value = val;
+  const bn = document.getElementById('pop-bignum');
+  if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(val) : val.toFixed(1);
+  drawCircle(); updateHUD();
+});
+
+document.getElementById('pop-radius').addEventListener('keydown', function(e) {
+  if (e.target.id === 'radius-text-input' && e.key === 'Enter') { e.target.blur(); }
 });
 
 document.getElementById('pop-tools').addEventListener('click', function(e) {
