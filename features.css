@@ -257,32 +257,6 @@ kbd {
   cursor: pointer;
 }
 
-.print-footer {
-  display: none;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255,255,255,0.95);
-  color: #1a1a2e;
-  padding: 8px 16px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  z-index: 600;
-}
-
-@media print {
-  header { display: none !important; }
-  .panel { display: none !important; }
-  .drawer-handle, .modal-overlay, .empty-state,
-  .leaflet-control-zoom, .map-style-badge, .location-breadcrumb,
-  .onboard-overlay, .toast { display: none !important; }
-  html, body { height: 100% !important; overflow: visible !important; }
-  .layout { display: block !important; overflow: visible !important; height: 100% !important; }
-  #map { width: 100% !important; height: 85vh !important; position: relative !important; }
-  .print-footer { display: block !important; }
-}
-
 .distance-label {
   background: var(--surface);
   color: var(--text);

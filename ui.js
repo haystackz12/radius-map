@@ -144,24 +144,40 @@ function toggleConcentric() {
 }
 
 function printMap() {
-  const footer = document.getElementById('print-footer');
-  if (footer) {
-    const addr = document.getElementById('address-input').value || 'No address';
-    const radius = document.getElementById('stat-radius').textContent;
-    const area = document.getElementById('stat-area-mi').textContent + ' mi² / ' + document.getElementById('stat-area-km').textContent + ' km²';
-    footer.innerHTML = `<strong>${addr}</strong> · Radius: ${radius} · Area: ${area} · ${new Date().toLocaleDateString()}`;
-  }
-  if (circle) map.fitBounds(circle.getBounds(), { padding: [20, 20], animate: false });
+  setStatus('Preparing print view…', 'loading');
   map.invalidateSize();
-  setTimeout(() => window.print(), 800);
+  setTimeout(function() {
+    if (typeof leafletImage !== 'undefined') {
+      leafletImage(map, function(err, canvas) {
+        if (!err && canvas) {
+          try { canvas.toDataURL(); openPrintTab(canvas); return; } catch {}
+        }
+        printFallback();
+      });
+    } else {
+      printFallback();
+    }
+  }, 100);
 }
 
-window.onbeforeprint = function() {
-  if (map) {
-    map.invalidateSize();
-    if (circle) map.fitBounds(circle.getBounds(), { padding: [20, 20], animate: false });
-  }
-};
+function printFallback() {
+  if (typeof html2canvas === 'undefined') { setStatus('Print unavailable — export libraries not loaded', 'error'); return; }
+  html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
+    .then(canvas => openPrintTab(canvas))
+    .catch(() => setStatus('Print failed — try Save as PNG instead', 'error'));
+}
+
+function openPrintTab(canvas) {
+  const addr = document.getElementById('address-input').value || 'Radius Map';
+  const radius = document.getElementById('stat-radius').textContent;
+  const dataUrl = canvas.toDataURL('image/png');
+  const w = window.open('');
+  if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
+  w.document.write(`<html><head><title>Print — ${addr}</title><style>body{margin:0;text-align:center;font-family:sans-serif}img{max-width:100%;height:auto}p{margin:8px;font-size:12px;color:#666}</style></head><body><img src="${dataUrl}"><p>${addr} · Radius: ${radius} · ${new Date().toLocaleDateString()}</p></body></html>`);
+  w.document.close();
+  w.onload = function() { w.print(); };
+  setStatus('Print view opened', 'success');
+}
 
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
