@@ -129,7 +129,17 @@ function toggleConcentric() {
   if (wrap) wrap.style.display = concentricActive ? 'block' : 'none';
   if (btn) btn.classList.toggle('active', concentricActive);
   if (!concentricActive && secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
-  if (concentricActive) drawSecondCircle();
+  if (concentricActive) {
+    const primaryVal = parseFloat(document.getElementById('radius-slider').value);
+    const slider2 = document.getElementById('radius-slider-2');
+    if (slider2) {
+      slider2.max = document.getElementById('radius-slider').max;
+      slider2.step = document.getElementById('radius-slider').step;
+      slider2.min = document.getElementById('radius-slider').min;
+      slider2.value = currentUnit === 'ft' ? Math.round(primaryVal * 0.5) : (primaryVal * 0.5).toFixed(1);
+    }
+    drawSecondCircle();
+  }
   updateSecondStats();
 }
 
@@ -174,7 +184,12 @@ restoreTheme();
 
 document.addEventListener('DOMContentLoaded', function() {
   const slider2 = document.getElementById('radius-slider-2');
-  if (slider2) slider2.addEventListener('input', function() { drawSecondCircle(); });
+  if (slider2) {
+    slider2.addEventListener('input', function(e) {
+      e.stopPropagation();
+      drawSecondCircle();
+    });
+  }
 });
 buildColorOptions();
 restoreFromURL();
