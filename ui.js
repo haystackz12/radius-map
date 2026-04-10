@@ -205,14 +205,32 @@ function toggleConcentric() {
 }
 
 function printMap() {
-  const val = parseFloat(document.getElementById('radius-slider').value);
-  const zoom = map.getZoom();
-  const color = encodeURIComponent(currentColor);
-  const addr = encodeURIComponent(document.getElementById('address-input').value || '');
-  const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}&zoom=${zoom}&color=${color}&addr=${addr}&print=1`;
-  const w = window.open(url, '_blank');
+  setStatus('Preparing print…', 'loading');
+  map.invalidateSize();
+  setTimeout(function() {
+    if (typeof leafletImage !== 'undefined') {
+      leafletImage(map, function(err, canvas) {
+        if (!err && canvas) { try { canvas.toDataURL(); openPrintWindow(canvas); return; } catch {} }
+        printViaHtml2canvas();
+      });
+    } else { printViaHtml2canvas(); }
+  }, 100);
+}
+
+function printViaHtml2canvas() {
+  if (typeof html2canvas === 'undefined') { setStatus('Print unavailable — libraries not loaded', 'error'); return; }
+  html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
+    .then(function(canvas) { openPrintWindow(canvas); })
+    .catch(function() { setStatus('Print failed', 'error'); });
+}
+
+function openPrintWindow(canvas) {
+  const dataUrl = canvas.toDataURL('image/png');
+  const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  setStatus('Print view opened', 'success');
+  w.document.write('<!DOCTYPE html><html><head><title>Print Map</title><style>@page{size:landscape;margin:0}body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="' + dataUrl + '" onload="window.print();window.close()"></body></html>');
+  w.document.close();
+  setStatus('Print dialog opened', 'success');
 }
 
 function getRecentSearches() {
@@ -337,72 +355,7 @@ buildPresets();
 restoreCollapsed();
 
 const urlParams = new URLSearchParams(location.search);
-const isPrintMode = urlParams.get('print') === '1';
-const willDetect = !urlParams.has('lat') && !isPrintMode;
-
-if (isPrintMode) {
-  document.querySelector('header').style.display = 'none';
-  document.querySelector('.panel').style.display = 'none';
-  document.querySelector('.layout').style.display = 'block';
-  const mapEl = document.getElementById('map');
-  mapEl.style.width = '100vw';
-  mapEl.style.height = '100vh';
-  const emptyState = document.getElementById('empty-state');
-  if (emptyState) emptyState.style.display = 'none';
-
-  const msg = document.createElement('div');
-  msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:var(--surface);color:var(--text);padding:16px 28px;border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
-  msg.textContent = 'Preparing print…';
-  document.body.appendChild(msg);
-
-  const printColor = decodeURIComponent(urlParams.get('color') || '#4f8ef7');
-  currentColor = printColor;
-
-  const printLat = parseFloat(urlParams.get('lat'));
-  const printLng = parseFloat(urlParams.get('lng'));
-  const printR = parseFloat(urlParams.get('r'));
-  const printUnit = urlParams.get('unit') || 'mi';
-  if (!isNaN(printLat)) currentLat = printLat;
-  if (!isNaN(printLng)) currentLng = printLng;
-  currentUnit = printUnit;
-  const sliderEl = document.getElementById('radius-slider');
-  if (!isNaN(printR) && sliderEl) sliderEl.value = printR;
-
-  let radiusM;
-  if (printUnit === 'mi') radiusM = printR * 1609.344;
-  else if (printUnit === 'ft') radiusM = printR * 0.3048;
-  else radiusM = printR * 1000;
-
-  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 4, { animate: false });
-  setTileLayer('street');
-
-  circle = L.circle([currentLat, currentLng], {
-    radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
-    fillColor: currentColor, fillOpacity: currentOpacity
-  }).addTo(map);
-
-  const zoom = map.getBoundsZoom(circle.getBounds(), false, [60, 60]);
-  map.setView([currentLat, currentLng], zoom, { animate: false });
-  map.invalidateSize();
-
-  let tileTimer;
-  map.on('tileload', function() {
-    clearTimeout(tileTimer);
-    tileTimer = setTimeout(function() {
-      msg.remove();
-      const badge = document.getElementById('map-style-badge');
-      if (badge) badge.style.display = 'none';
-      const breadcrumb = document.getElementById('location-breadcrumb');
-      if (breadcrumb) breadcrumb.style.display = 'none';
-      setTimeout(function() { window.print(); window.close(); }, 800);
-    }, 500);
-  });
-  setTimeout(function() {
-    msg.remove();
-    window.print(); window.close();
-  }, 5000);
-} else {
-  initMap(willDetect);
-  if (willDetect) detectLocation();
-  setTimeout(startOnboarding, 800);
-}
+const willDetect = !urlParams.has('lat');
+initMap(willDetect);
+if (willDetect) detectLocation();
+setTimeout(startOnboarding, 800);
