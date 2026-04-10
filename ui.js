@@ -423,6 +423,13 @@ window.addEventListener('load', () => {
       setTimeout(() => splash.remove(), 500);
     }
   }, 1800);
+  // Force Leaflet attribution links to open in new tab
+  setTimeout(() => {
+    document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    });
+  }, 2000);
 });
 
 /* ── Init ── */
