@@ -21,8 +21,10 @@ async function searchAddress() {
   }
   saveRecentSearch(query);
   setStatus('Searching…', 'loading');
-  document.getElementById('search-icon').style.display = 'none';
-  document.getElementById('spinner').style.display = 'block';
+  const searchIcon = document.getElementById('search-icon');
+  const spinner = document.getElementById('spinner');
+  if (searchIcon) searchIcon.style.display = 'none';
+  if (spinner) spinner.style.display = 'block';
   document.getElementById('suggestions').style.display = 'none';
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=5`;
@@ -32,8 +34,10 @@ async function searchAddress() {
     if (data.length === 1) { applyResult(data[0]); } else { showSuggestions(data); }
   } catch { setStatus('Network error — check connection', 'error');
   } finally {
-    document.getElementById('search-icon').style.display = 'block';
-    document.getElementById('spinner').style.display = 'none';
+    const searchIcon = document.getElementById('search-icon');
+    const spinner = document.getElementById('spinner');
+    if (searchIcon) searchIcon.style.display = 'block';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -248,7 +252,8 @@ function generateQR() {
   container.innerHTML = '';
   container.style.display = 'block';
   new QRCode(container, { text: url, width: 160, height: 160, colorDark: '#f0f2ff', colorLight: '#1a1d27' });
-  document.getElementById('qr-download-btn').style.display = 'flex';
+  const dlBtn = document.getElementById('qr-download-btn');
+  if (dlBtn) dlBtn.style.display = 'flex';
   setStatus('QR code generated', 'success');
 }
 

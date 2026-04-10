@@ -18,6 +18,7 @@ const TILE_LAYERS = {
   dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: '© <a href="https://carto.com">CARTO</a>' }
 };
 let currentTileLayer;
+let currentTileName = 'street';
 
 let map, circle, marker;
 let currentLat = 39.5, currentLng = -98.35;
@@ -206,6 +207,7 @@ function setTileLayer(name) {
   if (!t) return;
   if (currentTileLayer) map.removeLayer(currentTileLayer);
   currentTileLayer = L.tileLayer(t.url, { attribution: t.attribution, maxZoom: 19, crossOrigin: true }).addTo(map);
+  currentTileName = name;
   document.querySelectorAll('.tile-btn').forEach(b => b.classList.toggle('active', b.dataset.tile === name));
   updateMapBadge(name);
 }
