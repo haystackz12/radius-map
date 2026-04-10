@@ -131,6 +131,15 @@ function drawCircle() {
   updateStats();
   updatePresetActive();
   fetchElevation(currentLat, currentLng);
+  debouncedFetchPopulation();
+}
+
+let _popTimer;
+function debouncedFetchPopulation() {
+  clearTimeout(_popTimer);
+  _popTimer = setTimeout(() => {
+    if (typeof fetchPopulation === 'function') fetchPopulation(currentLat, currentLng, getRadiusMeters());
+  }, 1500);
 }
 
 function buildPresets() {

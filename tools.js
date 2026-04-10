@@ -202,6 +202,53 @@ async function fetchElevation(lat, lng) {
   }
 }
 
+/* ── Population Estimate (WorldPop) ── */
+async function fetchPopulation(lat, lng, radiusM) {
+  const hudPop = document.getElementById('hud-pop');
+  if (hudPop) hudPop.textContent = '…';
+  try {
+    // Build 64-point circle polygon
+    const n = 64;
+    const coords = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * 2 * Math.PI;
+      coords.push([
+        lng + (radiusM * Math.sin(angle)) / (111320 * Math.cos(lat * Math.PI / 180)),
+        lat + (radiusM * Math.cos(angle)) / 111320
+      ]);
+    }
+    coords.push(coords[0]);
+    const geojson = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coords] } }] };
+    const resp = await fetch('https://api.worldpop.org/v1/services/stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataset: 'wpgppop', year: 2020, geojson })
+    });
+    const data = await resp.json();
+    if (data.status === 'finished' && data.data && data.data.total_population != null) {
+      const pop = Math.round(data.data.total_population);
+      if (hudPop) hudPop.textContent = pop.toLocaleString();
+      return pop;
+    }
+    // If async task, poll for result
+    if (data.taskid) {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const poll = await fetch(`https://api.worldpop.org/v1/tasks/${data.taskid}`);
+        const result = await poll.json();
+        if (result.status === 'finished' && result.data) {
+          const pop = Math.round(result.data.total_population);
+          if (hudPop) hudPop.textContent = pop.toLocaleString();
+          return pop;
+        }
+      }
+    }
+    if (hudPop) hudPop.textContent = 'N/A';
+  } catch {
+    if (hudPop) hudPop.textContent = 'N/A';
+  }
+}
+
 async function reverseGeocode(lat, lng) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
