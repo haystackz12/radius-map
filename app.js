@@ -262,9 +262,29 @@ function setStatus(msg, type = '') {
   el.className = 'status-bar ' + type;
 }
 
+function tryParseCoords(query) {
+  const match = query.trim().match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
+  if (!match) return null;
+  const lat = parseFloat(match[1]), lng = parseFloat(match[2]);
+  if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return { lat, lng };
+  return null;
+}
+
 async function searchAddress() {
   const query = document.getElementById('address-input').value.trim();
   if (!query) return;
+  const coords = tryParseCoords(query);
+  if (coords) {
+    saveRecentSearch(query);
+    currentLat = coords.lat;
+    currentLng = coords.lng;
+    document.getElementById('address-input').value = `${coords.lat}, ${coords.lng}`;
+    document.getElementById('suggestions').style.display = 'none';
+    setStatus('Coordinate detected', 'success');
+    hideEmptyState();
+    drawCircle();
+    return;
+  }
   saveRecentSearch(query);
   setStatus('Searching…', 'loading');
   document.getElementById('search-icon').style.display = 'none';
