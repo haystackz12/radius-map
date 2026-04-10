@@ -103,8 +103,15 @@ function getSecondRadiusMeters() {
   return val * 1000;
 }
 
+function removeSecondCircle() {
+  if (secondCircle) {
+    if (map.hasLayer(secondCircle)) map.removeLayer(secondCircle);
+    secondCircle = null;
+  }
+}
+
 function drawSecondCircle() {
-  if (secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
+  removeSecondCircle();
   if (!concentricActive) return;
   secondCircle = L.circle([currentLat, currentLng], {
     radius: getSecondRadiusMeters(), color: currentColor, weight: 2, opacity: 0.6,
@@ -134,9 +141,14 @@ function toggleConcentric() {
   const wrap = document.getElementById('concentric-wrap');
   const btn = document.getElementById('concentric-btn');
   if (wrap) wrap.style.display = concentricActive ? 'block' : 'none';
-  if (btn) btn.classList.toggle('active', concentricActive);
-  if (!concentricActive && secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
-  if (concentricActive) {
+  if (btn) {
+    btn.classList.toggle('active', concentricActive);
+    const label = btn.childNodes[btn.childNodes.length - 1];
+    if (label) label.textContent = concentricActive ? ' Remove 2nd Ring' : ' Add 2nd Ring';
+  }
+  if (!concentricActive) {
+    removeSecondCircle();
+  } else {
     const primaryVal = parseFloat(document.getElementById('radius-slider').value);
     const slider2 = document.getElementById('radius-slider-2');
     if (slider2) {
