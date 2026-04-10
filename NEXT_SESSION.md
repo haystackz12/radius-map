@@ -34,7 +34,7 @@ All files under 400-line hard cap.
 
 ## Completed This Session
 - **refactor** — Split style.css + app.js into 4 files (style.css, components.css, app.js, tools.js)
-- **RM-027** — Smart default location: geolocation → ipapi.co IP lookup → US center (39.5, -98.35, zoom 4)
+- **RM-027** — Smart default location: geolocation → ipapi.co IP lookup → US center (39.5, -98.35, zoom 4). Followup fixes: deferred initial `drawCircle()` until location resolves (no premature flyTo), added `[RM-027]` console logs for debugging, IP fallback status reads "Approximate location detected — search an address for precision"
 - **RM-028** — Help modal: ? button in header, sections for each feature, keyboard shortcut reference
 - **RM-029** — Onboarding: 3-step walkthrough on first visit, localStorage `rm_onboarded` flag
 - **RM-030** — Empty state: centered prompt on map before first search/click
@@ -72,6 +72,8 @@ All files under 400-line hard cap.
 - Unit conversion via `convertRadius(from, to, val)` in app.js — supports mi, km, ft
 - Onboarding: only shows if `localStorage.getItem('rm_onboarded')` is falsy
 - Keyboard shortcuts skip when focus is in an input/textarea
+- `initMap(skipInitialDraw)` — pass `true` when geolocation will run so no circle draws before location resolves
+- `[RM-027]` console logs trace which geolocation path fires (browser geo, IP fallback, or US center default)
 
 ## Repo
 - **GitHub:** `haystackz12/radius-map`

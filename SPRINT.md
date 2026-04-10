@@ -18,14 +18,14 @@ RM-021 through RM-026. PNG export fix, copy confirmation toast, settings gear mo
 ---
 
 ## Sprint 4 — Polish & UX ✅ COMPLETE
-All 8 tickets + 2 refactor commits shipped. App feels complete and self-explanatory for new users.
+All 8 tickets + 2 refactor commits + 2 RM-027 followup fixes shipped. App feels complete and self-explanatory for new users.
 
 ### ✅ DONE (Sprint 4)
 
 | Ticket | Description |
 |---|---|
 | refactor | Split style.css + app.js into 4 files to stay under 400-line cap |
-| RM-027 | Smart default location — geolocation → IP (ipapi.co) → US center fallback |
+| RM-027 | Smart default location — geolocation → IP (ipapi.co) → US center fallback; followup: deferred initial draw until location resolves, console logs, clarified IP fallback status message |
 | RM-028 | In-app help modal — ? button in header, keyboard shortcuts reference |
 | RM-029 | Onboarding walkthrough — 3-step overlay, localStorage flag `rm_onboarded` |
 | RM-030 | Empty state prompt — centered overlay before first search/click |
