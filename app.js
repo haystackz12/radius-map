@@ -53,7 +53,7 @@ async function detectLocation() {
         currentLat = data.latitude;
         currentLng = data.longitude;
         console.log('[RM-027] IP fallback succeeded:', currentLat, currentLng, data.city, data.region);
-        setStatus('Location estimated from IP', 'success');
+        setStatus('Approximate location detected — search an address for precision', 'success');
       } else {
         console.log('[RM-027] IP fallback returned no coords, using US center');
         setStatus('Using default location', '');
