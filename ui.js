@@ -205,27 +205,18 @@ function toggleConcentric() {
 }
 
 function printMap() {
-  const token = window.MAPBOX_TOKEN;
-  if (!token || token === 'REPLACE_ME') {
-    setStatus('Print unavailable — Mapbox token not configured', 'error');
-    return;
-  }
   const zoom = Math.min(map.getZoom(), 17);
-  const addr = document.getElementById('address-input').value || 'Radius Map';
-  const radius = document.getElementById('stat-radius').textContent;
-  const area = document.getElementById('stat-area-mi').textContent + ' mi²';
-  const pin = `pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`;
-  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pin}/${currentLng},${currentLat},${zoom},0/1200x800@2x?access_token=${token}`;
+  const geojson = encodeURIComponent(JSON.stringify({
+    type: 'Feature',
+    properties: { stroke: currentColor, 'stroke-width': 2, fill: currentColor, 'fill-opacity': 0.15 },
+    geometry: { type: 'Point', coordinates: [currentLng, currentLat] }
+  }));
+  const token = window.MAPBOX_TOKEN;
+  if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
+  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/geojson(${geojson})/${currentLng},${currentLat},${zoom}/1200x800?access_token=${token}`;
   const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  w.document.write(`<!DOCTYPE html><html><head><title>Print — ${addr}</title>
-<style>@page{size:landscape;margin:10mm}body{margin:0;font-family:sans-serif;text-align:center}
-img{max-width:100%;max-height:80vh;object-fit:contain;display:block;margin:0 auto}
-.footer{margin-top:8px;font-size:12px;color:#444}</style></head><body>
-<img src="${imgUrl}" onload="window.print();window.close()" onerror="document.getElementById('err').style.display='block'">
-<div class="footer">${addr} &middot; Radius: ${radius} &middot; Area: ${area} &middot; ${new Date().toLocaleDateString()}</div>
-<div id="err" style="display:none;color:red;margin-top:16px">Print image failed to load. Check Mapbox token or try Save as PNG.</div>
-</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}body{margin:0}img{width:100%;height:100vh;object-fit:contain}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=\\'padding:40px;font-family:sans-serif\\'>Print failed — try Save as PNG instead.</p>'"></body></html>`);
   w.document.close();
   setStatus('Print dialog opened', 'success');
 }
