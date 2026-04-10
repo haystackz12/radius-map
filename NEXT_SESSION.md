@@ -1,98 +1,79 @@
 # NEXT_SESSION.md — Radius Map
 
-## Session Closed
+## Session Closed ✅
 **Date:** 2026-04-09
-**Session:** 3 — QA Pass (Sprint 3)
+**Session:** 4 — Sprint 4 Polish & UX (CLOSED)
+**Next ticket:** RM-035 (perimeter stat)
 
 ---
 
 ## App is Live
 https://radius-map-psi.vercel.app
 
-## What Was Completed This Session
-- RM-022 — Copy confirmation toast (animated, slides in from top)
-- RM-024 — Address search moved into header bar
-- RM-023 — Gear icon + settings modal (Appearance / Pins / Export tabs)
-- RM-021 — PNG export fixed (leaflet-image → html2canvas fallback, never silent)
-- RM-025 — PNG centering fixed (captures #map only, invalidateSize before export)
-- RM-026 — Worldwide coverage label added to header
-
 ## Current State
-- 3 files: `index.html`, `style.css`, `app.js`
-- All Sprint 3 tickets complete
+- **Sprints 1–4 complete** — 34 tickets shipped (RM-001 through RM-034)
 - No known bugs
-- Vercel auto-deploy on `main` — live and working
-- `vercel.json` has `{ "handle": "filesystem" }` before SPA fallback — do not remove
+- Onboarding + empty state + help modal make the app self-explanatory for new users
 
 ---
 
-## Sprint 4 Kickoff Instructions
+## File Structure & Line Counts
 
-### Step 1 — Check file sizes before touching anything
-```bash
-wc -l index.html style.css app.js
-```
-If any file exceeds 400 lines, split it first and commit before any feature work.
+| File | Lines | Purpose |
+|---|---|---|
+| `index.html` | 202 | Markup — header, panel, modals, script tags |
+| `style.css` | 383 | Base styles — layout, header, panel, forms, stats |
+| `components.css` | 175 | UI components — buttons, tiles, pins, mobile drawer |
+| `features.css` | 245 | Feature styles — modals, toast, onboarding, help, distance, empty state |
+| `app.js` | 351 | Core — map, circle, radius, search, geocode, presets, colors, status |
+| `tools.js` | 284 | Tools — distance, pins, export, modal, share, keyboard shortcuts, onboarding |
 
-### Step 2 — Work tickets in order
-RM-027 → RM-028 → RM-029 → RM-030 → RM-031 → RM-032 → RM-033 → RM-034
-
-Commit and push after each ticket:
-```bash
-git add -A && git commit -m "feat: RM-0XX description" && git push origin main
-```
+All files under 400-line hard cap.
 
 ---
 
-## Key Technical Notes for Sprint 4
-
-**RM-027 Smart geolocation:**
-```javascript
-// Step 1 — browser geolocation
-navigator.geolocation.getCurrentPosition(
-  pos => initMap(pos.coords.latitude, pos.coords.longitude, 13),
-  () => tryIPGeolocation()
-);
-// Step 2 — IP fallback
-async function tryIPGeolocation() {
-  try {
-    const r = await fetch('https://ipapi.co/json/');
-    const d = await r.json();
-    initMap(d.latitude, d.longitude, 11);
-  } catch {
-    initMap(39.5, -98.35, 4); // US center
-  }
-}
-```
-
-**RM-029 Onboarding localStorage flag:**
-```javascript
-if (!localStorage.getItem('rm_onboarded')) showOnboarding();
-// On complete or skip:
-localStorage.setItem('rm_onboarded', 'true');
-```
-
-**RM-033 Keyboard shortcuts — attach to document:**
-```javascript
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAllModals();
-  if (e.key === '?') openHelpModal();
-  if (e.key === '+' || e.key === '=') adjustRadius(1);
-  if (e.key === '-') adjustRadius(-1);
-});
-```
-
-**RM-034 Feet unit:**
-- Slider range: min=100, max=5280, step=10
-- To meters: ft * 0.3048
-- Display in radius-display and all stat cards
+## Completed This Session
+- **refactor** — Split style.css + app.js into 4 files (style.css, components.css, app.js, tools.js)
+- **RM-027** — Smart default location: geolocation → ipapi.co IP lookup → US center (39.5, -98.35, zoom 4)
+- **RM-028** — Help modal: ? button in header, sections for each feature, keyboard shortcut reference
+- **RM-029** — Onboarding: 3-step walkthrough on first visit, localStorage `rm_onboarded` flag
+- **RM-030** — Empty state: centered prompt on map before first search/click
+- **RM-031** — Pin labels: dark background address labels visible on map for each pinned location
+- **RM-032** — Fit circle: button near radius slider to snap viewport to active circle
+- **RM-033** — Keyboard shortcuts: Esc (close modals), ? (help), +/- (adjust radius), Enter (search)
+- **RM-034** — Feet unit: ft button alongside mi/km, range 100–5280, custom presets (250/500/1000/2640/5280)
+- **refactor** — Split components.css → features.css to stay under 400-line cap
 
 ---
+
+## Next Session — Sprint 5
+
+### First ticket: RM-035 — Perimeter stat
+- Add circumference (2πr) to the stats panel
+- Display in selected unit (mi, km, or ft)
+- Place below existing area stats
+
+### Full queue
+1. RM-035 — Perimeter stat
+2. RM-036 — About / attribution modal
+3. RM-037 — Elevation at center point
+4. RM-038 — Circle overlap indicator
+5. RM-039 — QR code for share link
+6. RM-040 — Embed code
+
+---
+
+## Key Technical Notes
+- Nominatim: `Accept-Language: en`, debounce ≥400ms, 1 req/sec limit
+- Tile layers use `crossOrigin: true` for PNG export
+- `leaflet-image` + `html2canvas` loaded from cdnjs; guard with typeof checks
+- Vercel: new static files must go in `vercel.json` builds array + filesystem handler before SPA catch-all
+- Distance mode and click-to-center are mutually exclusive
+- Unit conversion via `convertRadius(from, to, val)` in app.js — supports mi, km, ft
+- Onboarding: only shows if `localStorage.getItem('rm_onboarded')` is falsy
+- Keyboard shortcuts skip when focus is in an input/textarea
 
 ## Repo
 - **GitHub:** `haystackz12/radius-map`
 - **Local:** `/Users/michaelhastings/Projects/radius-map`
 - **Live:** https://radius-map-psi.vercel.app
-
-## Sprint 5 Preview
-After Sprint 4 ships: perimeter stat, about modal, elevation data, circle overlap shading, QR code, embed code. See SPRINT.md for full specs.
