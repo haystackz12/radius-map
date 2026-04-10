@@ -200,6 +200,10 @@ function renderPinList() {
   });
 }
 
+function fitCircle() {
+  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
+}
+
 function startOnboarding() {
   if (localStorage.getItem('rm_onboarded')) return;
   const steps = [
