@@ -173,6 +173,54 @@ function printMap() {
   setStatus('Print view opened', 'success');
 }
 
+function confirmReset() {
+  const overlay = document.createElement('div');
+  overlay.className = 'onboard-overlay';
+  overlay.innerHTML = `<div class="onboard-card">
+    <h3>Reset map to defaults?</h3>
+    <p>This clears all pins, rings, and settings.</p>
+    <div class="onboard-actions">
+      <button class="onboard-skip" id="reset-cancel">Cancel</button>
+      <button class="onboard-next" id="reset-confirm" style="background:var(--danger)">Confirm</button>
+    </div></div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#reset-cancel').onclick = () => overlay.remove();
+  overlay.querySelector('#reset-confirm').onclick = () => { overlay.remove(); resetApp(); };
+}
+
+function resetApp() {
+  pins.forEach(p => {
+    if (p.layer && map.hasLayer(p.layer)) map.removeLayer(p.layer);
+    if (p.labelMarker && map.hasLayer(p.labelMarker)) map.removeLayer(p.labelMarker);
+  });
+  pins = [];
+  renderPinList();
+  if (concentricActive) toggleConcentric();
+  overlapLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+  overlapLayers = [];
+  currentUnit = 'mi';
+  currentColor = '#4f8ef7';
+  currentOpacity = 0.15;
+  const slider = document.getElementById('radius-slider');
+  slider.min = 0.1; slider.max = 50; slider.step = 0.1; slider.value = 5;
+  document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === 'mi'));
+  document.getElementById('opacity-slider').value = 15;
+  document.getElementById('opacity-val').textContent = '15%';
+  buildColorOptions();
+  buildPresets();
+  setTileLayer('street');
+  document.getElementById('address-input').value = '';
+  updateClearBtn();
+  localStorage.removeItem('rm_recent_searches');
+  localStorage.removeItem('rm_collapsed');
+  document.querySelectorAll('.section.collapsed').forEach(s => s.classList.remove('collapsed'));
+  setStatus('', '');
+  const breadcrumb = document.getElementById('location-breadcrumb');
+  if (breadcrumb) breadcrumb.style.display = 'none';
+  detectLocation();
+  showToast('Map reset to defaults');
+}
+
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
   const newTheme = isLight ? 'dark' : 'light';
