@@ -115,11 +115,18 @@ function drawSecondCircle() {
 
 function updateSecondStats() {
   const el = document.getElementById('stat-second');
-  if (!el) return;
+  const display2 = document.getElementById('radius-display-2');
+  const unitLabel2 = document.getElementById('radius-unit-2');
   const slider2 = document.getElementById('radius-slider-2');
-  if (!slider2 || !concentricActive) { el.textContent = '—'; return; }
+  if (!slider2 || !concentricActive) {
+    if (el) el.textContent = '—';
+    return;
+  }
   const val2 = parseFloat(slider2.value);
-  el.textContent = (currentUnit === 'ft' ? Math.round(val2) : val2.toFixed(1)) + ' ' + currentUnit;
+  const formatted = currentUnit === 'ft' ? Math.round(val2) : val2.toFixed(1);
+  if (el) el.textContent = formatted + ' ' + currentUnit;
+  if (display2) display2.textContent = formatted;
+  if (unitLabel2) unitLabel2.textContent = currentUnit;
 }
 
 function toggleConcentric() {
