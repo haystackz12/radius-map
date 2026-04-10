@@ -376,21 +376,24 @@ function downloadBlob(canvas) {
 
 function savePNG() {
   setStatus('Generating PNG…', 'loading');
+  map.invalidateSize();
 
-  if (typeof leafletImage !== 'undefined') {
-    leafletImage(map, function(err, canvas) {
-      if (!err && canvas) {
-        try {
-          canvas.toDataURL();
-          downloadBlob(canvas);
-          return;
-        } catch (e) { /* tainted — fall through to html2canvas */ }
-      }
+  setTimeout(function() {
+    if (typeof leafletImage !== 'undefined') {
+      leafletImage(map, function(err, canvas) {
+        if (!err && canvas) {
+          try {
+            canvas.toDataURL();
+            downloadBlob(canvas);
+            return;
+          } catch (e) { /* tainted — fall through to html2canvas */ }
+        }
+        savePNGFallback();
+      });
+    } else {
       savePNGFallback();
-    });
-  } else {
-    savePNGFallback();
-  }
+    }
+  }, 100);
 }
 
 function savePNGFallback() {
@@ -399,9 +402,12 @@ function savePNGFallback() {
     return;
   }
   setStatus('Generating PNG (fallback)…', 'loading');
-  html2canvas(map.getContainer(), { useCORS: true, allowTaint: false, scale: 2 })
-    .then(canvas => downloadBlob(canvas))
-    .catch(e => setStatus('PNG export failed — ' + e.message, 'error'));
+  map.invalidateSize();
+  setTimeout(function() {
+    html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
+      .then(canvas => downloadBlob(canvas))
+      .catch(e => setStatus('PNG export failed — ' + e.message, 'error'));
+  }, 100);
 }
 
 function exportData() {
