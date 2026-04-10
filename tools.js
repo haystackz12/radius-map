@@ -153,6 +153,13 @@ function exportData() {
   a.click();
 }
 
+function copyEmbed() {
+  const val = parseFloat(document.getElementById('radius-slider').value);
+  const shareUrl = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
+  const iframe = `<iframe src="${shareUrl}" width="600" height="450" style="border:none;border-radius:8px;" loading="lazy" allowfullscreen></iframe>`;
+  navigator.clipboard.writeText(iframe).then(() => { showToast('Embed code copied!'); setStatus('Embed code copied!', 'success'); });
+}
+
 function generateQR() {
   if (typeof QRCode === 'undefined') { setStatus('QR library not loaded', 'error'); return; }
   const val = parseFloat(document.getElementById('radius-slider').value);
