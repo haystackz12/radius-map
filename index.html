@@ -131,14 +131,23 @@
 
 <!-- Splash screen -->
 <div id="splash">
-  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="36" cy="36" r="26" stroke="#007AFF" stroke-width="3"/>
-    <circle cx="36" cy="36" r="4" fill="#007AFF"/>
-    <line x1="36" y1="36" x2="57" y2="22" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="57" cy="22" r="3.5" fill="#007AFF"/>
+  <svg width="80" height="80" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Animated circle outline draws itself -->
+    <circle cx="36" cy="36" r="26" stroke="#007AFF" stroke-width="3"
+      stroke-dasharray="163.4" stroke-dashoffset="163.4"
+      style="animation: drawCircle 0.9s cubic-bezier(0.4,0,0.2,1) 0.1s forwards; transform-origin: 36px 36px; transform: rotate(-90deg);"/>
+    <!-- Radius line draws in after circle -->
+    <line x1="36" y1="36" x2="57" y2="22" stroke="#007AFF" stroke-width="3" stroke-linecap="round"
+      style="opacity:0; animation: fadeIn 0.3s ease 0.95s forwards;"/>
+    <!-- Center dot -->
+    <circle cx="36" cy="36" r="4" fill="#007AFF"
+      style="opacity:0; animation: fadeIn 0.3s ease 0.85s forwards;"/>
+    <!-- End dot -->
+    <circle cx="57" cy="22" r="3.5" fill="#007AFF"
+      style="opacity:0; animation: fadeIn 0.3s ease 1.05s forwards;"/>
   </svg>
-  <div id="splash-name">DrawRadius</div>
-  <div id="splash-tagline">Draw a radius. Know your area.</div>
+  <div id="splash-name" style="opacity:0; animation: fadeIn 0.4s ease 1.1s forwards;">DrawRadius</div>
+  <div id="splash-tagline" style="opacity:0; animation: fadeIn 0.4s ease 1.3s forwards;">Draw a radius. Know your area.</div>
 </div>
 
 <script src="config.js"></script>
