@@ -1,8 +1,8 @@
 # NEXT_SESSION.md — Radius Map
 
-## Session Closed ✅
+## Session Closed
 **Date:** 2026-04-09
-**Session:** 4 — Sprint 3 QA & polish (CLOSED)
+**Session:** 1 — Foundation + Project Setup
 
 ---
 
@@ -10,47 +10,53 @@
 https://radius-map-psi.vercel.app
 
 ## Current State
-- **Sprints 1–3 complete** — 24 tickets shipped total (RM-001 through RM-024)
-- Three-file architecture: `index.html` (markup), `style.css`, `app.js`
-- UI layout: search in header, gear icon opens settings modal (Appearance/Pins/Export), panel has Tools/Radius/Map style/Statistics
-- PNG export: leaflet-image primary, html2canvas fallback, never fails silently
+- `index.html` — single-file app, ~245 lines, fully working
+- OSM tiles working correctly from Vercel
 - No known bugs
+- All session docs in place
+- Vercel auto-deploy connected to `main` branch on `haystackz12/radius-map`
 
 ---
 
-## Completed This Session
-- **RM-022** — Copy confirmation toast: animated notification on clipboard actions
-- **RM-024** — Address search moved from panel into header bar
-- **RM-023** — Gear icon + settings modal with Appearance/Pins/Export tabs; those sections removed from sidebar
-- **RM-021** — Robust PNG export: tries leaflet-image, catches tainted canvas, falls back to html2canvas
+## Sprint 2 Kickoff Instructions
 
----
+### Step 1 — File split (do this before any features)
+`index.html` will exceed 400 lines during Sprint 2. Split it at the top of the session:
 
-## Next Session — No Sprint Queued
+```
+index.html   → markup only (link to style.css and app.js)
+style.css    → all <style> content extracted
+app.js       → all <script> content extracted
+```
 
-All planned work is done. Next session should start with:
+Update `index.html` to reference:
+```html
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+```
 
-1. **Manual QA pass** — test all features on Chrome desktop + iOS Safari + Android Chrome
-2. **Sprint 4 planning** — define new tickets based on QA findings or feature ideas
+Commit the split before touching any features:
+```bash
+git add -A && git commit -m "refactor: split index.html into style.css + app.js"
+```
 
-### Possible Sprint 4 directions
-- Accessibility: keyboard nav, ARIA labels, focus indicators, contrast audit
-- Geolocation button ("center on my location")
-- localStorage persistence (save/restore last view)
-- Dark/light theme toggle
-- Polygon/rectangle drawing tools
-- Multi-pin export (JSON with all pinned locations)
-- Performance: minification, lazy-load html2canvas
+### Step 2 — Work tickets in order
+See SPRINT.md. Order: RM-018 → RM-014 → RM-015 → RM-013 → RM-016 → RM-017 → RM-019 → RM-020
+
+Push after each ticket:
+```bash
+git add -A && git commit -m "feat: RM-0XX description" && git push origin main
+```
 
 ---
 
 ## Key Technical Notes
-- Nominatim: `Accept-Language: en`, debounce ≥400ms, 1 req/sec limit
-- Tile layers use `crossOrigin: true` for PNG export compatibility
-- `leaflet-image` + `html2canvas` both loaded from cdnjs in `index.html`
-- Vercel: new static files must be added to `vercel.json` `builds` array; `{ "handle": "filesystem" }` must precede SPA catch-all
-- Distance mode and click-to-center mode are mutually exclusive
-- Settings modal: toggle via `toggleModal()`, tabs via `switchTab(name)`
+- Nominatim reverse geocode endpoint: `https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}`
+- Esri satellite tiles: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`
+- OpenTopoMap tiles: `https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png`
+- For share links: use `URLSearchParams` to read/write — no library needed
+- For PNG export: try `leaflet-image` from cdnjs first; fall back to `html2canvas` if canvas taint issues arise
+- Nominatim rate limit: 1 req/sec — debounce at 400ms, do not lower
 
 ## Repo
 - **GitHub:** `haystackz12/radius-map`
