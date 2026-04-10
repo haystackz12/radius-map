@@ -359,22 +359,49 @@ function copyCoords() {
   navigator.clipboard.writeText(txt).then(() => { showToast('Coordinates copied!'); setStatus('Coordinates copied!', 'success'); });
 }
 
-function savePNG() {
-  if (typeof leafletImage === 'undefined') {
-    setStatus('PNG library not loaded', 'error');
-    return;
-  }
-  setStatus('Generating PNG…', 'loading');
-  leafletImage(map, function(err, canvas) {
-    if (err) { setStatus('PNG export failed (tile CORS)', 'error'); return; }
+function downloadBlob(canvas) {
+  try {
     canvas.toBlob(function(blob) {
+      if (!blob) { setStatus('PNG export failed — canvas tainted', 'error'); return; }
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'radius-map.png';
       a.click();
       setStatus('PNG downloaded!', 'success');
     });
-  });
+  } catch (e) {
+    setStatus('PNG export failed — ' + e.message, 'error');
+  }
+}
+
+function savePNG() {
+  setStatus('Generating PNG…', 'loading');
+
+  if (typeof leafletImage !== 'undefined') {
+    leafletImage(map, function(err, canvas) {
+      if (!err && canvas) {
+        try {
+          canvas.toDataURL();
+          downloadBlob(canvas);
+          return;
+        } catch (e) { /* tainted — fall through to html2canvas */ }
+      }
+      savePNGFallback();
+    });
+  } else {
+    savePNGFallback();
+  }
+}
+
+function savePNGFallback() {
+  if (typeof html2canvas === 'undefined') {
+    setStatus('PNG export unavailable — libraries failed to load', 'error');
+    return;
+  }
+  setStatus('Generating PNG (fallback)…', 'loading');
+  html2canvas(map.getContainer(), { useCORS: true, allowTaint: false, scale: 2 })
+    .then(canvas => downloadBlob(canvas))
+    .catch(e => setStatus('PNG export failed — ' + e.message, 'error'));
 }
 
 function exportData() {
