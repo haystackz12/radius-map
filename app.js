@@ -47,24 +47,19 @@ async function detectLocation() {
     });
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    console.log('[RM-027] Geolocation succeeded:', currentLat, currentLng);
     setStatus('Location detected', 'success');
-  } catch (geoErr) {
-    console.log('[RM-027] Geolocation failed:', geoErr?.message || geoErr);
+  } catch {
     try {
       const resp = await fetch('https://ipapi.co/json/');
       const data = await resp.json();
       if (data.latitude && data.longitude) {
         currentLat = data.latitude;
         currentLng = data.longitude;
-        console.log('[RM-027] IP fallback succeeded:', currentLat, currentLng, data.city, data.region);
         setStatus('Approximate location detected — search an address for precision', 'success');
       } else {
-        console.log('[RM-027] IP fallback returned no coords, using US center');
         setStatus('Using default location', '');
       }
-    } catch (ipErr) {
-      console.log('[RM-027] IP fallback failed:', ipErr?.message || ipErr);
+    } catch {
       setStatus('Using default location', '');
     }
   }
@@ -132,47 +127,6 @@ function drawCircle() {
   updatePresetActive();
   fetchElevation(currentLat, currentLng);
   drawSecondCircle();
-}
-
-function getSecondRadiusMeters() {
-  const slider2 = document.getElementById('radius-slider-2');
-  if (!slider2) return 0;
-  const val = parseFloat(slider2.value);
-  if (currentUnit === 'mi') return val * 1609.344;
-  if (currentUnit === 'ft') return val * 0.3048;
-  return val * 1000;
-}
-
-function drawSecondCircle() {
-  if (secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
-  if (!concentricActive) return;
-  const radiusM = getSecondRadiusMeters();
-  secondCircle = L.circle([currentLat, currentLng], {
-    radius: radiusM, color: currentColor, weight: 2, opacity: 0.6,
-    fillColor: currentColor, fillOpacity: currentOpacity * 0.5, dashArray: '6,4'
-  }).addTo(map);
-  updateSecondStats();
-}
-
-function updateSecondStats() {
-  const el = document.getElementById('stat-second');
-  if (!el) return;
-  const slider2 = document.getElementById('radius-slider-2');
-  if (!slider2 || !concentricActive) { el.textContent = '—'; return; }
-  const val2 = parseFloat(slider2.value);
-  const display = currentUnit === 'ft' ? Math.round(val2) : val2.toFixed(1);
-  el.textContent = display + ' ' + currentUnit;
-}
-
-function toggleConcentric() {
-  concentricActive = !concentricActive;
-  const wrap = document.getElementById('concentric-wrap');
-  const btn = document.getElementById('concentric-btn');
-  if (wrap) wrap.style.display = concentricActive ? 'block' : 'none';
-  if (btn) btn.classList.toggle('active', concentricActive);
-  if (!concentricActive && secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
-  if (concentricActive) drawSecondCircle();
-  updateSecondStats();
 }
 
 function buildPresets() {

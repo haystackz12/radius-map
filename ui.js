@@ -94,6 +94,56 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+function getSecondRadiusMeters() {
+  const slider2 = document.getElementById('radius-slider-2');
+  if (!slider2) return 0;
+  const val = parseFloat(slider2.value);
+  if (currentUnit === 'mi') return val * 1609.344;
+  if (currentUnit === 'ft') return val * 0.3048;
+  return val * 1000;
+}
+
+function drawSecondCircle() {
+  if (secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
+  if (!concentricActive) return;
+  secondCircle = L.circle([currentLat, currentLng], {
+    radius: getSecondRadiusMeters(), color: currentColor, weight: 2, opacity: 0.6,
+    fillColor: currentColor, fillOpacity: currentOpacity * 0.5, dashArray: '6,4'
+  }).addTo(map);
+  updateSecondStats();
+}
+
+function updateSecondStats() {
+  const el = document.getElementById('stat-second');
+  if (!el) return;
+  const slider2 = document.getElementById('radius-slider-2');
+  if (!slider2 || !concentricActive) { el.textContent = '—'; return; }
+  const val2 = parseFloat(slider2.value);
+  el.textContent = (currentUnit === 'ft' ? Math.round(val2) : val2.toFixed(1)) + ' ' + currentUnit;
+}
+
+function toggleConcentric() {
+  concentricActive = !concentricActive;
+  const wrap = document.getElementById('concentric-wrap');
+  const btn = document.getElementById('concentric-btn');
+  if (wrap) wrap.style.display = concentricActive ? 'block' : 'none';
+  if (btn) btn.classList.toggle('active', concentricActive);
+  if (!concentricActive && secondCircle) { map.removeLayer(secondCircle); secondCircle = null; }
+  if (concentricActive) drawSecondCircle();
+  updateSecondStats();
+}
+
+function printMap() {
+  const footer = document.getElementById('print-footer');
+  if (footer) {
+    const addr = document.getElementById('address-input').value || 'No address';
+    const radius = document.getElementById('stat-radius').textContent;
+    const area = document.getElementById('stat-area-mi').textContent + ' mi² / ' + document.getElementById('stat-area-km').textContent + ' km²';
+    footer.innerHTML = `<strong>${addr}</strong> · Radius: ${radius} · Area: ${area} · ${new Date().toLocaleDateString()}`;
+  }
+  window.print();
+}
+
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
   const newTheme = isLight ? 'dark' : 'light';

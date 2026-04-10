@@ -288,18 +288,6 @@ function clearRecentSearches(e) {
   document.getElementById('suggestions').style.display = 'none';
 }
 
-function printMap() {
-  const footer = document.getElementById('print-footer');
-  if (footer) {
-    const addr = document.getElementById('address-input').value || 'No address';
-    const radius = document.getElementById('stat-radius').textContent;
-    const area = document.getElementById('stat-area-mi').textContent + ' mi² / ' + document.getElementById('stat-area-km').textContent + ' km²';
-    const date = new Date().toLocaleDateString();
-    footer.innerHTML = `<strong>${addr}</strong> · Radius: ${radius} · Area: ${area} · ${date}`;
-  }
-  window.print();
-}
-
 function copyEmbed() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const shareUrl = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
