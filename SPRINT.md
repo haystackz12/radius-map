@@ -37,22 +37,39 @@ All 8 tickets + 2 refactor commits + 2 RM-027 followup fixes shipped. App feels 
 
 ---
 
-## Sprint 5 — Data & Shareability (Next)
-**Goal:** Deepen the data shown and expand how the map can be shared and embedded.
+## Sprint 5 — Data & Shareability ✅ COMPLETE
+All 6 tickets + 1 refactor shipped. Stats deepened, sharing expanded.
 
-### 🔲 IN QUEUE
+### ✅ DONE (Sprint 5)
+
+| Ticket | Description |
+|---|---|
+| RM-035 | Perimeter stat — circumference (2πr) in selected unit, full-width stat card |
+| RM-036 | About / attribution modal — `i` button in header, credits OSM/Nominatim/Leaflet/Esri/OpenTopo/Open-Elevation, GitHub link, v2.0 |
+| RM-037 | Elevation at center — open-elevation API, ft + m display, graceful "Unavailable" fallback |
+| RM-038 | Circle overlap indicator — amber shaded intersection polygon using arc geometry |
+| RM-039 | QR code for share link — qrcode.js, dark theme, generate + download as PNG |
+| RM-040 | Embed code — copy `<iframe>` snippet with share URL, toast confirmation |
+| refactor | Moved overlap geometry functions from app.js to tools.js (400-line cap) |
+
+---
+
+## Sprint 6 — UX Refinements (Next)
+**Goal:** Improve discoverability and make the panel smarter and more responsive to user context.
+
+### 🔲 IN QUEUE (work in this order)
 
 | Ticket | Priority | Description |
 |---|---|---|
-| RM-035 | High | **Perimeter stat** — Add circumference (2πr) to the stats panel in selected unit. Label: "Perimeter". Place below area stats. |
-| RM-036 | High | **About / attribution modal** — `i` button far right in header. Credits OpenStreetMap, Nominatim, Leaflet.js, CARTO, Open-Elevation. One-paragraph description, GitHub link, version number. |
-| RM-037 | Medium | **Elevation at center point** — After circle is drawn, call `https://api.open-elevation.com/api/v1/lookup?locations={lat},{lng}`. Display in stats panel in both feet and meters. Handle failure gracefully — show "Unavailable", not an error. |
-| RM-038 | Medium | **Circle overlap indicator** — When two pinned circles overlap, shade the intersection area in a distinct semi-transparent color using a Leaflet polygon layer. Only compute when distance between centers < sum of radii. |
-| RM-039 | Medium | **QR code for share link** — "Generate QR Code" button in Export tab. Uses `qrcode.js` from cdnjs. Renders QR inline in modal. "Download QR" saves as PNG. |
-| RM-040 | Low | **Embed code** — "Embed this map" section in Export tab. Generates `<iframe>` snippet with current share URL. "Copy embed code" button with confirmation toast (reuse RM-022 pattern). |
+| RM-041 | High | **Recent searches history** — Store last 8 searches in `localStorage` key `rm_recent_searches`. Show as dropdown list when search bar is focused (before typing). Each item clickable to re-search. Clear button to reset history. |
+| RM-042 | High | **Collapsible panel sections** — Tools, Radius, Map Style, Statistics sections each get a clickable header (chevron icon) to expand/collapse. Collapsed state persisted in `localStorage` key `rm_collapsed`. Default: all expanded. |
+| RM-043 | Medium | **Active map style indicator** — Stronger visual active state on Street/Satellite/Topo buttons. Small persistent badge on the map (bottom-left corner) showing current tile layer name (e.g. "Street"). |
+| RM-044 | Medium | **Radius presets show current unit** — Preset buttons dynamically label with current unit: "5 mi", "5 km", "5 ft". Already partially done — verify labels update on unit switch and fix if not. |
+| RM-045 | Medium | **Location breadcrumb** — Small fixed label on the map (top-left, below zoom controls) showing current city/state pulled from last reverse geocode result. Updates as user searches or clicks new locations. Disappears if no location set. |
 
 ---
 
 ## File Size Policy
 - Hard cap: 400 lines per file
+- Current files: `index.html`, `style.css`, `components.css`, `features.css`, `app.js`, `tools.js`
 - Deploy after every ticket: `git add -A && git commit -m "feat: RM-0XX description" && git push origin main`
