@@ -324,20 +324,33 @@ function hideEmptyState() {
   if (el) el.style.display = 'none';
 }
 
+function formatAddress(address, fallbackDisplayName) {
+  if (!address) return fallbackDisplayName ? fallbackDisplayName.split(',').slice(0, 3).join(',').trim() : '';
+  const num = address.house_number || '';
+  const road = address.road || '';
+  const street = [num, road].filter(Boolean).join(' ');
+  const city = address.city || address.town || address.village || address.hamlet || '';
+  const state = address.state || address.region || '';
+  return [street, city, state].filter(Boolean).join(', ');
+}
+
+function formatAddressShort(address, fallbackDisplayName) {
+  if (!address) return fallbackDisplayName ? fallbackDisplayName.split(',').slice(0, 2).join(',').trim() : '';
+  const city = address.city || address.town || address.village || address.hamlet || '';
+  const state = address.state || address.region || '';
+  return [city, state].filter(Boolean).join(', ');
+}
+
 function applyResult(r) {
   currentLat = parseFloat(r.lat);
   currentLng = parseFloat(r.lon);
-  document.getElementById('address-input').value = r.display_name.split(',').slice(0,3).join(',');
+  const addr = formatAddress(r.address, r.display_name);
+  document.getElementById('address-input').value = addr;
   document.getElementById('suggestions').style.display = 'none';
-  setStatus('Found: ' + r.display_name.split(',').slice(0,2).join(','), 'success');
+  setStatus('Found: ' + formatAddressShort(r.address, r.display_name), 'success');
   updateClearBtn();
   hideEmptyState();
-  if (r.address) {
-    updateBreadcrumb(r.address);
-  } else {
-    const parts = r.display_name.split(',').map(s => s.trim());
-    updateBreadcrumb({ city: parts[0] || '', state: parts[1] || '' });
-  }
+  updateBreadcrumb(r.address || null);
   drawCircle();
 }
 

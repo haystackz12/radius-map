@@ -223,8 +223,8 @@ async function reverseGeocode(lat, lng) {
     const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     const data = await resp.json();
     if (data && data.display_name) {
-      document.getElementById('address-input').value = data.display_name.split(',').slice(0,3).join(',');
-      setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
+      document.getElementById('address-input').value = formatAddress(data.address, data.display_name);
+      setStatus('Found: ' + formatAddressShort(data.address, data.display_name), 'success');
       updateBreadcrumb(data.address);
     }
   } catch {}
