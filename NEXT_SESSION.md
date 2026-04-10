@@ -2,8 +2,8 @@
 
 ## Session Closed ✅
 **Date:** 2026-04-09
-**Session:** 5 — Sprint 5 Data & Shareability (CLOSED)
-**Next ticket:** RM-041 (recent searches history)
+**Session:** 6 — Sprint 6 UX Refinements (CLOSED)
+**Next ticket:** RM-046 (named circle labels)
 
 ---
 
@@ -11,9 +11,9 @@
 https://radius-map-psi.vercel.app
 
 ## Current State
-- **Sprints 1–5 complete** — 40 tickets shipped (RM-001 through RM-040)
+- **Sprints 1–6 complete** — 45 tickets shipped (RM-001 through RM-045)
 - No known bugs
-- Full feature set: search, radius, pins, distance, tile switcher, export (JSON/PNG/QR/embed/share link), stats (area/perimeter/elevation), help, onboarding, keyboard shortcuts, about modal
+- Full feature set: search, radius, pins, distance, tile switcher, export (JSON/PNG/QR/embed/share), stats (area/perimeter/elevation), help, onboarding, keyboard shortcuts, about modal, recent searches, collapsible sections, location breadcrumb
 
 ---
 
@@ -21,42 +21,43 @@ https://radius-map-psi.vercel.app
 
 | File | Lines | Purpose |
 |---|---|---|
-| `index.html` | 248 | Markup — header, panel, modals (settings/help/about), script tags |
+| `index.html` | 249 | Markup — header, panel, modals (settings/help/about), script tags |
 | `style.css` | 383 | Base styles — layout, header, panel, forms, stats |
-| `components.css` | 175 | UI components — buttons, tiles, pins, mobile drawer |
-| `features.css` | 245 | Feature styles — modals, toast, onboarding, help, distance, empty state |
-| `app.js` | 385 | Core — map, circle, radius, search, geocode, presets, colors, status, elevation |
-| `tools.js` | 367 | Tools — distance, pins, export, modal, share, QR, embed, overlap geometry, keyboard shortcuts, onboarding |
+| `components.css` | 227 | UI components — buttons, tiles, pins, collapsible sections, mobile drawer, breadcrumb, map badge |
+| `features.css` | 270 | Feature styles — modals, toast, onboarding, help, distance, empty state, recent searches |
+| `app.js` | 377 | Core — map, circle, radius, search, geocode, presets, colors, status, tile layers |
+| `tools.js` | 371 | Tools — distance, pins, export, modal, share, QR, embed, overlap geometry, elevation, reverse geocode, breadcrumb, recent searches |
+| `ui.js` | 107 | UI — collapsible sections, onboarding, keyboard shortcuts, init sequence |
 
 All files under 400-line hard cap.
 
 ---
 
 ## Completed This Session
-- **RM-035** — Perimeter stat: circumference (2πr) in selected unit, full-width card in stats grid
-- **RM-036** — About modal: `i` button in header, credits for all data sources, GitHub link, v2.0
-- **RM-037** — Elevation at center: open-elevation API, displays ft + m, "Unavailable" on failure
-- **RM-038** — Circle overlap: amber intersection polygon computed via arc geometry (getBearing + destinationPoint)
-- **RM-039** — QR code: qrcode.js from cdnjs, dark theme colors, generate + download as PNG
-- **RM-040** — Embed code: copies `<iframe>` snippet with share URL, toast confirmation
-- **refactor** — Moved overlap geometry from app.js to tools.js (400-line cap)
+- **RM-041** — Recent searches: last 8 stored in localStorage, dropdown on focus, clear button
+- **RM-042** — Collapsible panel sections: chevron toggle, localStorage persistence
+- **RM-043** — Active map style indicator: glow on button + persistent badge on map
+- **RM-044** — Range labels update dynamically on unit switch
+- **RM-045** — Location breadcrumb: city/state label on map from reverse geocode
+- **refactor** — Split tools.js → tools.js + ui.js, added ui.js to vercel.json
 
 ---
 
-## Next Session — Sprint 6
+## Next Session — Sprint 7
 
-### First ticket: RM-041 — Recent searches history
-- Store last 8 searches in `localStorage` key `rm_recent_searches`
-- Show as dropdown when search bar is focused (before typing)
-- Each item clickable to re-search
-- Clear button to reset history
+### First ticket: RM-046 — Named circle labels
+- Prompt user for a name when pinning (default: first address segment)
+- Render as pill label on map via L.tooltip permanent
+- Editable inline in pins list
 
 ### Full queue
-1. RM-041 — Recent searches history
-2. RM-042 — Collapsible panel sections
-3. RM-043 — Active map style indicator
-4. RM-044 — Radius presets show current unit (verify/fix)
-5. RM-045 — Location breadcrumb on map
+1. RM-046 — Named circle labels
+2. RM-047 — Search by coordinates (regex detection, skip Nominatim)
+3. RM-048 — Dark / light mode toggle (CSS vars + localStorage)
+4. RM-049 — Concentric circles (comparison mode, dual sliders)
+5. RM-050 — Print-friendly view (@media print CSS + Print button)
+
+See SPRINT.md for full specs and implementation notes.
 
 ---
 
@@ -67,10 +68,10 @@ All files under 400-line hard cap.
 - Vercel: new static files must go in `vercel.json` builds array + filesystem handler before SPA catch-all
 - Distance mode and click-to-center are mutually exclusive
 - Unit conversion via `convertRadius(from, to, val)` in app.js — supports mi, km, ft
-- Elevation: `fetchElevation(lat, lng)` called from `drawCircle()`, shows "Unavailable" on failure
-- Overlap: `computeOverlaps()` called from `pinCurrent()` and `removePin()` in tools.js
+- Elevation: `fetchElevation(lat, lng)` in tools.js, called from `drawCircle()`
+- Overlap: `computeOverlaps()` in tools.js, called from `pinCurrent()` and `removePin()`
 - `initMap(skipInitialDraw)` — pass `true` when geolocation will run
-- localStorage keys in use: `rm_onboarded`
+- localStorage keys: `rm_onboarded`, `rm_recent_searches`, `rm_collapsed`
 
 ## Repo
 - **GitHub:** `haystackz12/radius-map`
