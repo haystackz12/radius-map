@@ -73,6 +73,7 @@ function initMap() {
     drawCircle();
     updateStats();
     setStatus('Center set by click', 'success');
+    hideEmptyState();
     reverseGeocode(currentLat, currentLng);
   });
 }
@@ -258,12 +259,18 @@ async function reverseGeocode(lat, lng) {
   } catch {}
 }
 
+function hideEmptyState() {
+  const el = document.getElementById('empty-state');
+  if (el) el.style.display = 'none';
+}
+
 function applyResult(r) {
   currentLat = parseFloat(r.lat);
   currentLng = parseFloat(r.lon);
   document.getElementById('address-input').value = r.display_name.split(',').slice(0,3).join(',');
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + r.display_name.split(',').slice(0,2).join(','), 'success');
+  hideEmptyState();
   drawCircle();
 }
 
