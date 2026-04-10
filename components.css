@@ -42,6 +42,22 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.collapsible {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.collapsible .chevron {
+  transition: transform 0.2s;
+  opacity: 0.5;
+}
+
+.section.collapsed .collapsible .chevron { transform: rotate(-90deg); }
+.section.collapsed > *:not(.section-label) { display: none; }
+
 .drawer-handle { display: none; }
 
 .tile-row {

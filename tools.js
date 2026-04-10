@@ -282,6 +282,28 @@ function renderPinList() {
   });
 }
 
+function toggleSection(name) {
+  const section = document.querySelector(`[data-section="${name}"]`);
+  if (!section) return;
+  section.classList.toggle('collapsed');
+  let collapsed = {};
+  try { collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}'); } catch {}
+  collapsed[name] = section.classList.contains('collapsed');
+  localStorage.setItem('rm_collapsed', JSON.stringify(collapsed));
+}
+
+function restoreCollapsed() {
+  try {
+    const collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}');
+    Object.keys(collapsed).forEach(name => {
+      if (collapsed[name]) {
+        const section = document.querySelector(`[data-section="${name}"]`);
+        if (section) section.classList.add('collapsed');
+      }
+    });
+  } catch {}
+}
+
 function fitCircle() {
   if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
 }
@@ -359,6 +381,7 @@ document.addEventListener('keydown', function(e) {
 buildColorOptions();
 restoreFromURL();
 buildPresets();
+restoreCollapsed();
 
 const urlParams = new URLSearchParams(location.search);
 const willDetect = !urlParams.has('lat');

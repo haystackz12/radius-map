@@ -43,8 +43,8 @@
 
     <div class="drawer-handle" onclick="toggleDrawer()"><span>Controls</span></div>
 
-    <div class="section">
-      <div class="section-label">Tools</div>
+    <div class="section" data-section="tools">
+      <div class="section-label collapsible" onclick="toggleSection('tools')"><span>Tools</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
       <div class="status-bar" id="status"></div>
       <button class="crosshair-btn" id="click-mode-btn" onclick="toggleClickMode()">
         <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
@@ -56,8 +56,8 @@
       </button>
     </div>
 
-    <div class="section">
-      <div class="section-label">Radius</div>
+    <div class="section" data-section="radius">
+      <div class="section-label collapsible" onclick="toggleSection('radius')"><span>Radius</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
       <div class="radius-row">
         <div class="radius-value" id="radius-display">5.0</div>
         <div class="unit-toggle">
@@ -75,8 +75,8 @@
       </button>
     </div>
 
-    <div class="section">
-      <div class="section-label">Map style</div>
+    <div class="section" data-section="mapstyle">
+      <div class="section-label collapsible" onclick="toggleSection('mapstyle')"><span>Map style</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
       <div class="tile-row">
         <button class="tile-btn active" data-tile="street" onclick="setTileLayer('street')">Street</button>
         <button class="tile-btn" data-tile="satellite" onclick="setTileLayer('satellite')">Satellite</button>
@@ -84,8 +84,8 @@
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-label">Statistics</div>
+    <div class="section" data-section="statistics">
+      <div class="section-label collapsible" onclick="toggleSection('statistics')"><span>Statistics</span><svg class="chevron" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="label">Radius</div>
