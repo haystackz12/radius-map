@@ -33,6 +33,7 @@ let debounceTimer;
 let pins = [];
 let locationResolved = false;
 let overlapLayers = [];
+let currentLocationLabel = '';
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -350,8 +351,28 @@ async function reverseGeocode(lat, lng) {
     if (data && data.display_name) {
       document.getElementById('address-input').value = data.display_name.split(',').slice(0,3).join(',');
       setStatus('Found: ' + data.display_name.split(',').slice(0,2).join(','), 'success');
+      updateBreadcrumb(data.address);
     }
   } catch {}
+}
+
+function updateBreadcrumb(address) {
+  let label = '';
+  if (address) {
+    const city = address.city || address.town || address.village || address.hamlet || '';
+    const state = address.state || address.region || '';
+    label = [city, state].filter(Boolean).join(', ');
+  }
+  currentLocationLabel = label;
+  let el = document.getElementById('location-breadcrumb');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'location-breadcrumb';
+    el.className = 'location-breadcrumb';
+    document.getElementById('map').appendChild(el);
+  }
+  if (label) { el.textContent = label; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
 }
 
 function hideEmptyState() {
@@ -366,6 +387,8 @@ function applyResult(r) {
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + r.display_name.split(',').slice(0,2).join(','), 'success');
   hideEmptyState();
+  const parts = r.display_name.split(',').map(s => s.trim());
+  updateBreadcrumb({ city: parts[0] || '', state: parts[1] || '' });
   drawCircle();
 }
 
