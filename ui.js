@@ -20,6 +20,48 @@ function restoreCollapsed() {
   } catch {}
 }
 
+function computeOverlaps() {
+  overlapLayers.forEach(l => map.removeLayer(l));
+  overlapLayers = [];
+  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
+  if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
+  for (let i = 0; i < allCircles.length; i++) {
+    for (let j = i + 1; j < allCircles.length; j++) {
+      const a = allCircles[i], b = allCircles[j];
+      const dist = L.latLng(a.lat, a.lng).distanceTo(L.latLng(b.lat, b.lng));
+      if (dist < a.r + b.r && dist > Math.abs(a.r - b.r)) {
+        const pts = circleIntersectionPolygon(a, b, dist);
+        if (pts.length > 2) {
+          const poly = L.polygon(pts, { color: '#f5a623', weight: 0, fillColor: '#f5a623', fillOpacity: 0.25 }).addTo(map);
+          overlapLayers.push(poly);
+        }
+      }
+    }
+  }
+}
+
+function circleIntersectionPolygon(a, b, dist) {
+  const R = a.r, r = b.r, d = dist;
+  const ac = L.latLng(a.lat, a.lng), bc = L.latLng(b.lat, b.lng);
+  const angA = Math.acos(Math.max(-1, Math.min(1, (R*R+d*d-r*r)/(2*R*d))));
+  const angB = Math.acos(Math.max(-1, Math.min(1, (r*r+d*d-R*R)/(2*r*d))));
+  const brng = getBearing(ac, bc), pts = [];
+  for (let i = 0; i <= 20; i++) pts.push(destPt(ac, R, brng-angA+(2*angA*i/20)));
+  for (let i = 0; i <= 20; i++) pts.push(destPt(bc, r, (brng+Math.PI)+angB-(2*angB*i/20)));
+  return pts;
+}
+
+function getBearing(f, t) {
+  const d = (t.lng-f.lng)*Math.PI/180, a = f.lat*Math.PI/180, b = t.lat*Math.PI/180;
+  return Math.atan2(Math.sin(d)*Math.cos(b), Math.cos(a)*Math.sin(b)-Math.sin(a)*Math.cos(b)*Math.cos(d));
+}
+
+function destPt(o, m, b) {
+  const R=6371000, la=o.lat*Math.PI/180, lo=o.lng*Math.PI/180, d=m/R;
+  const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
+  return [la2*180/Math.PI, (lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la), Math.cos(d)-Math.sin(la)*Math.sin(la2)))*180/Math.PI];
+}
+
 function fitCircle() {
   if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
 }
@@ -171,6 +213,42 @@ function printMap() {
   const w = window.open(url, '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
   setStatus('Print view opened', 'success');
+}
+
+function getRecentSearches() {
+  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
+}
+
+function saveRecentSearch(query) {
+  let recent = getRecentSearches().filter(q => q !== query);
+  recent.unshift(query);
+  if (recent.length > 8) recent = recent.slice(0, 8);
+  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
+}
+
+function showRecentSearches() {
+  const recent = getRecentSearches();
+  if (!recent.length) return;
+  const box = document.getElementById('suggestions');
+  box.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'recent-header';
+  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
+  box.appendChild(header);
+  recent.forEach(q => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.textContent = q;
+    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function clearRecentSearches(e) {
+  e.stopPropagation();
+  localStorage.removeItem('rm_recent_searches');
+  document.getElementById('suggestions').style.display = 'none';
 }
 
 function confirmReset() {
