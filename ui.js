@@ -414,6 +414,17 @@ if (_searchInput) {
   _searchInput.addEventListener('touchend', () => map.dragging.enable());
 }
 
+/* ── Splash screen ── */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.remove(), 500);
+    }
+  }, 1800);
+});
+
 /* ── Init ── */
 restoreFromURL();
 buildPresets();
