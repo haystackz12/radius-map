@@ -370,6 +370,8 @@ function removePin(id) {
 /* ── Undo / Redo ── */
 let undoStack = [];
 let redoStack = [];
+let _lastState = null;
+let _skipUndo = false;
 const MAX_UNDO = 10;
 
 function captureState() {
@@ -380,25 +382,31 @@ function captureState() {
   };
 }
 
+function statesEqual(a, b) {
+  return a && b && a.lat === b.lat && a.lng === b.lng && a.radiusVal === b.radiusVal && a.unit === b.unit && a.color === b.color && a.opacity === b.opacity;
+}
+
 function pushUndo() {
-  const state = captureState();
-  // Don't push if identical to top of stack
-  if (undoStack.length) {
-    const top = undoStack[undoStack.length - 1];
-    if (top.lat === state.lat && top.lng === state.lng && top.radiusVal === state.radiusVal && top.unit === state.unit && top.color === state.color && top.opacity === state.opacity) return;
+  if (_skipUndo) return;
+  const current = captureState();
+  if (_lastState && !statesEqual(_lastState, current)) {
+    undoStack.push(_lastState);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = [];
   }
-  undoStack.push(state);
-  if (undoStack.length > MAX_UNDO) undoStack.shift();
-  redoStack = [];
+  _lastState = current;
 }
 
 function applyState(s) {
+  _skipUndo = true;
   currentLat = s.lat; currentLng = s.lng;
   currentColor = s.color; currentOpacity = s.opacity;
   if (s.unit !== currentUnit) setUnit(s.unit);
   document.getElementById('radius-slider').value = s.radiusVal;
   document.getElementById('opacity-slider').value = Math.round(s.opacity * 100);
   drawCircle();
+  _lastState = captureState();
+  _skipUndo = false;
   if (typeof updateHUD === 'function') updateHUD();
   if (typeof renderPopover === 'function' && activeFab === 'tools') renderPopover('tools');
 }
