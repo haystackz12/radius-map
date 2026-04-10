@@ -153,6 +153,30 @@ function exportData() {
   a.click();
 }
 
+function generateQR() {
+  if (typeof QRCode === 'undefined') { setStatus('QR library not loaded', 'error'); return; }
+  const val = parseFloat(document.getElementById('radius-slider').value);
+  const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
+  const container = document.getElementById('qr-container');
+  container.innerHTML = '';
+  container.style.display = 'block';
+  new QRCode(container, { text: url, width: 160, height: 160, colorDark: '#f0f2ff', colorLight: '#1a1d27' });
+  document.getElementById('qr-download-btn').style.display = 'flex';
+  setStatus('QR code generated', 'success');
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qr-container canvas');
+  if (!canvas) return;
+  canvas.toBlob(function(blob) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'radius-map-qr.png';
+    a.click();
+    setStatus('QR downloaded!', 'success');
+  });
+}
+
 function pinCurrent() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const label = document.getElementById('address-input').value.trim() ||
