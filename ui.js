@@ -92,7 +92,24 @@ function settingsPopoverHTML() {
   return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button>${pinItems}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button>`;
 }
 
-/* ── Event Delegation on Popovers ── */
+/* ── Floating tool cancel pill ── */
+function showToolPill(label, onCancel) {
+  let pill = document.getElementById('tool-pill');
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.id = 'tool-pill';
+    pill.style.cssText = 'position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,122,255,0.92);color:#fff;font-family:system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,122,255,0.4);cursor:pointer;z-index:1002;display:flex;align-items:center;gap:8px;white-space:nowrap;backdrop-filter:blur(8px);';
+    document.getElementById('map').appendChild(pill);
+  }
+  pill.innerHTML = `<span>${label}</span><span style="background:rgba(255,255,255,0.25);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;">×</span>`;
+  pill.style.display = 'flex';
+  pill.onclick = onCancel;
+}
+
+function hideToolPill() {
+  const pill = document.getElementById('tool-pill');
+  if (pill) pill.style.display = 'none';
+}
 document.getElementById('pop-radius').addEventListener('click', function(e) {
   const seg = e.target.closest('.seg-btn'); if (seg) { setUnit(seg.dataset.unit); renderPopover('radius'); updateHUD(); return; }
   const pre = e.target.closest('.preset-btn'); if (pre) { document.getElementById('radius-slider').value = pre.dataset.preset; drawCircle(); updateHUD(); renderPopover('radius'); return; }
@@ -112,12 +129,22 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
     toggleClickMode();
     const bd = document.getElementById('popover-backdrop');
     if (bd) bd.style.display = 'none';
+    if (clickModeActive) {
+      showToolPill('Click map to set center… tap to cancel', () => { toggleClickMode(); hideToolPill(); renderPopover('tools'); });
+    } else {
+      hideToolPill();
+    }
     renderPopover('tools');
   }
   if (act.dataset.action === 'measure') {
     toggleDistanceMode();
     const bd = document.getElementById('popover-backdrop');
     if (bd) bd.style.display = 'none';
+    if (distanceModeActive) {
+      showToolPill('Measuring distance… tap to stop', () => { toggleDistanceMode(); hideToolPill(); renderPopover('tools'); });
+    } else {
+      hideToolPill();
+    }
     renderPopover('tools');
   }
   if (act.dataset.action === 'fit') fitCircle();
@@ -214,7 +241,12 @@ document.addEventListener('click', function(e) {
 
 /* ── Keyboard shortcuts ── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeAll(); return; }
+  if (e.key === 'Escape') {
+    if (distanceModeActive) { toggleDistanceMode(); hideToolPill(); }
+    if (clickModeActive) { toggleClickMode(); hideToolPill(); }
+    closeAll();
+    return;
+  }
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
   if (e.key === '+' || e.key === '=') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.min(parseFloat(s.max), parseFloat(s.value) + 1); drawCircle(); updateHUD(); }
