@@ -357,12 +357,25 @@ if (isPrintMode) {
 
   const printColor = decodeURIComponent(urlParams.get('color') || '#4f8ef7');
   currentColor = printColor;
-  restoreFromURL();
+
+  const printLat = parseFloat(urlParams.get('lat'));
+  const printLng = parseFloat(urlParams.get('lng'));
+  const printR = parseFloat(urlParams.get('r'));
+  const printUnit = urlParams.get('unit') || 'mi';
+  if (!isNaN(printLat)) currentLat = printLat;
+  if (!isNaN(printLng)) currentLng = printLng;
+  currentUnit = printUnit;
+  const sliderEl = document.getElementById('radius-slider');
+  if (!isNaN(printR) && sliderEl) sliderEl.value = printR;
+
+  let radiusM;
+  if (printUnit === 'mi') radiusM = printR * 1609.344;
+  else if (printUnit === 'ft') radiusM = printR * 0.3048;
+  else radiusM = printR * 1000;
 
   map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 4, { animate: false });
   setTileLayer('street');
 
-  const radiusM = getRadiusMeters();
   circle = L.circle([currentLat, currentLng], {
     radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
     fillColor: currentColor, fillOpacity: currentOpacity
@@ -372,27 +385,19 @@ if (isPrintMode) {
   map.setView([currentLat, currentLng], zoom, { animate: false });
   map.invalidateSize();
 
-  let tilesReady = false, mapLoaded = false, printed = false;
-  function tryPrint() {
-    if (!tilesReady || !mapLoaded || printed) return;
-    printed = true;
-    setTimeout(function() {
-      msg.remove();
-      const badge = document.getElementById('map-style-badge');
-      if (badge) badge.style.display = 'none';
-      const breadcrumb = document.getElementById('location-breadcrumb');
-      if (breadcrumb) breadcrumb.style.display = 'none';
-      window.print();
-    }, 1000);
-  }
-  map.on('load', function() { mapLoaded = true; tryPrint(); });
-  map.whenReady(function() { mapLoaded = true; tryPrint(); });
+  const debug = document.createElement('div');
+  debug.id = 'print-debug';
+  debug.style.cssText = 'position:fixed;bottom:10px;left:10px;z-index:9999;background:#1a1d27;color:#f0f2ff;padding:10px 14px;border-radius:6px;font-family:monospace;font-size:11px;line-height:1.6;box-shadow:0 2px 8px rgba(0,0,0,0.5);';
+  debug.innerHTML = `lat: ${currentLat}<br>lng: ${currentLng}<br>r: ${printR} ${printUnit}<br>radiusM: ${radiusM.toFixed(1)}<br>color: ${currentColor}<br>zoom: ${zoom}`;
+  document.body.appendChild(debug);
+
+  msg.textContent = 'Print ready — circle should be visible';
+
   let tileTimer;
   map.on('tileload', function() {
     clearTimeout(tileTimer);
-    tileTimer = setTimeout(function() { tilesReady = true; tryPrint(); }, 500);
+    tileTimer = setTimeout(function() { msg.textContent = 'Tiles loaded — ready to print'; }, 500);
   });
-  setTimeout(function() { tilesReady = true; mapLoaded = true; tryPrint(); }, 5000);
 } else {
   initMap(willDetect);
   if (willDetect) detectLocation();
