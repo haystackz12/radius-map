@@ -152,6 +152,7 @@ function toggleConcentric() {
 
 function printMap() {
   setStatus('Preparing print view…', 'loading');
+  if (circle) map.flyToBounds(circle.getBounds(), { padding: [60, 60], animate: false });
   map.invalidateSize();
   setTimeout(function() {
     if (typeof leafletImage !== 'undefined') {
@@ -164,7 +165,7 @@ function printMap() {
     } else {
       printFallback();
     }
-  }, 100);
+  }, 300);
 }
 
 function printFallback() {
