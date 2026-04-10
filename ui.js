@@ -28,7 +28,9 @@ function renderPopover(name) {
   const el = document.getElementById('pop-' + name);
   if (!el || !el.classList.contains('pop-open')) return;
   const renderers = { radius: radiusPopoverHTML, tools: toolsPopoverHTML, style: stylePopoverHTML, settings: settingsPopoverHTML };
+  console.log('rendering into:', el.id, 'parent:', el.parentElement?.id, 'in document:', document.contains(el));
   el.innerHTML = renderers[name]();
+  console.log('preset-btn found in pop:', !!document.querySelector('#pop-radius .preset-btn'), 'pop-radius children:', document.getElementById('pop-radius')?.children.length);
   disableMapPropagation();
 }
 
