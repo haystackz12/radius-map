@@ -51,9 +51,14 @@
 }
 
 .collapsible .chevron {
-  transition: transform 0.2s;
-  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 0.6;
+  color: var(--text);
+  width: 14px;
+  height: 14px;
 }
+
+.collapsible:hover .chevron { opacity: 1; }
 
 .section.collapsed .collapsible .chevron { transform: rotate(-90deg); }
 .section.collapsed > *:not(.section-label) { display: none; }
