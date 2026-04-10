@@ -178,6 +178,22 @@ function buildColorOptions() {
   });
 }
 
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.remove('show');
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
 function setStatus(msg, type = '') {
   const el = document.getElementById('status');
   el.textContent = msg;
@@ -331,7 +347,7 @@ function toggleDrawer() {
 
 function copyCoords() {
   const txt = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
-  navigator.clipboard.writeText(txt).then(() => setStatus('Coordinates copied!', 'success'));
+  navigator.clipboard.writeText(txt).then(() => { showToast('Coordinates copied!'); setStatus('Coordinates copied!', 'success'); });
 }
 
 function savePNG() {
@@ -436,7 +452,7 @@ function restoreFromURL() {
 function copyShareLink() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
-  navigator.clipboard.writeText(url).then(() => setStatus('Share link copied!', 'success'));
+  navigator.clipboard.writeText(url).then(() => { showToast('Share link copied!'); setStatus('Share link copied!', 'success'); });
 }
 
 buildColorOptions();
