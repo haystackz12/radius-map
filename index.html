@@ -34,6 +34,9 @@
 </div>
 
 <div id="map">
+  <!-- Backdrop — closes popovers when clicking outside -->
+  <div id="popover-backdrop" style="display:none; position:fixed; inset:0; z-index:998; background:transparent;"></div>
+
   <!-- Floating Search Bar -->
   <div id="search-bar" data-keep-open>
     <input id="address-input" type="text" placeholder="Address or lat, lng coordinates…" autocomplete="off">
