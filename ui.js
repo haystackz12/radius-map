@@ -205,39 +205,21 @@ function toggleConcentric() {
 }
 
 function printMap() {
-  setStatus('Preparing print…', 'loading');
-  const panel = document.querySelector('.panel');
-  if (panel) panel.style.display = 'none';
-  map.invalidateSize();
-  if (circle) map.fitBounds(circle.getBounds(), { padding: [60, 60], animate: false });
-  setTimeout(function() {
-    if (typeof leafletImage !== 'undefined') {
-      leafletImage(map, function(err, canvas) {
-        restorePanel(panel);
-        if (!err && canvas) { try { canvas.toDataURL(); openPrintWindow(canvas); return; } catch {} }
-        printViaHtml2canvas(panel);
-      });
-    } else { printViaHtml2canvas(panel); }
-  }, 600);
-}
-
-function restorePanel(panel) {
-  if (panel) panel.style.display = '';
-  map.invalidateSize();
-}
-
-function printViaHtml2canvas(panel) {
-  if (typeof html2canvas === 'undefined') { restorePanel(panel); setStatus('Print unavailable — libraries not loaded', 'error'); return; }
-  html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, scale: 2 })
-    .then(function(canvas) { restorePanel(panel); openPrintWindow(canvas); })
-    .catch(function() { restorePanel(panel); setStatus('Print failed', 'error'); });
-}
-
-function openPrintWindow(canvas) {
-  const dataUrl = canvas.toDataURL('image/png');
+  const zoom = map.getZoom();
+  const addr = document.getElementById('address-input').value || 'Radius Map';
+  const radius = document.getElementById('stat-radius').textContent;
+  const area = document.getElementById('stat-area-mi').textContent + ' mi²';
+  const imgUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${currentLat},${currentLng}&zoom=${zoom}&size=1200x800&markers=${currentLat},${currentLng},red`;
   const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  w.document.write('<!DOCTYPE html><html><head><title>Print Map</title><style>@page{size:landscape;margin:0}body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="' + dataUrl + '" onload="window.print();window.close()"></body></html>');
+  w.document.write(`<!DOCTYPE html><html><head><title>Print — ${addr}</title>
+<style>@page{size:landscape;margin:10mm}body{margin:0;font-family:sans-serif;text-align:center}
+img{max-width:100%;max-height:80vh;object-fit:contain;display:block;margin:0 auto}
+.footer{margin-top:8px;font-size:12px;color:#444}</style></head><body>
+<img src="${imgUrl}" onload="window.print();window.close()" onerror="document.getElementById('err').style.display='block'">
+<div class="footer">${addr} &middot; Radius: ${radius} &middot; Area: ${area} &middot; ${new Date().toLocaleDateString()}</div>
+<div id="err" style="display:none;color:red;margin-top:16px">Static map failed to load. Try Save as PNG instead.</div>
+</body></html>`);
   w.document.close();
   setStatus('Print dialog opened', 'success');
 }
