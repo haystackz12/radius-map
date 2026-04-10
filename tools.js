@@ -54,6 +54,10 @@ function toggleClickMode() {
   else setStatus('', '');
 }
 
+function toggleHelp() {
+  document.getElementById('help-overlay').classList.toggle('open');
+}
+
 function toggleModal() {
   document.getElementById('modal-overlay').classList.toggle('open');
 }

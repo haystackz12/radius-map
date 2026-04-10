@@ -296,6 +296,29 @@
   opacity: 1;
 }
 
+.help-body { padding: 16px 20px; }
+
+.help-section { margin-bottom: 16px; }
+.help-section:last-child { margin-bottom: 0; }
+.help-section h3 { font-size: 13px; font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+.help-section p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.shortcut-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.shortcut-list div { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+
+kbd {
+  display: inline-block;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  min-width: 24px;
+  text-align: center;
+}
+
 .distance-label {
   background: var(--surface);
   color: var(--text);
