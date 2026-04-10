@@ -307,6 +307,18 @@ async function searchAddress() {
   }
 }
 
+function clearSearchInput() {
+  document.getElementById('address-input').value = '';
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('clear-input-btn').style.display = 'none';
+  setStatus('', '');
+}
+
+function updateClearBtn() {
+  const btn = document.getElementById('clear-input-btn');
+  if (btn) btn.style.display = document.getElementById('address-input').value.trim() ? 'flex' : 'none';
+}
+
 function hideEmptyState() {
   const el = document.getElementById('empty-state');
   if (el) el.style.display = 'none';
@@ -318,6 +330,7 @@ function applyResult(r) {
   document.getElementById('address-input').value = r.display_name.split(',').slice(0,3).join(',');
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + r.display_name.split(',').slice(0,2).join(','), 'success');
+  updateClearBtn();
   hideEmptyState();
   if (r.address) {
     updateBreadcrumb(r.address);
@@ -379,6 +392,7 @@ document.getElementById('address-input').addEventListener('focus', function() {
 });
 
 document.getElementById('address-input').addEventListener('input', function() {
+  updateClearBtn();
   clearTimeout(debounceTimer);
   const q = this.value.trim();
   if (q.length < 3) { document.getElementById('suggestions').style.display = 'none'; return; }

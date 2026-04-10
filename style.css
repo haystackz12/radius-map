@@ -87,7 +87,7 @@ header h1 {
 }
 
 .header-search .search-wrap input {
-  padding: 8px 36px 8px 12px;
+  padding: 8px 60px 8px 12px;
   font-size: 13px;
 }
 
@@ -165,6 +165,26 @@ header h1 {
 
 .search-btn:hover { opacity: 0.85; }
 .search-btn svg { width: 14px; height: 14px; fill: white; }
+
+.clear-input-btn {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.clear-input-btn:hover { color: var(--text); }
 
 .suggestions {
   position: absolute;
