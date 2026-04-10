@@ -419,6 +419,52 @@ function resetEverything() {
   if (typeof renderPopover === 'function') renderPopover('tools');
 }
 
+/* ── CSV Import ── */
+function handleCSVImport(file) {
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+    // Skip header if it looks like one
+    const start = /^(address|name|location|city)/i.test(lines[0]) ? 1 : 0;
+    const addresses = lines.slice(start).map(l => l.split(',')[0].trim()).filter(Boolean).slice(0, 20);
+    if (!addresses.length) { setStatus('No addresses found in CSV', 'error'); return; }
+    const prog = document.getElementById('csv-progress');
+    if (prog) { prog.style.display = 'block'; prog.textContent = `Importing 0/${addresses.length}…`; }
+    let imported = 0;
+    for (let i = 0; i < addresses.length; i++) {
+      if (prog) prog.textContent = `Importing ${i + 1}/${addresses.length}…`;
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(addresses[i])}&limit=1`;
+        const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+        const data = await resp.json();
+        if (data.length) {
+          const r = data[0];
+          const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+          const radiusM = getRadiusMeters();
+          const layer = L.circle([lat, lng], {
+            radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
+            fillColor: currentColor, fillOpacity: currentOpacity
+          }).addTo(map);
+          const name = addresses[i].split(',')[0].trim();
+          const labelMarker = L.marker([lat, lng], {
+            icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${name}</div>`, iconSize: null, iconAnchor: null })
+          }).addTo(map);
+          pins.push({ id: Date.now() + i, lat, lng, radiusVal: parseFloat(document.getElementById('radius-slider').value), unit: currentUnit, color: currentColor, label: addresses[i], name, layer, labelMarker });
+          imported++;
+        }
+      } catch {}
+      // Respect Nominatim 1 req/sec
+      if (i < addresses.length - 1) await new Promise(res => setTimeout(res, 1100));
+    }
+    renderPinList();
+    computeOverlaps();
+    if (prog) { prog.textContent = `Done — imported ${imported}/${addresses.length} addresses`; setTimeout(() => { prog.style.display = 'none'; }, 3000); }
+    setStatus(`Imported ${imported} locations from CSV`, 'success');
+    if (typeof renderPopover === 'function') renderPopover('settings');
+  };
+  reader.readAsText(file);
+}
+
 function renderPinList() {
   const list = document.getElementById('pin-list');
   if (!list) return;

@@ -91,7 +91,7 @@ function settingsPopoverHTML() {
   const swatches = COLORS.map(c => `<div class="color-sw ${c.hex === currentColor ? 'active' : ''}" data-color="${c.hex}" style="background:${c.hex}" title="${c.name}"></div>`).join('');
   const opVal = Math.round(currentOpacity * 100);
   const pinItems = pins.map(p => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0;"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(0,0,0,0.7);">${p.name || p.label}</span><span style="cursor:pointer;color:rgba(0,0,0,0.3);font-size:14px;" data-action="remove-pin" data-pin-id="${p.id}">×</span></div>`).join('');
-  return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button><div style="font-size:9px;color:rgba(0,0,0,0.38);padding:2px 2px 6px;line-height:1.4;">Saves current circle. Search a new address to start a new radius.</div>${pinItems}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button>`;
+  return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button><div style="font-size:9px;color:rgba(0,0,0,0.38);padding:2px 2px 6px;line-height:1.4;">Saves current circle. Search a new address to start a new radius.</div>${pinItems}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button><hr class="pop-divider"><div class="pop-title">Import</div><button class="action-btn" data-action="csv">📄  Import CSV Addresses</button><input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none"><div id="csv-progress" style="display:none;font-size:10px;color:rgba(0,0,0,0.5);padding:4px 0;"></div>`;
 }
 
 /* ── Floating tool cancel pill ── */
@@ -206,6 +206,7 @@ document.getElementById('pop-settings').addEventListener('click', function(e) {
   if (act.dataset.action === 'qr') generateQR();
   if (act.dataset.action === 'json') exportData();
   if (act.dataset.action === 'embed') copyEmbed();
+  if (act.dataset.action === 'csv') { document.getElementById('csv-file-input').click(); }
   if (act.dataset.action === 'remove-pin') { removePin(parseInt(act.dataset.pinId)); renderPopover('settings'); }
 });
 document.getElementById('pop-settings').addEventListener('input', function(e) {
@@ -476,6 +477,14 @@ const _aboutBtn = document.getElementById('about-btn');
 if (_aboutBtn) _aboutBtn.addEventListener('click', () => {
   const overlay = document.getElementById('about-overlay');
   if (overlay) overlay.style.display = 'flex';
+});
+
+/* ── CSV file input listener ── */
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'csv-file-input' && e.target.files.length) {
+    handleCSVImport(e.target.files[0]);
+    e.target.value = '';
+  }
 });
 
 /* ── Init ── */
