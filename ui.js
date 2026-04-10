@@ -5,6 +5,9 @@ function closeAll() {
   document.querySelectorAll('.popover').forEach(p => p.classList.remove('pop-open'));
   document.querySelectorAll('.fab').forEach(f => f.classList.remove('fab-active'));
   activeFab = null;
+  const bd = document.getElementById('popover-backdrop');
+  if (bd) bd.style.display = 'none';
+  document.getElementById('suggestions').style.display = 'none';
 }
 
 function toggleFab(name) {
@@ -14,6 +17,8 @@ function toggleFab(name) {
   document.getElementById('fab-' + name).classList.add('fab-active');
   const pop = document.getElementById('pop-' + name);
   pop.classList.add('pop-open');
+  const bd = document.getElementById('popover-backdrop');
+  if (bd) bd.style.display = 'block';
   renderPopover(name);
 }
 
@@ -23,14 +28,16 @@ document.getElementById('fab-tools').addEventListener('click', () => toggleFab('
 document.getElementById('fab-style').addEventListener('click', () => toggleFab('style'));
 document.getElementById('fab-settings').addEventListener('click', () => toggleFab('settings'));
 
+/* ── Backdrop closes all popovers ── */
+const _backdrop = document.getElementById('popover-backdrop');
+if (_backdrop) _backdrop.addEventListener('click', () => closeAll());
+
 /* ── Popover Renderers ── */
 function renderPopover(name) {
   const el = document.getElementById('pop-' + name);
   if (!el || !el.classList.contains('pop-open')) return;
   const renderers = { radius: radiusPopoverHTML, tools: toolsPopoverHTML, style: stylePopoverHTML, settings: settingsPopoverHTML };
-  console.log('rendering into:', el.id, 'parent:', el.parentElement?.id, 'in document:', document.contains(el));
   el.innerHTML = renderers[name]();
-  console.log('preset-btn found in pop:', !!document.querySelector('#pop-radius .preset-btn'), 'pop-radius children:', document.getElementById('pop-radius')?.children.length);
   disableMapPropagation();
 }
 
@@ -171,20 +178,11 @@ document.getElementById('address-input').addEventListener('input', function() {
 document.getElementById('search-btn').addEventListener('click', () => searchAddress());
 document.getElementById('search-clear').addEventListener('click', () => { clearSearchInput(); document.getElementById('search-clear').style.display = 'none'; });
 
-/* ── Global click: close suggestions + popovers ── */
+/* ── Close suggestions on outside click ── */
 document.addEventListener('click', function(e) {
-  let el = e.target;
-  const path = [];
-  while (el) {
-    path.push(el.tagName + (el.id ? '#'+el.id : '') + (el.className ? '.'+el.className : ''));
-    el = el.parentElement;
+  if (!e.target.closest('#suggestions') && !e.target.closest('#search-bar')) {
+    document.getElementById('suggestions').style.display = 'none';
   }
-  console.log('[CLICK PATH]', path.join(' → '));
-  console.log('[keep-open match]', !!e.target.closest('[data-keep-open]'));
-
-  if (!e.target.closest('#suggestions') && !e.target.closest('[data-keep-open]')) document.getElementById('suggestions').style.display = 'none';
-  if (e.target.closest('[data-keep-open]') || e.target.closest('#stats-hud')) return;
-  closeAll();
 });
 
 /* ── Keyboard shortcuts ── */
@@ -196,7 +194,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '-') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.max(parseFloat(s.min), parseFloat(s.value) - 1); drawCircle(); updateHUD(); }
 });
 
-/* ── Missing functions restored from pre-redesign ── */
+/* ── Missing functions ── */
 function fitCircle() {
   if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
 }
