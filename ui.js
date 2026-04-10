@@ -204,16 +204,28 @@ function toggleConcentric() {
   updateSecondStats();
 }
 
-function printMap() {
-  const zoom = Math.min(map.getZoom(), 17);
-  const geojson = encodeURIComponent(JSON.stringify({
+function buildCircleGeoJSON(lat, lng, radiusM, steps) {
+  steps = steps || 64;
+  const coords = [];
+  for (var i = 0; i < steps; i++) {
+    var angle = (i / steps) * 2 * Math.PI;
+    var dLat = (radiusM * Math.cos(angle)) / 111320;
+    var dLng = (radiusM * Math.sin(angle)) / (111320 * Math.cos(lat * Math.PI / 180));
+    coords.push([lng + dLng, lat + dLat]);
+  }
+  coords.push(coords[0]);
+  return {
     type: 'Feature',
-    properties: { stroke: currentColor, 'stroke-width': 2, fill: currentColor, 'fill-opacity': 0.15 },
-    geometry: { type: 'Point', coordinates: [currentLng, currentLat] }
-  }));
+    properties: { stroke: currentColor, 'stroke-width': 3, 'stroke-opacity': 1, fill: currentColor, 'fill-opacity': 0.2 },
+    geometry: { type: 'Polygon', coordinates: [coords] }
+  };
+}
+
+function printMap() {
   const token = window.MAPBOX_TOKEN;
   if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
-  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/geojson(${geojson})/${currentLng},${currentLat},${zoom}/1200x800?access_token=${token}`;
+  const geojson = encodeURIComponent(JSON.stringify(buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters())));
+  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/geojson(${geojson})/auto/1200x800?access_token=${token}`;
   const w = window.open('', '_blank');
   if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
   w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}body{margin:0}img{width:100%;height:100vh;object-fit:contain}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=\\'padding:40px;font-family:sans-serif\\'>Print failed — try Save as PNG instead.</p>'"></body></html>`);
