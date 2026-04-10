@@ -6,18 +6,19 @@ All tickets done. App live at https://radius-map-psi.vercel.app
 ## Sprint 2 — Features ✅ COMPLETE
 All 8 tickets shipped. File split + 7 user-facing features deployed.
 
----
-
-## Sprint 3 — TBD 🗓️ PLANNING
-**Status:** Backlog empty — pending planning session.
-
-Suggested focus areas:
-- Polish & bug hunting (cross-browser, mobile, edge cases)
-- Accessibility audit (keyboard nav, ARIA, contrast)
-- Performance review
-- New feature ideas from user feedback
+## Sprint 3 — QA & Polish ✅ COMPLETE
+All 4 tickets shipped. UI reorganization + robust PNG export.
 
 ---
+
+### ✅ DONE (Sprint 3)
+
+| Ticket | Description |
+|---|---|
+| RM-021 | Fix PNG export — leaflet-image with html2canvas fallback, never fails silently |
+| RM-022 | Copy confirmation toast notification |
+| RM-023 | Gear icon + settings modal (Appearance / Pins / Export tabs) |
+| RM-024 | Move address search into header bar |
 
 ### ✅ DONE (Sprint 2)
 
