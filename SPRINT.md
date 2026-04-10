@@ -17,30 +17,27 @@ RM-021 through RM-026. PNG export fix, copy confirmation toast, settings gear mo
 
 ---
 
-## Sprint 4 — Polish & UX (Current)
-**Goal:** Make the app feel complete and self-explanatory for a new user landing for the first time.
+## Sprint 4 — Polish & UX ✅ COMPLETE
+All 8 tickets + 2 refactor commits shipped. App feels complete and self-explanatory for new users.
 
-### ⚠️ DO THIS FIRST
-Check current line counts on `index.html`, `style.css`, `app.js`. If any file exceeds 400 lines, split before starting feature work.
+### ✅ DONE (Sprint 4)
 
----
-
-### 🔲 IN QUEUE (work in this order)
-
-| Ticket | Priority | Description |
-|---|---|---|
-| RM-027 | High | **Smart default location** — On load: (1) try `navigator.geolocation` — ask browser permission, center map on user if granted. (2) If denied/unavailable, call `https://ipapi.co/json/` to get city-level location from IP. (3) If both fail, fall back to geographic center of US (lat: 39.5, lng: -98.35, zoom: 4). Show a subtle status message during detection. Never hard-code Denver. |
-| RM-028 | High | **In-app user guide** — `?` button in the header (right of gear icon). Opens a clean help modal with sections: Search, Radius, Pins, Settings, Export, Distance Tool, Share Link. Each section has a short description and keyboard shortcut if applicable. Close with × or Escape. |
-| RM-029 | High | **Onboarding walkthrough** — First-time visitors (detected via `localStorage` flag `rm_onboarded`) see a 3-step overlay on load: Step 1 "Search an address" (highlights search bar), Step 2 "Set your radius" (highlights slider), Step 3 "Explore the tools" (highlights gear icon). Skip button available. Sets `rm_onboarded = true` on completion so it never shows again. |
-| RM-030 | High | **Empty state prompt** — On first load before any address is searched, show a centered overlay on the map: large pin icon, heading "Search an address to get started", subtext "Enter any address, city, or place in the search bar above." Disappears the moment the first circle is drawn. |
-| RM-031 | Medium | **Address labels on pins** — Each pinned location marker shows a small label with the address name (first 2 segments of display name). Label visible by default, not just on hover. Dark background, white text, small font — matches dark UI. |
-| RM-032 | Medium | **Zoom to radius button** — Small "Fit circle" button (target icon) near the radius slider. One click calls `map.flyToBounds(circle.getBounds(), { padding: [40,40] })` to snap viewport back to the active circle. Useful after panning away. |
-| RM-033 | Medium | **Keyboard shortcuts** — `Escape` closes any open modal. `Enter` in search bar triggers search. `+`/`=` increases radius by 1 unit. `-` decreases radius by 1 unit. `?` opens help modal. Add shortcut reference at bottom of help modal (RM-028). |
-| RM-034 | Medium | **Feet unit option** — Add `ft` as third unit alongside `mi` and `km`. Slider range in feet: 100–5280 ft. Conversion: 1 mi = 5280 ft. Stats panel and radius display update accordingly. Useful for small radius use cases (a city block, a property boundary). |
+| Ticket | Description |
+|---|---|
+| refactor | Split style.css + app.js into 4 files to stay under 400-line cap |
+| RM-027 | Smart default location — geolocation → IP (ipapi.co) → US center fallback |
+| RM-028 | In-app help modal — ? button in header, keyboard shortcuts reference |
+| RM-029 | Onboarding walkthrough — 3-step overlay, localStorage flag `rm_onboarded` |
+| RM-030 | Empty state prompt — centered overlay before first search/click |
+| RM-031 | Address labels on pinned locations — dark labels visible on map |
+| RM-032 | Zoom to radius — "Fit circle in view" button near slider |
+| RM-033 | Keyboard shortcuts — Esc, ?, +/-, Enter |
+| RM-034 | Feet unit option — ft alongside mi/km, 100–5280 range, custom presets |
+| refactor | Split components.css → features.css (400-line cap) |
 
 ---
 
-## Sprint 5 — Data & Shareability (Planned)
+## Sprint 5 — Data & Shareability (Next)
 **Goal:** Deepen the data shown and expand how the map can be shared and embedded.
 
 ### 🔲 IN QUEUE
@@ -58,6 +55,4 @@ Check current line counts on `index.html`, `style.css`, `app.js`. If any file ex
 
 ## File Size Policy
 - Hard cap: 400 lines per file
-- Current files: `index.html`, `style.css`, `app.js`
-- If any file exceeds 400 lines during Sprint 4, split immediately and commit before continuing
 - Deploy after every ticket: `git add -A && git commit -m "feat: RM-0XX description" && git push origin main`
