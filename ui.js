@@ -1,362 +1,202 @@
-function toggleSection(name) {
-  const section = document.querySelector(`[data-section="${name}"]`);
-  if (!section) return;
-  section.classList.toggle('collapsed');
-  let collapsed = {};
-  try { collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}'); } catch {}
-  collapsed[name] = section.classList.contains('collapsed');
-  localStorage.setItem('rm_collapsed', JSON.stringify(collapsed));
+/* ── FAB & Popover State ── */
+let activeFab = null;
+
+function closeAll() {
+  document.querySelectorAll('.popover').forEach(p => p.classList.remove('pop-open'));
+  document.querySelectorAll('.fab').forEach(f => f.classList.remove('fab-active'));
+  activeFab = null;
 }
 
-function restoreCollapsed() {
-  try {
-    const collapsed = JSON.parse(localStorage.getItem('rm_collapsed') || '{}');
-    Object.keys(collapsed).forEach(name => {
-      if (collapsed[name]) {
-        const section = document.querySelector(`[data-section="${name}"]`);
-        if (section) section.classList.add('collapsed');
-      }
-    });
-  } catch {}
+function toggleFab(name) {
+  if (activeFab === name) { closeAll(); return; }
+  closeAll();
+  activeFab = name;
+  document.getElementById('fab-' + name).classList.add('fab-active');
+  const pop = document.getElementById('pop-' + name);
+  pop.classList.add('pop-open');
+  renderPopover(name);
 }
 
-function computeOverlaps() {
-  overlapLayers.forEach(l => map.removeLayer(l));
-  overlapLayers = [];
-  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
-  if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
-  for (let i = 0; i < allCircles.length; i++) {
-    for (let j = i + 1; j < allCircles.length; j++) {
-      const a = allCircles[i], b = allCircles[j];
-      const dist = L.latLng(a.lat, a.lng).distanceTo(L.latLng(b.lat, b.lng));
-      if (dist < a.r + b.r && dist > Math.abs(a.r - b.r)) {
-        const pts = circleIntersectionPolygon(a, b, dist);
-        if (pts.length > 2) {
-          const poly = L.polygon(pts, { color: '#f5a623', weight: 0, fillColor: '#f5a623', fillOpacity: 0.25 }).addTo(map);
-          overlapLayers.push(poly);
-        }
-      }
-    }
-  }
+/* ── Popover Renderers ── */
+function renderPopover(name) {
+  const el = document.getElementById('pop-' + name);
+  if (!el || !el.classList.contains('pop-open')) return;
+  const renderers = { radius: radiusPopoverHTML, tools: toolsPopoverHTML, style: stylePopoverHTML, settings: settingsPopoverHTML };
+  el.innerHTML = renderers[name]();
+  bindPopoverEvents(name);
 }
 
-function circleIntersectionPolygon(a, b, dist) {
-  const R = a.r, r = b.r, d = dist;
-  const ac = L.latLng(a.lat, a.lng), bc = L.latLng(b.lat, b.lng);
-  const angA = Math.acos(Math.max(-1, Math.min(1, (R*R+d*d-r*r)/(2*R*d))));
-  const angB = Math.acos(Math.max(-1, Math.min(1, (r*r+d*d-R*R)/(2*r*d))));
-  const brng = getBearing(ac, bc), pts = [];
-  for (let i = 0; i <= 20; i++) pts.push(destPt(ac, R, brng-angA+(2*angA*i/20)));
-  for (let i = 0; i <= 20; i++) pts.push(destPt(bc, r, (brng+Math.PI)+angB-(2*angB*i/20)));
-  return pts;
+function radiusPopoverHTML() {
+  const r = parseFloat(document.getElementById('radius-slider').value);
+  const u = currentUnit;
+  const maxR = u === 'ft' ? 26400 : (u === 'km' ? 80 : 50);
+  const step = u === 'ft' ? 10 : 0.1;
+  const presets = u === 'ft' ? [500, 1000, 2640, 5280, 26400] : [1, 3, 5, 10, 25];
+  const pLabels = u === 'ft' ? presets.map(p => p >= 5280 ? (p/5280) + ' mi' : p + ' ft') : presets.map(p => p + ' ' + u);
+  const presetsHTML = presets.map((p, i) => {
+    const active = Math.abs(r - (u === 'km' ? +(p * 1.60934).toFixed(1) : p)) < (u === 'ft' ? 50 : 0.05);
+    const val = u === 'km' ? +(p * 1.60934).toFixed(1) : p;
+    return `<div class="preset-btn ${active ? 'active' : ''}" data-preset="${val}">${pLabels[i]}</div>`;
+  }).join('');
+  const unitBtns = ['mi','km','ft'].map(uu => `<div class="seg-btn ${u === uu ? 'active' : ''}" data-unit="${uu}">${uu}</div>`).join('');
+  const hasRing2 = concentricActive;
+  const r2 = parseFloat(document.getElementById('radius-slider-2').value);
+  const ring2Sec = hasRing2 ? `<div class="ring2-box"><div class="ring2-label">2nd Ring · ${u === 'ft' ? Math.round(r2) : r2.toFixed(1)} ${u}</div><input class="pop-slider" id="ring2-slider" type="range" min="${u === 'ft' ? 100 : 0.1}" max="${maxR}" step="${step}" value="${r2}"></div>` : '';
+  return `<div class="pop-title">Radius</div><div class="pop-bignum">${u === 'ft' ? Math.round(r) : r.toFixed(1)}</div><div class="pop-unit-sub">${u}</div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${u === 'ft' ? 100 : 0.1}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" id="btn-ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" id="btn-fit">⊡  Fit Circle in View</button>`;
 }
 
-function getBearing(f, t) {
-  const d = (t.lng-f.lng)*Math.PI/180, a = f.lat*Math.PI/180, b = t.lat*Math.PI/180;
-  return Math.atan2(Math.sin(d)*Math.cos(b), Math.cos(a)*Math.sin(b)-Math.sin(a)*Math.cos(b)*Math.cos(d));
+function toolsPopoverHTML() {
+  return `<div class="pop-title">Tools</div><button class="action-btn" id="btn-print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" id="btn-setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" id="btn-measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" id="btn-fit2">⊡  Fit Circle in View</button><button class="action-btn" id="btn-zoomin">＋  Zoom In</button><button class="action-btn" id="btn-zoomout">－  Zoom Out</button>`;
 }
 
-function destPt(o, m, b) {
-  const R=6371000, la=o.lat*Math.PI/180, lo=o.lng*Math.PI/180, d=m/R;
-  const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
-  return [la2*180/Math.PI, (lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la), Math.cos(d)-Math.sin(la)*Math.sin(la2)))*180/Math.PI];
-}
-
-function fitCircle() {
-  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
-}
-
-function startOnboarding() {
-  if (localStorage.getItem('rm_onboarded')) return;
-  const steps = [
-    { target: '.header-search', title: 'Search an address', text: 'Type any address, city, or place to center the map.' },
-    { target: '#radius-slider', title: 'Set your radius', text: 'Drag the slider or pick a preset to adjust the circle size.' },
-    { target: '.gear-btn[aria-label="Settings"]', title: 'Explore the tools', text: 'Open Settings to pin locations, change colors, and export your map.' }
+function stylePopoverHTML() {
+  const styles = [
+    { id: 'street', swatch: '#d6e4ef', name: 'Street', desc: 'Roads & neighborhoods' },
+    { id: 'satellite', swatch: '#182818', name: 'Satellite', desc: 'Aerial imagery' },
+    { id: 'topo', swatch: '#c9d9a8', name: 'Topographic', desc: 'Terrain & elevation' }
   ];
-  let step = 0;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'onboard-overlay';
-  document.body.appendChild(overlay);
-
-  function show() {
-    overlay.innerHTML = '';
-    if (step >= steps.length) { finish(); return; }
-    const s = steps[step];
-    const el = document.querySelector(s.target);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    const card = document.createElement('div');
-    card.className = 'onboard-card';
-    card.innerHTML = `<div class="onboard-step">Step ${step + 1} of ${steps.length}</div>` +
-      `<h3>${s.title}</h3><p>${s.text}</p>` +
-      `<div class="onboard-actions">` +
-      `<button class="onboard-skip">Skip</button>` +
-      `<button class="onboard-next">${step < steps.length - 1 ? 'Next' : 'Done'}</button></div>`;
-    card.querySelector('.onboard-skip').onclick = finish;
-    card.querySelector('.onboard-next').onclick = () => { step++; show(); };
-    overlay.appendChild(card);
-  }
-
-  function finish() {
-    localStorage.setItem('rm_onboarded', 'true');
-    overlay.remove();
-  }
-
-  show();
+  const curStyle = document.querySelector('.tile-btn.active')?.dataset?.tile || 'street';
+  return `<div class="pop-title">Map Style</div>` + styles.map(s => `<div class="style-opt ${curStyle === s.id ? 'active' : ''}" data-style="${s.id}"><div class="style-swatch" style="background:${s.swatch}"></div><div><div class="style-name">${s.name}</div><div class="style-desc">${s.desc}</div></div></div>`).join('');
 }
 
-document.addEventListener('keydown', function(e) {
-  const tag = (e.target.tagName || '').toLowerCase();
-  const inInput = tag === 'input' || tag === 'textarea';
-
-  if (e.key === 'Escape') {
-    if (document.getElementById('help-overlay').classList.contains('open')) toggleHelp();
-    else if (document.getElementById('modal-overlay').classList.contains('open')) toggleModal();
-    else if (document.getElementById('about-overlay').classList.contains('open')) toggleAbout();
-    return;
-  }
-
-  if (inInput) return;
-
-  if (e.key === '?' || e.key === '/') { e.preventDefault(); toggleHelp(); return; }
-  if (e.key === '+' || e.key === '=') {
-    e.preventDefault();
-    const slider = document.getElementById('radius-slider');
-    slider.value = Math.min(parseFloat(slider.max), parseFloat(slider.value) + 1);
-    drawCircle();
-    return;
-  }
-  if (e.key === '-') {
-    e.preventDefault();
-    const slider = document.getElementById('radius-slider');
-    slider.value = Math.max(parseFloat(slider.min), parseFloat(slider.value) - 1);
-    drawCircle();
-    return;
-  }
-});
-
-function getSecondRadiusMeters() {
-  const slider2 = document.getElementById('radius-slider-2');
-  if (!slider2) return 0;
-  const val = parseFloat(slider2.value);
-  if (currentUnit === 'mi') return val * 1609.344;
-  if (currentUnit === 'ft') return val * 0.3048;
-  return val * 1000;
+function settingsPopoverHTML() {
+  const swatches = COLORS.map(c => `<div class="color-sw ${c.hex === currentColor ? 'active' : ''}" data-color="${c.hex}" style="background:${c.hex}" title="${c.name}"></div>`).join('');
+  const opVal = Math.round(currentOpacity * 100);
+  return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" id="btn-pin">📍  Pin this location</button><div id="pop-pins-list"></div><hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" id="btn-share">🔗  Copy share link</button><button class="action-btn" id="btn-coords">📋  Copy coordinates</button><button class="action-btn" id="btn-qr">⬛  Generate QR code</button><button class="action-btn" id="btn-json">⬇  Download as JSON</button><button class="action-btn" id="btn-embed">‹›  Copy embed code</button>`;
 }
 
-function removeSecondCircle() {
-  if (secondCircle) {
-    if (map.hasLayer(secondCircle)) map.removeLayer(secondCircle);
-    secondCircle = null;
-  }
-}
-
-function drawSecondCircle() {
-  removeSecondCircle();
-  if (!concentricActive) return;
-  secondCircle = L.circle([currentLat, currentLng], {
-    radius: getSecondRadiusMeters(), color: currentColor, weight: 2, opacity: 0.6,
-    fillColor: currentColor, fillOpacity: currentOpacity * 0.5, dashArray: '6,4'
-  }).addTo(map);
-  updateSecondStats();
-}
-
-function updateSecondStats() {
-  const el = document.getElementById('stat-second');
-  const display2 = document.getElementById('radius-display-2');
-  const unitLabel2 = document.getElementById('radius-unit-2');
-  const slider2 = document.getElementById('radius-slider-2');
-  if (!slider2 || !concentricActive) {
-    if (el) el.textContent = '—';
-    return;
-  }
-  const val2 = parseFloat(slider2.value);
-  const formatted = currentUnit === 'ft' ? Math.round(val2) : val2.toFixed(1);
-  if (el) el.textContent = formatted + ' ' + currentUnit;
-  if (display2) display2.textContent = formatted;
-  if (unitLabel2) unitLabel2.textContent = currentUnit;
-}
-
-function toggleConcentric() {
-  concentricActive = !concentricActive;
-  const wrap = document.getElementById('concentric-wrap');
-  const btn = document.getElementById('concentric-btn');
-  if (wrap) wrap.style.display = concentricActive ? 'block' : 'none';
-  if (btn) {
-    btn.classList.toggle('active', concentricActive);
-    const label = btn.childNodes[btn.childNodes.length - 1];
-    if (label) label.textContent = concentricActive ? ' Remove 2nd Ring' : ' Add 2nd Ring';
-  }
-  if (!concentricActive) {
-    removeSecondCircle();
-  } else {
-    const primaryVal = parseFloat(document.getElementById('radius-slider').value);
-    const slider2 = document.getElementById('radius-slider-2');
-    if (slider2) {
-      slider2.max = document.getElementById('radius-slider').max;
-      slider2.step = document.getElementById('radius-slider').step;
-      slider2.min = document.getElementById('radius-slider').min;
-      slider2.value = currentUnit === 'ft' ? Math.round(primaryVal * 0.5) : (primaryVal * 0.5).toFixed(1);
+/* ── Event Binding ── */
+function bindPopoverEvents(name) {
+  if (name === 'radius') {
+    document.querySelectorAll('#pop-radius .seg-btn').forEach(btn => btn.addEventListener('click', () => { setUnit(btn.dataset.unit); renderPopover('radius'); updateHUD(); }));
+    const rSlider = document.getElementById('radius-slider-new');
+    if (rSlider) {
+      rSlider.addEventListener('input', () => { document.getElementById('radius-slider').value = rSlider.value; drawCircle(); updateHUD(); const bn = document.querySelector('#pop-radius .pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(rSlider.value)) : parseFloat(rSlider.value).toFixed(1); });
+      rSlider.addEventListener('change', () => renderPopover('radius'));
     }
-    drawSecondCircle();
+    const r2Slider = document.getElementById('ring2-slider');
+    if (r2Slider) r2Slider.addEventListener('input', () => { document.getElementById('radius-slider-2').value = r2Slider.value; drawSecondCircle(); updateHUD(); });
+    document.querySelectorAll('#pop-radius .preset-btn').forEach(btn => btn.addEventListener('click', () => { document.getElementById('radius-slider').value = btn.dataset.preset; drawCircle(); renderPopover('radius'); updateHUD(); }));
+    document.getElementById('btn-ring2')?.addEventListener('click', () => { toggleConcentric(); renderPopover('radius'); updateHUD(); });
+    document.getElementById('btn-fit')?.addEventListener('click', () => fitCircle());
   }
-  updateSecondStats();
+  if (name === 'tools') {
+    document.getElementById('btn-print')?.addEventListener('click', () => printMap());
+    document.getElementById('btn-setctr')?.addEventListener('click', () => { toggleClickMode(); renderPopover('tools'); });
+    document.getElementById('btn-measure')?.addEventListener('click', () => { toggleDistanceMode(); renderPopover('tools'); });
+    document.getElementById('btn-fit2')?.addEventListener('click', () => fitCircle());
+    document.getElementById('btn-zoomin')?.addEventListener('click', () => map.zoomIn());
+    document.getElementById('btn-zoomout')?.addEventListener('click', () => map.zoomOut());
+  }
+  if (name === 'style') {
+    document.querySelectorAll('#pop-style .style-opt').forEach(opt => opt.addEventListener('click', () => {
+      const s = opt.dataset.style;
+      setTileLayer(s);
+      document.getElementById('map').classList.toggle('satellite-theme', s === 'satellite');
+      renderPopover('style');
+    }));
+  }
+  if (name === 'settings') {
+    document.getElementById('btn-pin')?.addEventListener('click', () => { pinCurrent(); renderPopover('settings'); });
+    document.getElementById('btn-share')?.addEventListener('click', () => copyShareLink());
+    document.getElementById('btn-coords')?.addEventListener('click', () => copyCoords());
+    document.getElementById('btn-qr')?.addEventListener('click', () => generateQR());
+    document.getElementById('btn-json')?.addEventListener('click', () => exportData());
+    document.getElementById('btn-embed')?.addEventListener('click', () => copyEmbed());
+    document.getElementById('pop-opacity')?.addEventListener('input', function() {
+      currentOpacity = parseInt(this.value) / 100;
+      if (circle) circle.setStyle({ fillOpacity: currentOpacity });
+      document.getElementById('pop-opacity-val').textContent = this.value + '%';
+      document.getElementById('opacity-slider').value = this.value;
+    });
+    document.querySelectorAll('#pop-settings .color-sw').forEach(sw => sw.addEventListener('click', () => {
+      currentColor = sw.dataset.color;
+      document.querySelectorAll('.color-sw').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      drawCircle();
+    }));
+    renderPinListInPopover();
+  }
 }
 
-function buildCircleGeoJSON(lat, lng, radiusM, steps) {
-  steps = steps || 64;
-  const coords = [];
-  for (var i = 0; i < steps; i++) {
-    var angle = (i / steps) * 2 * Math.PI;
-    var dLat = (radiusM * Math.cos(angle)) / 111320;
-    var dLng = (radiusM * Math.sin(angle)) / (111320 * Math.cos(lat * Math.PI / 180));
-    coords.push([lng + dLng, lat + dLat]);
-  }
-  coords.push(coords[0]);
+function renderPinListInPopover() {
+  const list = document.getElementById('pop-pins-list');
+  if (!list || !pins.length) return;
+  list.innerHTML = pins.map(p => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0;"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(0,0,0,0.7);">${p.name || p.label}</span><span style="cursor:pointer;color:rgba(0,0,0,0.3);font-size:14px;" onclick="removePin(${p.id});renderPopover('settings');">×</span></div>`).join('');
+}
+
+/* ── HUD ── */
+function computeStats() {
+  const r = parseFloat(document.getElementById('radius-slider').value);
+  const u = currentUnit;
+  const rMi = u === 'mi' ? r : u === 'km' ? r / 1.60934 : r / 5280;
+  const rKm = u === 'km' ? r : u === 'mi' ? r * 1.60934 : r * 0.0003048;
   return {
-    type: 'Feature',
-    properties: { stroke: currentColor, 'stroke-width': 3, 'stroke-opacity': 1, fill: currentColor, 'fill-opacity': 0.2 },
-    geometry: { type: 'Polygon', coordinates: [coords] }
+    radius: (u === 'ft' ? Math.round(r) : r.toFixed(1)) + ' ' + u,
+    diameter: (u === 'ft' ? Math.round(r * 2) : (r * 2).toFixed(1)) + ' ' + u,
+    areaMi: (Math.PI * rMi * rMi).toFixed(2),
+    areaKm: (Math.PI * rKm * rKm).toFixed(2),
+    perim: (u === 'ft' ? Math.round(2 * Math.PI * r).toLocaleString() : (2 * Math.PI * r).toFixed(2)) + ' ' + u,
+    elev: document.getElementById('elevation-box')?.textContent?.replace('Elevation: ', '') || '—',
+    ring2: concentricActive ? ((u === 'ft' ? Math.round(parseFloat(document.getElementById('radius-slider-2').value)) : parseFloat(document.getElementById('radius-slider-2').value).toFixed(1)) + ' ' + u) : '—'
   };
 }
 
-function printMap() {
-  const token = window.MAPBOX_TOKEN;
-  if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
-  const pin = `pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`;
-  const geojson = encodeURIComponent(JSON.stringify(buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters())));
-  const imgUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${pin},geojson(${geojson})/auto/1200x800?access_token=${token}`;
-  const w = window.open('', '_blank');
-  if (!w) { setStatus('Pop-up blocked — allow pop-ups and try again', 'error'); return; }
-  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="${imgUrl}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=\\'padding:40px;font-family:sans-serif\\'>Print failed — try Save as PNG instead.</p>'"></body></html>`);
-  w.document.close();
-  setStatus('Print dialog opened', 'success');
+function updateHUD() {
+  const s = computeStats();
+  document.getElementById('hud-radius').textContent = s.radius;
+  document.getElementById('hud-diameter').textContent = s.diameter;
+  document.getElementById('hud-area-mi').textContent = s.areaMi;
+  document.getElementById('hud-area-km').textContent = s.areaKm;
+  document.getElementById('hud-perim').textContent = s.perim;
+  document.getElementById('hud-elev').textContent = s.elev;
+  document.getElementById('hud-ring2').textContent = s.ring2;
+  const cl = document.getElementById('coords-label');
+  if (cl) cl.textContent = `Lat: ${currentLat.toFixed(5)}  Lng: ${currentLng.toFixed(5)}`;
 }
 
-function getRecentSearches() {
-  try { return JSON.parse(localStorage.getItem('rm_recent_searches') || '[]'); } catch { return []; }
-}
-
-function saveRecentSearch(query) {
-  let recent = getRecentSearches().filter(q => q !== query);
-  recent.unshift(query);
-  if (recent.length > 8) recent = recent.slice(0, 8);
-  localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
-}
-
-function showRecentSearches() {
-  const recent = getRecentSearches();
-  if (!recent.length) return;
-  const box = document.getElementById('suggestions');
-  box.innerHTML = '';
-  const header = document.createElement('div');
-  header.className = 'recent-header';
-  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
-  box.appendChild(header);
-  recent.forEach(q => {
-    const item = document.createElement('div');
-    item.className = 'suggestion-item';
-    item.textContent = q;
-    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
-    box.appendChild(item);
-  });
-  box.style.display = 'block';
-}
-
-function clearRecentSearches(e) {
-  e.stopPropagation();
-  localStorage.removeItem('rm_recent_searches');
-  document.getElementById('suggestions').style.display = 'none';
-}
-
-function confirmReset() {
-  const overlay = document.createElement('div');
-  overlay.className = 'onboard-overlay';
-  overlay.innerHTML = `<div class="onboard-card">
-    <h3>Reset map to defaults?</h3>
-    <p>This clears all pins, rings, and settings.</p>
-    <div class="onboard-actions">
-      <button class="onboard-skip" id="reset-cancel">Cancel</button>
-      <button class="onboard-next" id="reset-confirm" style="background:var(--danger)">Confirm</button>
-    </div></div>`;
-  document.body.appendChild(overlay);
-  overlay.querySelector('#reset-cancel').onclick = () => overlay.remove();
-  overlay.querySelector('#reset-confirm').onclick = () => { overlay.remove(); resetApp(); };
-}
-
-function resetApp() {
-  pins.forEach(p => {
-    if (p.layer && map.hasLayer(p.layer)) map.removeLayer(p.layer);
-    if (p.labelMarker && map.hasLayer(p.labelMarker)) map.removeLayer(p.labelMarker);
-  });
-  pins = [];
-  renderPinList();
-  if (concentricActive) toggleConcentric();
-  overlapLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-  overlapLayers = [];
-  currentUnit = 'mi';
-  currentColor = '#4f8ef7';
-  currentOpacity = 0.15;
-  const slider = document.getElementById('radius-slider');
-  slider.min = 0.1; slider.max = 50; slider.step = 0.1; slider.value = 5;
-  document.querySelectorAll('.unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === 'mi'));
-  document.getElementById('opacity-slider').value = 15;
-  document.getElementById('opacity-val').textContent = '15%';
-  buildColorOptions();
-  buildPresets();
-  setTileLayer('street');
-  document.getElementById('address-input').value = '';
+/* ── Search wiring ── */
+document.getElementById('address-input').addEventListener('keydown', e => { if (e.key === 'Enter') { document.getElementById('suggestions').style.display = 'none'; searchAddress(); } });
+document.getElementById('address-input').addEventListener('focus', function() { if (!this.value.trim()) showRecentSearches(); });
+document.getElementById('address-input').addEventListener('input', function() {
   updateClearBtn();
-  localStorage.removeItem('rm_recent_searches');
-  localStorage.removeItem('rm_collapsed');
-  document.querySelectorAll('.section.collapsed').forEach(s => s.classList.remove('collapsed'));
-  setStatus('', '');
-  const breadcrumb = document.getElementById('location-breadcrumb');
-  if (breadcrumb) breadcrumb.style.display = 'none';
-  detectLocation();
-  showToast('Map reset to defaults');
-}
-
-function toggleTheme() {
-  const isLight = document.body.getAttribute('data-theme') === 'light';
-  const newTheme = isLight ? 'dark' : 'light';
-  document.body.setAttribute('data-theme', newTheme);
-  localStorage.setItem('rm_theme', newTheme);
-  const btn = document.getElementById('theme-btn');
-  if (btn) btn.innerHTML = newTheme === 'light'
-    ? '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>';
-}
-
-function restoreTheme() {
-  const theme = localStorage.getItem('rm_theme');
-  if (theme === 'light') {
-    document.body.setAttribute('data-theme', 'light');
-    const btn = document.getElementById('theme-btn');
-    if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>';
-  }
-}
-
-/* --- Init --- */
-restoreTheme();
-
-document.addEventListener('DOMContentLoaded', function() {
-  const slider2 = document.getElementById('radius-slider-2');
-  if (slider2) {
-    slider2.addEventListener('input', function(e) {
-      e.stopPropagation();
-      drawSecondCircle();
-    });
-  }
+  clearTimeout(debounceTimer);
+  const q = this.value.trim();
+  if (q.length < 3) { document.getElementById('suggestions').style.display = 'none'; return; }
+  debounceTimer = setTimeout(async () => { try { const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=4`; const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } }); const data = await resp.json(); if (data.length) showSuggestions(data); } catch {} }, 400);
 });
-buildColorOptions();
+document.getElementById('search-btn').addEventListener('click', () => searchAddress());
+document.getElementById('search-clear').addEventListener('click', () => { clearSearchInput(); document.getElementById('search-clear').style.display = 'none'; });
+
+function updateClearBtn() {
+  const btn = document.getElementById('search-clear');
+  if (btn) btn.style.display = document.getElementById('address-input').value.trim() ? 'block' : 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#suggestions') && !e.target.closest('#address-input')) document.getElementById('suggestions').style.display = 'none';
+  if (!e.target.closest('#fab-stack') && !e.target.closest('.popover') && !e.target.closest('#search-bar')) closeAll();
+});
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeAll(); return; }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.min(parseFloat(s.max), parseFloat(s.value) + 1); drawCircle(); updateHUD(); }
+  if (e.key === '-') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.max(parseFloat(s.min), parseFloat(s.value) - 1); drawCircle(); updateHUD(); }
+});
+
+/* ── Hook into existing drawCircle to update HUD ── */
+const _origDrawCircle = drawCircle;
+drawCircle = function() { _origDrawCircle(); updateHUD(); };
+
+/* ── Init ── */
 restoreFromURL();
 buildPresets();
-restoreCollapsed();
-
 const urlParams = new URLSearchParams(location.search);
 const willDetect = !urlParams.has('lat');
 initMap(willDetect);
 if (willDetect) detectLocation();
-setTimeout(startOnboarding, 800);
+toggleFab('radius');
+updateHUD();
