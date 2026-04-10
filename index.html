@@ -90,6 +90,42 @@
       <circle cx="57" cy="22" r="4" fill="white"/>
     </svg>
     <span>DrawRadius</span>
+    <button id="about-btn" title="About & attribution">ℹ</button>
+  </div>
+</div>
+
+<!-- About overlay -->
+<div id="about-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99998; align-items:center; justify-content:center;">
+  <div id="about-modal">
+    <div id="about-header">
+      <svg width="32" height="32" viewBox="0 0 72 72" fill="none">
+        <circle cx="36" cy="36" r="26" stroke="#007AFF" stroke-width="3"/>
+        <circle cx="36" cy="36" r="4" fill="#007AFF"/>
+        <line x1="36" y1="36" x2="57" y2="22" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="57" cy="22" r="3.5" fill="#007AFF"/>
+      </svg>
+      <div>
+        <div id="about-title">DrawRadius</div>
+        <div id="about-sub">Draw a radius. Know your area.</div>
+      </div>
+      <button id="about-close" onclick="document.getElementById('about-overlay').style.display='none'">×</button>
+    </div>
+    <p id="about-desc">A free tool for drawing configurable radius circles on an interactive map. No account required. No data collected.</p>
+    <div id="about-section-title">Data sources & attribution</div>
+    <div class="about-credit"><strong>Map tiles</strong> — © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</div>
+    <div class="about-credit"><strong>Geocoding</strong> — <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim</a> / OpenStreetMap</div>
+    <div class="about-credit"><strong>Satellite imagery</strong> — Tiles © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a></div>
+    <div class="about-credit"><strong>Topographic tiles</strong> — © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA)</div>
+    <div class="about-credit"><strong>Elevation data</strong> — <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a></div>
+    <div class="about-credit"><strong>Map engine</strong> — <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet.js</a></div>
+    <div class="about-credit"><strong>Print maps</strong> — © <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox</a> © OpenStreetMap</div>
+    <div id="about-footer">
+      <a href="https://github.com/haystackz12/radius-map" target="_blank" rel="noopener">GitHub</a>
+      <span>·</span>
+      <a href="https://drawradius.com" target="_blank" rel="noopener">drawradius.com</a>
+      <span>·</span>
+      <span>v3.0</span>
+    </div>
   </div>
 </div>
 

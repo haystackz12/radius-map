@@ -432,6 +432,13 @@ window.addEventListener('load', () => {
   }, 2000);
 });
 
+/* ── About button ── */
+const _aboutBtn = document.getElementById('about-btn');
+if (_aboutBtn) _aboutBtn.addEventListener('click', () => {
+  const overlay = document.getElementById('about-overlay');
+  if (overlay) overlay.style.display = 'flex';
+});
+
 /* ── Init ── */
 restoreFromURL();
 buildPresets();
