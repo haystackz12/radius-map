@@ -441,6 +441,10 @@ body {
   .popover { left: 12px; top: auto !important; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); max-height: 55vh; }
   #search-bar { width: calc(100vw - 80px); }
   .pop-slider::-webkit-slider-thumb { width: 24px; height: 24px; }
-  .hud-val { font-size: 10px; }
+  #stats-hud { grid-template-columns: repeat(4, minmax(0,1fr)); height: calc(44px + env(safe-area-inset-bottom, 0px)); }
+  .hud-stat:nth-child(n+5) { display: none; }
+  .hud-val { font-size: 11px; }
   .hud-key { font-size: 7px; }
+  #brand-badge { bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
+  #coords-label { bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
 }
