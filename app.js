@@ -304,6 +304,7 @@ function applyResult(r) {
   currentLng = parseFloat(r.lon);
   const addr = formatAddress(r.address, r.display_name);
   document.getElementById('address-input').value = addr;
+  document.getElementById('address-input').blur();
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + formatAddressShort(r.address, r.display_name), 'success');
   const _cb = document.getElementById('search-clear');

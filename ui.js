@@ -364,6 +364,15 @@ if (_searchInput) {
   _searchInput.addEventListener('touchend', () => map.dragging.enable());
 }
 
+/* ── Keyboard handling (iOS) ── */
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const hud = document.getElementById('stats-hud');
+    const kbH = window.innerHeight - window.visualViewport.height;
+    hud.style.transform = kbH > 100 ? `translateY(-${kbH}px)` : '';
+  });
+}
+
 /* ── Splash screen ── */
 window.addEventListener('load', () => {
   setTimeout(() => { const s = document.getElementById('splash'); if (s) { s.classList.add('fade-out'); setTimeout(() => s.remove(), 500); } }, 1800);
