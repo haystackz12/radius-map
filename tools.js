@@ -314,8 +314,8 @@ function _buildFavItem(q, isFav) {
   const item = document.createElement('div');
   item.className = 'suggestion-item';
   item.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${q}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
-  item.querySelector('span:first-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+  item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${q}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
+  item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
   item.querySelector('[data-fav-addr]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
   return item;
 }
