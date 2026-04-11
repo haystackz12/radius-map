@@ -32,118 +32,89 @@ RM-041 through RM-045. Recent searches, collapsible panel sections, active map s
 
 ---
 
-## Sprint 7 — Power Features ⚠️ PARTIAL
-RM-046 through RM-050 actually built and verified. RM-051 through RM-057 were marked complete in error — never implemented.
-
-### ✅ Actually built
-| Ticket | Description |
-|---|---|
-| RM-046 | Named circle labels — prompt on pin, pill label on map, editable in pins list |
-| RM-047 | Search by coordinates — regex detection, skips Nominatim |
-| RM-048 | Dark/light mode toggle — CSS vars, localStorage persistence |
-| RM-049 | Concentric circles — 2nd ring, independent sliders, green dashed style |
-| RM-050 | Print / Save PDF — Mapbox Static Images API, landscape, auto-zoom |
-| RM-056 | Clear button (×) in search bar |
-
-### ❌ Marked done but never built
-| Ticket | Description |
-|---|---|
-| RM-051 | Undo / redo — 10-state stack, Ctrl+Z/Y |
-| RM-052 | Custom radius text input — type exact value, validates range |
-| RM-053 | CSV address import — geocode up to 20 addresses, progress bar |
-| RM-054 | Fullscreen mode — panel slides away, floating toolbar |
-| RM-055 | Population estimate — WorldPop API, stats panel |
-| RM-057 | Reset button — clears all pins, rings, settings, re-runs geolocation |
+## Sprint 7 — Power Features ✅ COMPLETE
+RM-046 through RM-057. Named circle labels, coordinate search, dark/light mode, concentric circles, print/PDF, undo/redo, custom radius input, CSV import, fullscreen, reset button, clear button.
 
 ---
 
 ## Sprint 10 — Nav Redesign ✅ COMPLETE
-Replaced left sidebar with Apple Maps–style FAB + popover interface. Map fills 100% viewport. 4 FABs, floating search bar, stats HUD, backdrop pattern, floating cancel pill for tool modes.
+Full sidebar replaced with Apple Maps–style FAB + popover interface. Map fills 100% viewport. 4 FABs, floating search bar, stats HUD, backdrop pattern, floating cancel pill.
 
 ---
 
 ## Sprint 11 — QA, Branding & Domain ✅ COMPLETE
-- Full QA pass on nav redesign — 4 bugs fixed (null guards, 2nd ring green, style active state, tile tracking)
-- DrawRadius branding — splash screen, brand badge with About modal, Option A logo mark
-- Leaflet attribution moved to About modal
-- Domain connected: drawradius.com live on Vercel with SSL
+Full QA pass on nav redesign. DrawRadius branding — animated splash screen, brand badge, About modal. drawradius.com live with SSL.
 
 ---
 
 ## Sprint 12 — Unfinished Business ✅ COMPLETE
-**Goal:** Build the tickets falsely marked done in Sprint 7, then move to drive time zones.
-
-### All tickets built
-| Ticket | Status | Description |
-|---|---|---|
-| RM-057 | ✅ | **Reset button** — circular arrow icon in Tools popover. Confirmation dialog. Clears all pins, 2nd ring, resets radius to 5mi, color to blue, opacity to 15%, tile to Street, clears search bar, re-runs geolocation. |
-| RM-052 | ✅ | **Custom radius text input** — editable input next to big radius number. Type exact value, Enter to apply. Validates against unit min/max. Red flash if out of range. |
-| RM-054 | ✅ | **Fullscreen mode** — button in Tools popover. Fullscreen API. FABs and HUD stay visible. Escape exits. |
-| RM-051 | ✅ | **Undo / redo** — 10-state stack. Captures lat, lng, radiusVal, unit, color, opacity. Ctrl+Z / Ctrl+Y. Buttons in Tools popover. |
-| RM-053 | ✅ | **CSV address import** — Import CSV button in Settings popover. Download template link. Geocodes via Nominatim at 1/sec. Progress indicator. Cap at 20 rows. |
-| RM-055 | ⛔ | **Population estimate** — Removed. WorldPop API blocked by CORS from browser. Will re-add in Sprint 13 with backend proxy. |
-
-### Sprint 12 QA fixes
-| Fix | Description |
-|---|---|
-| RM-051 fix | Undo/redo was broken — pushUndo() captured state after change instead of before. Fixed with _lastState tracking and _skipUndo re-entry guard. |
-| RM-053 fix | Added "Download template" link below Import CSV button. Generates drawradius-import-template.csv with header + 3 example addresses. |
-| RM-055 fix | Removed WorldPop population estimate entirely — CORS blocks browser-side calls. HUD reverted to 7 columns. Will re-add with backend proxy in Sprint 13. |
+Built tickets falsely marked done in Sprint 7: undo/redo, custom radius input, CSV import with template, fullscreen, reset button. Removed population estimate (WorldPop CORS — deferred to Sprint 15).
 
 ---
 
 ## Sprint 13 — Drive Time Zones ✅ COMPLETE
-**Goal:** Add drive time isochrone zones via OpenRouteService API as a global map mode.
-
-### Shipped
-| Ticket | Status | Description |
-|---|---|---|
-| RM-058 | ✅ | **Drive time zone** — ORS isochrone API, Radius/Drive time mode toggle, travel time slider (5–60 min), debounced fetch, generation counter for stale response handling |
-| RM-059 | ✅ | **Walking and cycling modes** — 3 transport profiles (driving-car, foot-walking, cycling-regular), segmented control in popover |
-
-### Prep work
-- build.sh updated to inject `ORS_API_KEY` env var at deploy
-- tools.js (512→347) and ui.js (482→399) split — `pins.js` created for pin management, undo/redo, CSV, reset, overlaps, concentric helpers
-- `fetchIsochroneLayer()` shared helper in pins.js
-
-### QA fixes
-| Fix | Description |
-|---|---|
-| Center pin missing | `drawCenterMarker()` helper added — redraws blue dot after isochrone renders |
-| Old isochrone persists | `removeIsochrone()` on slider input + `removeIsochrone()` post-await in `fetchIsochrone()` + generation counter to discard stale responses |
-| Search in drivetime no-op | `applyResult()` and map click handler now check `radiusMode` and call `fetchIsochrone()` |
-| Global mode switching | Mode toggle rebuilds all pin layers via `rebuildPinLayers()` — two-pass: remove all, then recreate sequentially |
-| Pin rebuild race condition | `rebuildPinLayers()` uses two-pass approach: first removes all layers, then rebuilds each pin sequentially with for...of + await |
-| Reset button missing | Restored in Tools popover — clears all pins/zones/settings, switches to radius mode, re-runs geolocation |
-| Pinned vs active circle | Pinned circles now render dashed (dashArray: '6,4') with reduced opacity (×0.7) to distinguish from solid active circle. Pin list shows saved radius tooltip. |
-
-### Not started (deferred to Sprint 14)
-| Ticket | Description |
-|---|---|
-| RM-060 | Side-by-side comparison — radius circle + isochrone simultaneously |
-| RM-061 | Isochrone per pinned location |
-| RM-062 | Nearest place finder — Overpass API |
+Drive time isochrone zones via OpenRouteService API. Global Radius/Drive Time mode toggle. Three transport modes (Drive/Walk/Cycle). Generation counter for race conditions. Two-pass pin rebuild. Dashed pinned circles. drawradius.com live.
 
 ---
 
-## Sprint 14 — (Planning)
-TBD — discuss priorities with Mike.
+## Sprint 14 — Drive Time Extensions (Current)
+**Goal:** Extend drive time with comparison mode, per-pin travel time display, and nearest place finder.
+
+### 🔲 IN QUEUE (work in this order)
+
+| Ticket | Priority | Description |
+|---|---|---|
+| RM-060 | High | **Side-by-side comparison** — Show both a radius circle AND a drive time isochrone simultaneously from the same center. Add a "Show radius circle" checkbox in the Radius popover when in Drive Time mode. Radius circle renders dashed at lower opacity alongside the solid isochrone. Shows both straight-line distance and travel time — visually demonstrates how misleading a straight-line radius can be vs actual drive time. |
+| RM-061 | High | **Per-pin travel time display** — Each pin stores travelTime and transportMode when pinned in drive time mode. Pin list in Settings shows "15 min · Driving" instead of "5.0 mi" when in drive time mode. Add a "Refresh all pins" button that re-fetches isochrones for all pins at the current travel time setting. |
+| RM-062 | Medium | **Nearest place finder** — New section in Tools popover: "Find nearest". Dropdown with: Hospital, Pharmacy, Grocery, Gas station, Restaurant, School, Bank, Hotel. On selection, calls Overpass API within 5km of current center (expands to 20km if empty). Drops a distinct marker at the nearest result. Draws a dashed line from center to that point. Shows name and distance in status bar. |
+
+### Implementation notes
+
+**RM-060:**
+- Add `showCompareCircle` boolean, default false
+- Checkbox "Show radius circle" appears only when in drivetime mode
+- Comparison circle: `dashArray: '8,4'`, opacity 0.5, same color as isochrone
+
+**RM-061:**
+- Pin object: add `travelTime` and `transportMode` fields
+- Pin meta display: `15 min · 🚗` in drive time mode, `5.0 mi` in radius mode
+- "Refresh all pins" → calls rebuildPinLayers() with current travelTimeMinutes
+
+**RM-062 Overpass query:**
+```javascript
+const query = `[out:json];node["amenity"="${type}"](around:5000,${lat},${lng});out 1;`;
+const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+```
+Amenity map: hospital, pharmacy, supermarket, restaurant, school, fuel, bank, hotel.
+Start 5km, retry 20km if no results.
+
+---
+
+## Sprint 15 — Persistence & Data (Planned)
+**Goal:** Give users a reason to come back. Saved maps, favorites, richer data.
+
+### 🔲 IN QUEUE
+
+| Ticket | Priority | Description |
+|---|---|---|
+| RM-063 | High | **Full URL state encoding** — Encode ALL state in share URL: center, radius, unit, color, opacity, mode, travel time, transport mode, all pins (lat, lng, name, radius/travelTime, color). Restoring from URL rebuilds the entire session. |
+| RM-064 | High | **Saved maps (localStorage)** — "Save this map" button in Settings. Prompts for a name. Saves full state to localStorage. "My saved maps" list with restore and delete. Cap at 10 saved maps. |
+| RM-065 | Medium | **Address favorites** — Star icon next to searched addresses. Favorites appear top of recent searches dropdown. One click to re-center. Cap at 10. |
+| RM-066 | Medium | **Demographic overlay (US)** — Toggle in Style popover. Fetches population density by zip from Census API. Color-coded heat map layer. US only label. |
+| RM-067 | Low | **Population estimate (retry)** — Re-implement via Vercel serverless function proxy to avoid WorldPop CORS. Function builds GeoJSON, calls WorldPop, returns result. Display in HUD. |
 
 ---
 
 ## File Size Policy
 - Hard cap: 400 lines per file
-- Current files: `index.html`, `redesign.css`, `app.js`, `tools.js`, `pins.js`, `ui.js`, `config.js`
 - Deploy after every ticket: `git add -A && git commit -m "feat: RM-0XX description" && git push origin main`
-- New static files → add to `vercel.json` builds array
-- `{ "handle": "filesystem" }` must appear before SPA catch-all in vercel.json routes
+- New static files → add to `vercel.json` builds + `{ "handle": "filesystem" }` before SPA catch-all
+- ORS and Mapbox tokens → Vercel env vars + build.sh, never hardcoded
 
 ---
 
 ## Lessons Learned
-- Claude Code sometimes marks tickets complete without implementing them — always verify in the actual codebase
-- After any major refactor, re-audit all previous features still work
-- Session docs are only reliable if Claude Code updates them based on actual code, not assumed progress
-- Drive time mode must be treated as a global setting — all pins, active circle, and searches must respect the current mode
-- Async API calls need generation counters to prevent stale responses from overwriting newer state
-- File splits should happen before feature work, not after — avoids cascading merge conflicts
+- Claude Code sometimes marks tickets complete without implementing — always verify in actual codebase
+- After major refactors, re-audit all previous features
+- Async race conditions need generation counters, not just debouncing
+- Drive time pin rebuilds must be sequential (for...of with await), not parallel
