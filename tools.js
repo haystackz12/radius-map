@@ -95,31 +95,15 @@ function toggleDistanceMode() {
 }
 
 function handleDistanceClick(latlng) {
-  // Ignore clicks within 400ms of activation — prevents the button click from registering as first point
   if (Date.now() - distanceModeActivatedAt < 400) return;
   if (distancePoints.length >= 2) clearDistance();
   distancePoints.push(latlng);
-  const dotIcon = L.divIcon({
-    className: '',
-    html: `<div style="width:10px;height:10px;border-radius:50%;background:#4f8ef7;border:2px solid #fff;"></div>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 5]
-  });
-  distanceMarkers.push(L.marker(latlng, { icon: dotIcon }).addTo(map));
+  distanceMarkers.push(L.marker(latlng, { icon: L.divIcon({ className: '', html: `<div style="width:10px;height:10px;border-radius:50%;background:#4f8ef7;border:2px solid #fff;"></div>`, iconSize: [10, 10], iconAnchor: [5, 5] }) }).addTo(map));
   if (distancePoints.length === 2) {
     distanceLine = L.polyline(distancePoints, { color: '#4f8ef7', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map);
-    const meters = distancePoints[0].distanceTo(distancePoints[1]);
-    const mi = (meters / 1609.344).toFixed(2);
-    const km = (meters / 1000).toFixed(2);
+    const m = distancePoints[0].distanceTo(distancePoints[1]), mi = (m / 1609.344).toFixed(2), km = (m / 1000).toFixed(2);
     const mid = L.latLng((distancePoints[0].lat + distancePoints[1].lat) / 2, (distancePoints[0].lng + distancePoints[1].lng) / 2);
-    distanceLabel = L.marker(mid, {
-      icon: L.divIcon({
-        className: '',
-        html: `<div class="distance-label">${mi} mi · ${km} km</div>`,
-        iconSize: [120, 24],
-        iconAnchor: [60, 12]
-      })
-    }).addTo(map);
+    distanceLabel = L.marker(mid, { icon: L.divIcon({ className: '', html: `<div class="distance-label">${mi} mi · ${km} km</div>`, iconSize: [120, 24], iconAnchor: [60, 12] }) }).addTo(map);
     setStatus(`Distance: ${mi} mi (${km} km)`, 'success');
   }
 }
@@ -317,22 +301,40 @@ function saveRecentSearch(query) {
   localStorage.setItem('rm_recent_searches', JSON.stringify(recent));
 }
 
+function getFavorites() { try { return JSON.parse(localStorage.getItem('rm_favorites') || '[]'); } catch { return []; } }
+function toggleFavorite(addr) {
+  let favs = getFavorites();
+  const idx = favs.indexOf(addr);
+  if (idx >= 0) { favs.splice(idx, 1); } else { favs.unshift(addr); if (favs.length > 10) favs = favs.slice(0, 10); }
+  localStorage.setItem('rm_favorites', JSON.stringify(favs));
+}
+
 function showRecentSearches() {
-  const recent = getRecentSearches();
-  if (!recent.length) return;
+  const favs = getFavorites();
+  const recent = getRecentSearches().filter(q => !favs.includes(q));
+  if (!favs.length && !recent.length) return;
   const box = document.getElementById('suggestions');
   box.innerHTML = '';
-  const header = document.createElement('div');
-  header.className = 'recent-header';
-  header.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>';
-  box.appendChild(header);
-  recent.forEach(q => {
-    const item = document.createElement('div');
-    item.className = 'suggestion-item';
-    item.textContent = q;
-    item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
-    box.appendChild(item);
-  });
+  if (favs.length) {
+    const fh = document.createElement('div'); fh.className = 'recent-header'; fh.innerHTML = '<span>Favorites</span>'; box.appendChild(fh);
+    favs.forEach(q => {
+      const item = document.createElement('div'); item.className = 'suggestion-item'; item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '6px';
+      item.innerHTML = `<span style="color:#f5a623;font-size:14px;cursor:pointer;" data-fav="${encodeURIComponent(q)}">★</span><span style="flex:1;">${q}</span>`;
+      item.querySelector('span:last-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+      item.querySelector('[data-fav]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
+      box.appendChild(item);
+    });
+  }
+  if (recent.length) {
+    const rh = document.createElement('div'); rh.className = 'recent-header'; rh.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>'; box.appendChild(rh);
+    recent.forEach(q => {
+      const item = document.createElement('div'); item.className = 'suggestion-item'; item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '6px';
+      item.innerHTML = `<span style="color:rgba(0,0,0,0.2);font-size:14px;cursor:pointer;" data-fav="${encodeURIComponent(q)}">☆</span><span style="flex:1;">${q}</span>`;
+      item.querySelector('span:last-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+      item.querySelector('[data-fav]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
+      box.appendChild(item);
+    });
+  }
   box.style.display = 'block';
 }
 
