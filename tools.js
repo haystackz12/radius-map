@@ -116,9 +116,17 @@ function toggleClickMode() {
 }
 
 
+function safeCopy(text, label) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => { showToast(label + ' copied!'); setStatus(label + ' copied!', 'success'); }).catch(() => { setStatus('Copy failed — try again', 'error'); });
+  } else {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast(label + ' copied!'); setStatus(label + ' copied!', 'success');
+  }
+}
+
 function copyCoords() {
-  const txt = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
-  navigator.clipboard.writeText(txt).then(() => { showToast('Coordinates copied!'); setStatus('Coordinates copied!', 'success'); });
+  safeCopy(`${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`, 'Coordinates');
 }
 
 function buildShareURL() {
@@ -144,8 +152,7 @@ function buildShareURL() {
 }
 
 function copyShareLink() {
-  const url = buildShareURL();
-  navigator.clipboard.writeText(url).then(() => { showToast('Share link copied!'); setStatus('Share link copied!', 'success'); });
+  safeCopy(buildShareURL(), 'Share link');
 }
 
 function exportData() {
@@ -220,8 +227,7 @@ function updateBreadcrumb(address) {
 }
 
 function copyEmbed() {
-  const iframe = `<iframe src="${buildShareURL()}" width="600" height="450" style="border:none;border-radius:8px;" loading="lazy" allowfullscreen></iframe>`;
-  navigator.clipboard.writeText(iframe).then(() => { showToast('Embed code copied!'); setStatus('Embed code copied!', 'success'); });
+  safeCopy(`<iframe src="${buildShareURL()}" width="600" height="450" style="border:none;border-radius:8px;" loading="lazy" allowfullscreen></iframe>`, 'Embed code');
 }
 
 function generateQR() {
