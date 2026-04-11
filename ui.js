@@ -7,7 +7,6 @@ function closeAll() {
   activeFab = null;
   const bd = document.getElementById('popover-backdrop');
   if (bd) bd.style.display = 'none';
-  // Note: do NOT hide suggestions here — handled separately
 }
 
 function toggleFab(name) {
@@ -42,7 +41,12 @@ if (_backdrop) _backdrop.addEventListener('click', (e) => {
   closeAll();
 });
 
-/* ── Popover Renderers ── */
+/* ── Swipe to close popovers ── */
+document.querySelectorAll('.popover').forEach(el => {
+  let _sy = 0;
+  el.addEventListener('touchstart', e => { _sy = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => { if (e.changedTouches[0].clientY - _sy > 60) closeAll(); }, { passive: true });
+});
 function renderPopover(name) {
   const el = document.getElementById('pop-' + name);
   if (!el || !el.classList.contains('pop-open')) return;
@@ -355,14 +359,8 @@ function disableMapPropagation() {
 disableMapPropagation();
 
 /* ── Prevent search input drag from moving map ── */
-const _searchInput = document.getElementById('address-input');
-if (_searchInput) {
-  _searchInput.addEventListener('mousedown', () => map.dragging.disable());
-  _searchInput.addEventListener('mouseup', () => map.dragging.enable());
-  _searchInput.addEventListener('mouseleave', () => map.dragging.enable());
-  _searchInput.addEventListener('touchstart', () => map.dragging.disable());
-  _searchInput.addEventListener('touchend', () => map.dragging.enable());
-}
+const _si = document.getElementById('address-input');
+if (_si) { ['mousedown','touchstart'].forEach(ev => _si.addEventListener(ev, () => map.dragging.disable())); ['mouseup','mouseleave','touchend'].forEach(ev => _si.addEventListener(ev, () => map.dragging.enable())); }
 
 /* ── Keyboard handling (iOS) ── */
 if (window.visualViewport) {
