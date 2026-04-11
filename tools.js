@@ -50,10 +50,6 @@ function clearSearchInput() {
   setStatus('', '');
 }
 
-function updateClearBtn() {
-  const btn = document.getElementById('search-clear') || document.getElementById('clear-input-btn');
-  if (btn) btn.style.display = document.getElementById('address-input').value.trim() ? 'block' : 'none';
-}
 
 function hideEmptyState() {
   const el = document.getElementById('empty-state');
@@ -241,54 +237,6 @@ function generateQR() {
   setStatus('QR code generated', 'success');
 }
 
-function downloadQR() {
-  const canvas = document.querySelector('#qr-container canvas');
-  if (!canvas) return;
-  canvas.toBlob(function(blob) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'radius-map-qr.png';
-    a.click();
-    setStatus('QR downloaded!', 'success');
-  });
-}
-
-/* ── CSV Import ── */
-let _csvImporting = false, _csvProgress = '';
-function downloadCSVTemplate() {
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['Address\n1600 Pennsylvania Ave NW Washington DC\n221B Baker Street London\n1 Infinite Loop Cupertino CA\n'], { type: 'text/csv' })); a.download = 'drawradius-import-template.csv'; a.click();
-}
-function handleCSVImport(file) {
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
-    const start = /^(address|name|location|city)/i.test(lines[0]) ? 1 : 0;
-    const addrs = lines.slice(start).map(l => l.split(',')[0].trim()).filter(Boolean).slice(0, 20);
-    if (!addrs.length) { setStatus('No addresses found in CSV', 'error'); return; }
-    _csvImporting = true; let imported = 0; const bounds = L.latLngBounds([]);
-    for (let i = 0; i < addrs.length; i++) {
-      _csvProgress = `Geocoding ${i + 1} of ${addrs.length}…`;
-      if (typeof renderPopover === 'function' && activeFab === 'settings') renderPopover('settings');
-      try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(addrs[i])}&limit=1`, { headers: { 'Accept-Language': 'en' } });
-        const data = await resp.json();
-        if (data.length) {
-          const r = data[0], lat = parseFloat(r.lat), lng = parseFloat(r.lon), name = addrs[i].split(',')[0].trim();
-          const layer = L.circle([lat, lng], { radius: getRadiusMeters(), color: currentColor, weight: 2, opacity: 0.9, dashArray: '6,4', fillColor: currentColor, fillOpacity: currentOpacity * 0.7 }).addTo(map);
-          const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${sanitize(name)}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
-          pins.push({ id: Date.now() + i, lat, lng, radiusVal: parseFloat(document.getElementById('radius-slider').value), unit: currentUnit, color: currentColor, label: addrs[i], name, layer, labelMarker });
-          bounds.extend(layer.getBounds()); imported++;
-        }
-      } catch {}
-      if (i < addrs.length - 1) await new Promise(res => setTimeout(res, 1100));
-    }
-    _csvImporting = false; _csvProgress = ''; renderPinList(); computeOverlaps();
-    if (bounds.isValid()) map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 12 });
-    setStatus(`Imported ${imported} of ${addrs.length} locations`, 'success');
-    if (typeof renderPopover === 'function') renderPopover('settings');
-  };
-  reader.readAsText(file);
-}
 
 /* ── Recent Searches ── */
 function getRecentSearches() {

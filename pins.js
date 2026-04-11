@@ -231,16 +231,6 @@ function statesEqual(a, b) {
   return a && b && a.lat === b.lat && a.lng === b.lng && a.radiusVal === b.radiusVal && a.unit === b.unit && a.color === b.color && a.opacity === b.opacity;
 }
 
-function pushUndo() {
-  if (_skipUndo) return;
-  const current = captureState();
-  if (_lastState && !statesEqual(_lastState, current)) {
-    undoStack.push(_lastState);
-    if (undoStack.length > MAX_UNDO) undoStack.shift();
-    redoStack = [];
-  }
-  _lastState = current;
-}
 
 function applyState(s) {
   _skipUndo = true;
@@ -267,15 +257,6 @@ function redo() {
   applyState(redoStack.pop());
 }
 
-/* ── Fullscreen ── */
-function toggleFullscreen() {
-  if (document.fullscreenElement || document.webkitFullscreenElement) {
-    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  } else {
-    const el = document.documentElement;
-    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-  }
-}
 
 /* ── Reset ── */
 function resetEverything() {
