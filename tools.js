@@ -16,7 +16,8 @@ async function searchAddress() {
     document.getElementById('address-input').value = `${coords.lat}, ${coords.lng}`;
     document.getElementById('suggestions').style.display = 'none';
     setStatus('Coordinate detected', 'success');
-    hideEmptyState(); updateClearBtn(); drawCircle();
+    const _cb = document.getElementById('search-clear'); if (_cb) _cb.style.display = 'block';
+    hideEmptyState(); drawCircle();
     return;
   }
   saveRecentSearch(query);

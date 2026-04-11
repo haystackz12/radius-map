@@ -308,7 +308,10 @@ document.getElementById('address-input').addEventListener('input', function() {
   if (q.length < 3) { document.getElementById('suggestions').style.display = 'none'; return; }
   debounceTimer = setTimeout(async () => { try { const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=4`, { headers: { 'Accept-Language': 'en' } }); const data = await resp.json(); if (data.length) showSuggestions(data); } catch {} }, 400);
 });
-document.getElementById('search-btn').addEventListener('click', () => searchAddress());
+document.getElementById('search-btn').addEventListener('click', () => {
+  document.getElementById('suggestions').style.display = 'none';
+  searchAddress();
+});
 document.getElementById('search-clear').addEventListener('click', () => { clearSearchInput(); document.getElementById('search-clear').style.display = 'none'; });
 
 /* ── Close suggestions on outside click ── */
@@ -363,20 +366,8 @@ if (_searchInput) {
 
 /* ── Splash screen ── */
 window.addEventListener('load', () => {
-  setTimeout(() => {
-    const splash = document.getElementById('splash');
-    if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => splash.remove(), 500);
-    }
-  }, 1800);
-  // Force Leaflet attribution links to open in new tab
-  setTimeout(() => {
-    document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
-    });
-  }, 2000);
+  setTimeout(() => { const s = document.getElementById('splash'); if (s) { s.classList.add('fade-out'); setTimeout(() => s.remove(), 500); } }, 1800);
+  setTimeout(() => { document.querySelectorAll('.leaflet-control-attribution a').forEach(a => { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); }); }, 2000);
 });
 
 /* ── About button ── */

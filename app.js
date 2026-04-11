@@ -294,7 +294,8 @@ function applyResult(r) {
   document.getElementById('address-input').value = addr;
   document.getElementById('suggestions').style.display = 'none';
   setStatus('Found: ' + formatAddressShort(r.address, r.display_name), 'success');
-  updateClearBtn();
+  const _cb = document.getElementById('search-clear');
+  if (_cb) _cb.style.display = 'block';
   hideEmptyState();
   updateBreadcrumb(r.address || null);
   if (radiusMode === 'drivetime') {
@@ -309,8 +310,11 @@ function showSuggestions(results) {
   const box = document.getElementById('suggestions');
   box.innerHTML = '';
   const favs = typeof getFavorites === 'function' ? getFavorites() : [];
+  const seen = new Set();
   results.forEach(r => {
     const addr = r.display_name;
+    if (seen.has(addr)) return;
+    seen.add(addr);
     const isFav = favs.includes(addr);
     const item = document.createElement('div');
     item.className = 'suggestion-item';
@@ -368,32 +372,4 @@ document.getElementById('opacity-slider').addEventListener('input', function() {
   if (circle) circle.setStyle({ fillOpacity: currentOpacity });
 });
 
-document.getElementById('address-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') { document.getElementById('suggestions').style.display = 'none'; searchAddress(); }
-});
-
-document.getElementById('address-input').addEventListener('focus', function() {
-  if (!this.value.trim()) showRecentSearches();
-});
-
-document.getElementById('address-input').addEventListener('input', function() {
-  updateClearBtn();
-  clearTimeout(debounceTimer);
-  const q = this.value.trim();
-  if (q.length < 3) { document.getElementById('suggestions').style.display = 'none'; return; }
-  debounceTimer = setTimeout(async () => {
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=4`;
-      const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      const data = await resp.json();
-      if (data.length) showSuggestions(data);
-    } catch {}
-  }, 400);
-});
-
-document.addEventListener('click', function(e) {
-  if (!document.getElementById('suggestions').contains(e.target) &&
-      !document.getElementById('address-input').contains(e.target)) {
-    document.getElementById('suggestions').style.display = 'none';
-  }
-});
+/* Search input listeners in ui.js */
