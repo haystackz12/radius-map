@@ -57,36 +57,21 @@ Drive time isochrone zones via OpenRouteService API. Global Radius/Drive Time mo
 
 ---
 
-## Sprint 14 — Drive Time Extensions (Current)
+## Sprint 14 — Drive Time Extensions ✅ COMPLETE
 **Goal:** Extend drive time with comparison mode, per-pin travel time display, and nearest place finder.
 
-### 🔲 IN QUEUE (work in this order)
-
-| Ticket | Priority | Description |
+### Shipped
+| Ticket | Status | Description |
 |---|---|---|
-| RM-060 | High | **Side-by-side comparison** — Show both a radius circle AND a drive time isochrone simultaneously from the same center. Add a "Show radius circle" checkbox in the Radius popover when in Drive Time mode. Radius circle renders dashed at lower opacity alongside the solid isochrone. Shows both straight-line distance and travel time — visually demonstrates how misleading a straight-line radius can be vs actual drive time. |
-| RM-061 | High | **Per-pin travel time display** — Each pin stores travelTime and transportMode when pinned in drive time mode. Pin list in Settings shows "15 min · Driving" instead of "5.0 mi" when in drive time mode. Add a "Refresh all pins" button that re-fetches isochrones for all pins at the current travel time setting. |
-| RM-062 | Medium | **Nearest place finder** — New section in Tools popover: "Find nearest". Dropdown with: Hospital, Pharmacy, Grocery, Gas station, Restaurant, School, Bank, Hotel. On selection, calls Overpass API within 5km of current center (expands to 20km if empty). Drops a distinct marker at the nearest result. Draws a dashed line from center to that point. Shows name and distance in status bar. |
+| RM-060 | ✅ | **Side-by-side comparison** — "Show radius circle for comparison" checkbox in Drive Time mode. Dashed circle (dashArray: '8,4', opacity 0.5) overlays the isochrone. Auto-draws after each fetch, cleans up on mode switch. |
+| RM-061 | ✅ | **Per-pin travel time display** — Pins store travelTime and transportMode. Pin list shows "15 min · 🚗" in drivetime mode, radius in radius mode. "Refresh all pins" button re-fetches all pin layers at current settings. |
+| RM-062 | ✅ | **Nearest place finder** — "Find Nearest" section in Tools popover with 8 amenity types (Overpass API). Red marker + dashed line from center. 5km search radius, expands to 20km if empty. Name and distance in status bar. |
 
-### Implementation notes
-
-**RM-060:**
-- Add `showCompareCircle` boolean, default false
-- Checkbox "Show radius circle" appears only when in drivetime mode
-- Comparison circle: `dashArray: '8,4'`, opacity 0.5, same color as isochrone
-
-**RM-061:**
-- Pin object: add `travelTime` and `transportMode` fields
-- Pin meta display: `15 min · 🚗` in drive time mode, `5.0 mi` in radius mode
-- "Refresh all pins" → calls rebuildPinLayers() with current travelTimeMinutes
-
-**RM-062 Overpass query:**
-```javascript
-const query = `[out:json];node["amenity"="${type}"](around:5000,${lat},${lng});out 1;`;
-const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-```
-Amenity map: hospital, pharmacy, supermarket, restaurant, school, fuel, bank, hotel.
-Start 5km, retry 20km if no results.
+### Code housekeeping
+- Removed unused `buildColorOptions()` from app.js
+- Moved `showToolPill`/`hideToolPill` from ui.js to tools.js
+- Moved `drawCompareCircle`/`removeCompareCircle` from app.js to pins.js
+- All JS files under 400 lines
 
 ---
 
