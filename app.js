@@ -39,6 +39,10 @@ let secondCircle = null;
 let concentricActive = false;
 let currentLocationLabel = '';
 let userHasSearched = false;
+let isochroneLayer = null;
+let travelTimeMinutes = 15;
+let transportMode = 'driving-car';
+let radiusMode = 'radius';
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -131,6 +135,45 @@ function drawCircle() {
   updateStats();
   updatePresetActive();
   fetchElevation(currentLat, currentLng);
+}
+
+function removeIsochrone() {
+  if (isochroneLayer) { map.removeLayer(isochroneLayer); isochroneLayer = null; }
+}
+
+let _isoTimer;
+function debouncedFetchIsochrone() {
+  clearTimeout(_isoTimer);
+  _isoTimer = setTimeout(fetchIsochrone, 600);
+}
+
+async function fetchIsochrone() {
+  removeIsochrone();
+  const key = window.ORS_API_KEY;
+  if (!key) { setStatus('Drive time unavailable — configure ORS API key', 'error'); return; }
+  setStatus('Calculating drive time zone…', 'loading');
+  try {
+    const resp = await fetch(`https://api.openrouteservice.org/v2/isochrones/${transportMode}`, {
+      method: 'POST',
+      headers: { 'Authorization': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        locations: [[currentLng, currentLat]],
+        range: [travelTimeMinutes * 60],
+        range_type: 'time'
+      })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const geojson = await resp.json();
+    isochroneLayer = L.geoJSON(geojson, {
+      style: { color: currentColor, weight: 2, fillColor: currentColor, fillOpacity: currentOpacity }
+    }).addTo(map);
+    map.fitBounds(isochroneLayer.getBounds(), { padding: [40, 40] });
+    const modeLabel = { 'driving-car': 'driving', 'foot-walking': 'walking', 'cycling-regular': 'cycling' }[transportMode];
+    setStatus(`${travelTimeMinutes} min ${modeLabel} zone`, 'success');
+    if (typeof updateHUD === 'function') updateHUD();
+  } catch(e) {
+    setStatus('Drive time unavailable — check API key or try again', 'error');
+  }
 }
 
 function buildPresets() {

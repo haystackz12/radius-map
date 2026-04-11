@@ -230,6 +230,47 @@ function handleCSVImport(file) {
   reader.readAsText(file);
 }
 
+/* ── Circle Helpers ── */
+function fitCircle() {
+  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
+}
+
+function getSecondRadiusMeters() {
+  const val = parseFloat(document.getElementById('radius-slider-2').value);
+  if (currentUnit === 'mi') return val * 1609.344;
+  if (currentUnit === 'ft') return val * 0.3048;
+  return val * 1000;
+}
+
+function removeSecondCircle() {
+  if (secondCircle) { if (map.hasLayer(secondCircle)) map.removeLayer(secondCircle); secondCircle = null; }
+}
+
+function drawSecondCircle() {
+  removeSecondCircle();
+  if (!concentricActive) return;
+  secondCircle = L.circle([currentLat, currentLng], {
+    radius: getSecondRadiusMeters(), color: '#34C759', weight: 2, opacity: 0.8,
+    fillColor: '#34C759', fillOpacity: 0.1, dashArray: '6,4'
+  }).addTo(map);
+}
+
+function toggleConcentric() {
+  concentricActive = !concentricActive;
+  if (!concentricActive) { removeSecondCircle(); }
+  else {
+    const primaryVal = parseFloat(document.getElementById('radius-slider').value);
+    const slider2 = document.getElementById('radius-slider-2');
+    if (slider2) {
+      slider2.max = document.getElementById('radius-slider').max;
+      slider2.step = document.getElementById('radius-slider').step;
+      slider2.min = document.getElementById('radius-slider').min;
+      slider2.value = currentUnit === 'ft' ? Math.round(primaryVal * 0.5) : (primaryVal * 0.5).toFixed(1);
+    }
+    drawSecondCircle();
+  }
+}
+
 /* ── Overlaps ── */
 function computeOverlaps() {
   overlapLayers.forEach(l => map.removeLayer(l));

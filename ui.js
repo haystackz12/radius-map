@@ -52,6 +52,9 @@ function renderPopover(name) {
 }
 
 function radiusPopoverHTML() {
+  const mode = typeof radiusMode !== 'undefined' ? radiusMode : 'radius';
+  const modeToggle = `<div class="seg-ctrl" style="margin-bottom:10px;"><div class="seg-btn ${mode === 'radius' ? 'active' : ''}" data-mode="radius">Radius</div><div class="seg-btn ${mode === 'drivetime' ? 'active' : ''}" data-mode="drivetime">Drive time</div></div>`;
+  if (mode === 'drivetime') return modeToggle + drivetimePopoverHTML();
   const r = parseFloat(document.getElementById('radius-slider').value);
   const u = currentUnit;
   const maxR = u === 'ft' ? 26400 : (u === 'km' ? 80 : 50);
@@ -68,7 +71,21 @@ function radiusPopoverHTML() {
   const hasRing2 = concentricActive;
   const r2 = parseFloat(document.getElementById('radius-slider-2').value);
   const ring2Sec = hasRing2 ? `<div class="ring2-box"><div class="ring2-label">2nd Ring · ${u === 'ft' ? Math.round(r2) : r2.toFixed(1)} ${u}</div><input class="pop-slider" id="ring2-slider" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r2}"></div>` : '';
-  return `<div class="pop-title">Radius</div><div id="pop-bignum-wrap" style="margin-bottom:10px;"><span class="pop-bignum" id="pop-bignum" data-action="edit-radius" title="Click to enter exact value" style="cursor:pointer;">${u === 'ft' ? Math.round(r) : r.toFixed(1)}</span><span class="pop-unit-sub" style="margin-left:4px;">${u}</span></div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
+  return modeToggle + `<div id="pop-bignum-wrap" style="margin-bottom:10px;"><span class="pop-bignum" id="pop-bignum" data-action="edit-radius" title="Click to enter exact value" style="cursor:pointer;">${u === 'ft' ? Math.round(r) : r.toFixed(1)}</span><span class="pop-unit-sub" style="margin-left:4px;">${u}</span></div><div class="seg-ctrl">${unitBtns}</div><input class="pop-slider" id="radius-slider-new" type="range" min="${minR}" max="${maxR}" step="${step}" value="${r}"><div class="presets-row">${presetsHTML}</div><hr class="pop-divider"><div class="pop-title">2nd Ring</div><button class="action-btn ${hasRing2 ? 'action-active' : ''}" data-action="ring2"><span>${hasRing2 ? '✓' : '+'}</span> ${hasRing2 ? 'Ring 2 Active' : 'Add 2nd Ring'}</button>${ring2Sec}<hr class="pop-divider"><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button>`;
+}
+
+function drivetimePopoverHTML() {
+  const t = typeof travelTimeMinutes !== 'undefined' ? travelTimeMinutes : 15;
+  const tm = typeof transportMode !== 'undefined' ? transportMode : 'driving-car';
+  const modes = [
+    { id: 'driving-car', icon: '\uD83D\uDE97', label: 'Drive' },
+    { id: 'foot-walking', icon: '\uD83D\uDEB6', label: 'Walk' },
+    { id: 'cycling-regular', icon: '\uD83D\uDEB2', label: 'Cycle' }
+  ];
+  const modeBtns = modes.map(m => `<div class="seg-btn ${tm === m.id ? 'active' : ''}" data-transport="${m.id}">${m.icon} ${m.label}</div>`).join('');
+  const presets = [5, 10, 15, 30, 60];
+  const presetBtns = presets.map(p => `<div class="preset-btn ${t === p ? 'active' : ''}" data-time="${p}">${p} min</div>`).join('');
+  return `<div class="pop-bignum" style="margin-bottom:2px;">${t}</div><div class="pop-unit-sub">minutes</div><div class="seg-ctrl">${modeBtns}</div><input class="pop-slider" id="travel-time-slider" type="range" min="5" max="60" step="5" value="${t}"><div class="presets-row">${presetBtns}</div><hr class="pop-divider"><button class="action-btn" data-action="fit-iso">⊡  Fit Zone in View</button>`;
 }
 
 function toolsPopoverHTML() {
@@ -111,8 +128,23 @@ function hideToolPill() {
   if (pill) pill.style.display = 'none';
 }
 document.getElementById('pop-radius').addEventListener('click', function(e) {
-  const seg = e.target.closest('.seg-btn'); if (seg) { setUnit(seg.dataset.unit); renderPopover('radius'); updateHUD(); return; }
-  const pre = e.target.closest('.preset-btn'); if (pre) { document.getElementById('radius-slider').value = pre.dataset.preset; drawCircle(); updateHUD(); renderPopover('radius'); return; }
+  const modeBtn = e.target.closest('[data-mode]');
+  if (modeBtn) {
+    const newMode = modeBtn.dataset.mode;
+    if (newMode !== radiusMode) {
+      radiusMode = newMode;
+      if (radiusMode === 'radius') { removeIsochrone(); drawCircle(); }
+      else { if (circle) map.removeLayer(circle); if (marker) map.removeLayer(marker); debouncedFetchIsochrone(); }
+      updateHUD();
+    }
+    renderPopover('radius'); return;
+  }
+  const transport = e.target.closest('[data-transport]');
+  if (transport) { transportMode = transport.dataset.transport; debouncedFetchIsochrone(); renderPopover('radius'); return; }
+  const timePre = e.target.closest('[data-time]');
+  if (timePre) { travelTimeMinutes = parseInt(timePre.dataset.time); document.getElementById('travel-time-slider').value = travelTimeMinutes; debouncedFetchIsochrone(); updateHUD(); renderPopover('radius'); return; }
+  const seg = e.target.closest('.seg-btn'); if (seg && seg.dataset.unit) { setUnit(seg.dataset.unit); renderPopover('radius'); updateHUD(); return; }
+  const pre = e.target.closest('.preset-btn'); if (pre && pre.dataset.preset) { document.getElementById('radius-slider').value = pre.dataset.preset; drawCircle(); updateHUD(); renderPopover('radius'); return; }
   const act = e.target.closest('[data-action]'); if (!act) return;
   if (act.dataset.action === 'edit-radius') {
     const wrap = document.getElementById('pop-bignum-wrap');
@@ -148,10 +180,15 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
   }
   if (act.dataset.action === 'ring2') { toggleConcentric(); renderPopover('radius'); updateHUD(); }
   if (act.dataset.action === 'fit') fitCircle();
+  if (act.dataset.action === 'fit-iso') { if (isochroneLayer) map.fitBounds(isochroneLayer.getBounds(), { padding: [40, 40] }); }
 });
 document.getElementById('pop-radius').addEventListener('input', function(e) {
   if (e.target.id === 'radius-slider-new') { document.getElementById('radius-slider').value = e.target.value; drawCircle(); updateHUD(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1); }
   if (e.target.id === 'ring2-slider') { document.getElementById('radius-slider-2').value = e.target.value; drawSecondCircle(); updateHUD(); }
+  if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = travelTimeMinutes; updateHUD(); }
+});
+document.getElementById('pop-radius').addEventListener('change', function(e) {
+  if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); debouncedFetchIsochrone(); updateHUD(); renderPopover('radius'); }
 });
 
 document.getElementById('pop-tools').addEventListener('click', function(e) {
@@ -215,6 +252,13 @@ document.getElementById('pop-settings').addEventListener('input', function(e) {
 
 /* ── HUD ── */
 function computeStats() {
+  const mode = typeof radiusMode !== 'undefined' ? radiusMode : 'radius';
+  if (mode === 'drivetime') {
+    const t = typeof travelTimeMinutes !== 'undefined' ? travelTimeMinutes : 15;
+    const tm = typeof transportMode !== 'undefined' ? transportMode : 'driving-car';
+    const icon = { 'driving-car': '\uD83D\uDE97', 'foot-walking': '\uD83D\uDEB6', 'cycling-regular': '\uD83D\uDEB2' }[tm] || '';
+    return { radius: t + ' min ' + icon, diameter: '—', areaMi: '—', areaKm: '—', perim: '—', elev: '—', ring2: '—' };
+  }
   const r = parseFloat(document.getElementById('radius-slider').value);
   const u = currentUnit;
   const rMi = u === 'mi' ? r : u === 'km' ? r / 1.60934 : r / 5280;
@@ -285,52 +329,16 @@ document.addEventListener('keydown', e => {
   if (e.key === '-') { e.preventDefault(); const s = document.getElementById('radius-slider'); s.value = Math.max(parseFloat(s.min), parseFloat(s.value) - 1); drawCircle(); updateHUD(); }
 });
 
-/* ── Missing functions ── */
-function fitCircle() {
-  if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
-}
-
-function getSecondRadiusMeters() {
-  const val = parseFloat(document.getElementById('radius-slider-2').value);
-  if (currentUnit === 'mi') return val * 1609.344;
-  if (currentUnit === 'ft') return val * 0.3048;
-  return val * 1000;
-}
-
-function removeSecondCircle() {
-  if (secondCircle) { if (map.hasLayer(secondCircle)) map.removeLayer(secondCircle); secondCircle = null; }
-}
-
-function drawSecondCircle() {
-  removeSecondCircle();
-  if (!concentricActive) return;
-  secondCircle = L.circle([currentLat, currentLng], {
-    radius: getSecondRadiusMeters(), color: '#34C759', weight: 2, opacity: 0.8,
-    fillColor: '#34C759', fillOpacity: 0.1, dashArray: '6,4'
-  }).addTo(map);
-}
-
-function toggleConcentric() {
-  concentricActive = !concentricActive;
-  if (!concentricActive) { removeSecondCircle(); }
-  else {
-    const primaryVal = parseFloat(document.getElementById('radius-slider').value);
-    const slider2 = document.getElementById('radius-slider-2');
-    if (slider2) {
-      slider2.max = document.getElementById('radius-slider').max;
-      slider2.step = document.getElementById('radius-slider').step;
-      slider2.min = document.getElementById('radius-slider').min;
-      slider2.value = currentUnit === 'ft' ? Math.round(primaryVal * 0.5) : (primaryVal * 0.5).toFixed(1);
-    }
-    drawSecondCircle();
-  }
-}
+/* fitCircle, concentric functions moved to pins.js */
 
 /* printMap, buildCircleGeoJSON, recent searches, computeOverlaps moved to tools.js/pins.js */
 
 /* ── Hook drawCircle to auto-update HUD ── */
 const _origDrawCircle = drawCircle;
-drawCircle = function() { _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle(); };
+drawCircle = function() {
+  if (typeof radiusMode !== 'undefined' && radiusMode === 'drivetime') { updateHUD(); return; }
+  _origDrawCircle(); updateHUD(); if (concentricActive) drawSecondCircle();
+};
 
 /* ── Prevent Leaflet from intercepting overlay events ── */
 function disableMapPropagation() {
