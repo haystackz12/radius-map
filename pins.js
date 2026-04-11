@@ -83,6 +83,27 @@ function renderPinList() {
   });
 }
 
+/* ── Clear all map state (used by restore/reset) ── */
+function clearAllState() {
+  pins.forEach(p => { if (p.layer) map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
+  pins = []; renderPinList();
+  if (circle) { map.removeLayer(circle); circle = null; }
+  if (marker) { map.removeLayer(marker); marker = null; }
+  removeIsochrone();
+  if (typeof removeCompareCircle === 'function') removeCompareCircle();
+  showCompareCircle = false;
+  if (concentricActive) { concentricActive = false; removeSecondCircle(); }
+  overlapLayers.forEach(l => map.removeLayer(l)); overlapLayers = [];
+  if (typeof clearNearestResult === 'function') clearNearestResult();
+  if (distanceModeActive) toggleDistanceMode();
+  if (clickModeActive) toggleClickMode();
+  clearDistance();
+  if (typeof hideToolPill === 'function') hideToolPill();
+  document.getElementById('address-input').value = '';
+  document.getElementById('suggestions').style.display = 'none';
+  const cb = document.getElementById('search-clear'); if (cb) cb.style.display = 'none';
+}
+
 /* ── Saved Maps (localStorage) ── */
 function captureFullState() {
   const pinData = pins.map(p => {
@@ -110,8 +131,7 @@ function restoreSavedMap(index) {
   const maps = getSavedMaps();
   if (!maps[index]) return;
   const s = maps[index].state;
-  pins.forEach(p => { if (p.layer) map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
-  pins = []; removeIsochrone(); removeCompareCircle();
+  clearAllState();
   currentLat = s.lat; currentLng = s.lng; currentColor = s.color || '#4f8ef7'; currentOpacity = s.opacity || 0.15;
   currentUnit = s.unit || 'mi'; radiusMode = s.mode || 'radius'; travelTimeMinutes = s.travelTime || 15; transportMode = s.transport || 'driving-car';
   const sl = document.getElementById('radius-slider');
@@ -260,33 +280,16 @@ function toggleFullscreen() {
 /* ── Reset ── */
 function resetEverything() {
   if (!confirm('Reset map to defaults? This clears all pins, zones and settings.')) return;
-  pins.forEach(p => { map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
-  pins = [];
-  renderPinList();
-  if (concentricActive) { concentricActive = false; removeSecondCircle(); }
+  clearAllState();
   currentUnit = 'mi';
-  const slider = document.getElementById('radius-slider');
-  slider.min = 0.1; slider.max = 50; slider.step = 0.1; slider.value = 5;
-  currentColor = '#4f8ef7';
-  currentOpacity = 0.15;
+  const sl = document.getElementById('radius-slider');
+  sl.min = 0.1; sl.max = 50; sl.step = 0.1; sl.value = 5;
+  currentColor = '#4f8ef7'; currentOpacity = 0.15;
   document.getElementById('opacity-slider').value = 15;
   setTileLayer('street');
   document.getElementById('map').classList.remove('satellite-theme');
-  document.getElementById('address-input').value = '';
-  document.getElementById('suggestions').style.display = 'none';
-  const cb = document.getElementById('search-clear');
-  if (cb) cb.style.display = 'none';
-  if (distanceModeActive) toggleDistanceMode();
-  if (clickModeActive) toggleClickMode();
-  clearDistance();
-  if (typeof hideToolPill === 'function') hideToolPill();
-  overlapLayers.forEach(l => map.removeLayer(l));
-  overlapLayers = [];
-  // Remove isochrone if present
-  if (typeof isochroneLayer !== 'undefined' && isochroneLayer) { map.removeLayer(isochroneLayer); isochroneLayer = null; }
-  if (typeof radiusMode !== 'undefined') radiusMode = 'radius';
-  userHasSearched = false;
-  locationResolved = false;
+  radiusMode = 'radius';
+  userHasSearched = false; locationResolved = false;
   detectLocation();
   setStatus('Reset complete', 'success');
   if (typeof updateHUD === 'function') updateHUD();
