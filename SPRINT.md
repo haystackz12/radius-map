@@ -81,16 +81,30 @@ Drive time isochrone zones via OpenRouteService API. Global Radius/Drive Time mo
 
 ---
 
-## Sprint 15 — Persistence & Data (Current)
+## Sprint 15 — Persistence & Data ✅ COMPLETE
 **Goal:** Give users a reason to come back. Saved maps, favorites.
 
-### In progress
-
-| Ticket | Priority | Description |
+### Shipped
+| Ticket | Status | Description |
 |---|---|---|
-| RM-063 | High | **Full URL state encoding** — Encode all state in share URL. Restoring from URL rebuilds the entire session. |
-| RM-064 | High | **Saved maps (localStorage)** — Save/restore/delete maps, cap at 10. |
-| RM-065 | Medium | **Address favorites** — Star icon, favorites in recent searches dropdown, cap at 10. |
+| RM-063 | ✅ | **Full URL state encoding** — Share URLs encode center, radius, unit, color, opacity, mode, travel time, transport, tile, all pins. Restoring from URL rebuilds entire session including pins and isochrone. |
+| RM-064 | ✅ | **Saved maps (localStorage)** — Save/restore/delete maps in Settings popover. Full state capture including pins and mode. Cap at 10. clearAllState() ensures clean restore. |
+| RM-065 | ✅ | **Address favorites** — ★/☆ star toggle on right side of every suggestion, favorite, and recent search item. Favorites section above recent searches. Cap at 10. |
+
+### QA fixes
+| Fix | Description |
+|---|---|
+| Saved map restore layering | clearAllState() now removes all pin layers, circle, marker, isochrone, compare circle, second ring, overlaps, nearest result, distance tool, search bar before restoring. resetEverything() also uses it. |
+| Favorites star not visible | Stars added to showSuggestions() (geocoding results) and moved from left to right side in showRecentSearches(). _buildFavItem() helper shared. |
+| Search button not firing | Confirmed unconditional — hides suggestions then calls searchAddress(). |
+| Suggestion click not searching | onclick moved from span:first-child to full div.suggestion-item so clicking anywhere triggers applyResult() which calls drawCircle()/fetchIsochrone(). |
+| Clear button not showing | Explicit style.display='block' in applyResult() and coordinate path. Removed duplicate input listeners from app.js. |
+
+### Code housekeeping
+- Removed duplicate address-input listeners from app.js (consolidated in ui.js)
+- Removed unused buildColorOptions(), toggleAbout/Help/Modal/Drawer functions
+- Moved printMap/buildCircleGeoJSON to pins.js, CSV import to tools.js
+- All JS files under 400 lines
 
 ### Deferred
 | Ticket | Description |
