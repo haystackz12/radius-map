@@ -43,6 +43,8 @@ let isochroneLayer = null;
 let travelTimeMinutes = 15;
 let transportMode = 'driving-car';
 let radiusMode = 'radius';
+let showCompareCircle = false;
+let compareCircleLayer = null;
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -149,6 +151,20 @@ function drawCenterMarker() {
   marker = L.marker([currentLat, currentLng], { icon }).addTo(map);
 }
 
+function drawCompareCircle() {
+  removeCompareCircle();
+  if (!showCompareCircle || radiusMode !== 'drivetime') return;
+  compareCircleLayer = L.circle([currentLat, currentLng], {
+    radius: getRadiusMeters(),
+    color: currentColor, weight: 2, opacity: 0.5, dashArray: '8,4',
+    fillColor: currentColor, fillOpacity: currentOpacity * 0.3
+  }).addTo(map);
+}
+
+function removeCompareCircle() {
+  if (compareCircleLayer) { map.removeLayer(compareCircleLayer); compareCircleLayer = null; }
+}
+
 function removeIsochrone() {
   if (isochroneLayer) { map.removeLayer(isochroneLayer); isochroneLayer = null; }
 }
@@ -171,6 +187,7 @@ async function fetchIsochrone() {
   removeIsochrone();
   if (layer) {
     isochroneLayer = layer.addTo(map);
+    drawCompareCircle();
     drawCenterMarker();
     map.fitBounds(isochroneLayer.getBounds(), { padding: [40, 40] });
     const modeLabel = { 'driving-car': 'driving', 'foot-walking': 'walking', 'cycling-regular': 'cycling' }[transportMode];

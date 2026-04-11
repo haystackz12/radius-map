@@ -85,7 +85,8 @@ function drivetimePopoverHTML() {
   const modeBtns = modes.map(m => `<div class="seg-btn ${tm === m.id ? 'active' : ''}" data-transport="${m.id}">${m.icon} ${m.label}</div>`).join('');
   const presets = [5, 10, 15, 30, 60];
   const presetBtns = presets.map(p => `<div class="preset-btn ${t === p ? 'active' : ''}" data-time="${p}">${p} min</div>`).join('');
-  return `<div class="pop-bignum" style="margin-bottom:2px;">${t}</div><div class="pop-unit-sub">minutes</div><div class="seg-ctrl">${modeBtns}</div><input class="pop-slider" id="travel-time-slider" type="range" min="5" max="60" step="5" value="${t}"><div class="presets-row">${presetBtns}</div><hr class="pop-divider"><button class="action-btn" data-action="fit-iso">⊡  Fit Zone in View</button>`;
+  const compareChecked = typeof showCompareCircle !== 'undefined' && showCompareCircle;
+  return `<div class="pop-bignum" style="margin-bottom:2px;">${t}</div><div class="pop-unit-sub">minutes</div><div class="seg-ctrl">${modeBtns}</div><input class="pop-slider" id="travel-time-slider" type="range" min="5" max="60" step="5" value="${t}"><div class="presets-row">${presetBtns}</div><hr class="pop-divider"><label style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(0,0,0,0.6);cursor:pointer;padding:4px 0;"><input type="checkbox" id="compare-check" ${compareChecked ? 'checked' : ''} style="accent-color:#007AFF;"> Show radius circle for comparison</label><hr class="pop-divider"><button class="action-btn" data-action="fit-iso">⊡  Fit Zone in View</button>`;
 }
 
 function toolsPopoverHTML() {
@@ -133,8 +134,9 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
     const newMode = modeBtn.dataset.mode;
     if (newMode !== radiusMode) {
       radiusMode = newMode;
-      // Clean up both active layers before switching
+      // Clean up all active layers before switching
       removeIsochrone();
+      removeCompareCircle();
       if (circle) { map.removeLayer(circle); circle = null; }
       if (marker) { map.removeLayer(marker); marker = null; }
       if (radiusMode === 'radius') { drawCircle(); }
@@ -191,6 +193,7 @@ document.getElementById('pop-radius').addEventListener('input', function(e) {
   if (e.target.id === 'radius-slider-new') { document.getElementById('radius-slider').value = e.target.value; drawCircle(); updateHUD(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1); }
   if (e.target.id === 'ring2-slider') { document.getElementById('radius-slider-2').value = e.target.value; drawSecondCircle(); updateHUD(); }
   if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); removeIsochrone(); drawCenterMarker(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = travelTimeMinutes; updateHUD(); }
+  if (e.target.id === 'compare-check') { showCompareCircle = e.target.checked; if (showCompareCircle) drawCompareCircle(); else removeCompareCircle(); }
 });
 document.getElementById('pop-radius').addEventListener('change', function(e) {
   if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); debouncedFetchIsochrone(); updateHUD(); renderPopover('radius'); }
