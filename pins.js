@@ -22,7 +22,7 @@ async function pinCurrent() {
   const labelMarker = L.marker([currentLat, currentLng], {
     icon: L.divIcon({
       className: 'pin-label-icon',
-      html: `<div class="pin-map-label">${name}</div>`,
+      html: `<div class="pin-map-label">${sanitize(name)}</div>`,
       iconSize: null,
       iconAnchor: null
     })
@@ -44,7 +44,7 @@ function renamePinLabel(id) {
   if (pin.labelMarker) {
     map.removeLayer(pin.labelMarker);
     pin.labelMarker = L.marker([pin.lat, pin.lng], {
-      icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${newName}</div>`, iconSize: null, iconAnchor: null })
+      icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${sanitize(newName)}</div>`, iconSize: null, iconAnchor: null })
     }).addTo(map);
   }
   renderPinList();
@@ -74,7 +74,7 @@ function renderPinList() {
     const metaText = (radiusMode === 'drivetime' && p.travelTime) ? `${p.travelTime} min · ${modeIcons[p.transportMode] || '\uD83D\uDE97'}` : radiusDisplay;
     item.title = p.travelTime ? `${p.travelTime} min ${p.transportMode || 'driving'}` : `Saved at ${radiusDisplay} radius`;
     item.innerHTML = `<span class="pin-dot" style="background:${p.color}"></span>` +
-      `<span class="pin-label pin-name-edit" title="Click to rename" data-id="${p.id}">${p.name || p.label}</span>` +
+      `<span class="pin-label pin-name-edit" title="Click to rename" data-id="${p.id}">${sanitize(p.name || p.label)}</span>` +
       `<span class="pin-meta">${metaText}</span>` +
       `<button class="pin-remove" aria-label="Remove">×</button>`;
     item.querySelector('.pin-remove').onclick = () => removePin(p.id);
@@ -160,7 +160,7 @@ function restoreURLPins() {
     const lat = p.la, lng = p.ln, color = '#' + (p.c || '4f8ef7');
     const radiusM = p.u === 'mi' ? p.r * 1609.344 : p.u === 'ft' ? p.r * 0.3048 : p.r * 1000;
     const layer = L.circle([lat, lng], { radius: radiusM, color, weight: 2, opacity: 0.9, dashArray: '6,4', fillColor: color, fillOpacity: currentOpacity * 0.7 }).addTo(map);
-    const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${p.n}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
+    const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${sanitize(p.n)}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
     const pinData = { id: Date.now() + Math.random(), lat, lng, radiusVal: p.r, unit: p.u || 'mi', color, label: p.n, name: p.n, layer, labelMarker };
     if (p.t) { pinData.travelTime = p.t; pinData.transportMode = p.tp; }
     pins.push(pinData);

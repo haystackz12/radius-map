@@ -1,3 +1,9 @@
+function sanitize(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
 const COLORS = [
   { hex: '#4f8ef7', name: 'Blue' },
   { hex: '#5ecfa0', name: 'Green' },
@@ -319,7 +325,7 @@ function showSuggestions(results) {
     const item = document.createElement('div');
     item.className = 'suggestion-item';
     item.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${addr}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
+    item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitize(addr)}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
     item.onclick = () => applyResult(r);
     item.querySelector('[data-fav-addr]').onclick = (e) => { e.stopPropagation(); toggleFavorite(addr); showSuggestions(results); };
     box.appendChild(item);

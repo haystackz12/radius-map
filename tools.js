@@ -275,7 +275,7 @@ function handleCSVImport(file) {
         if (data.length) {
           const r = data[0], lat = parseFloat(r.lat), lng = parseFloat(r.lon), name = addrs[i].split(',')[0].trim();
           const layer = L.circle([lat, lng], { radius: getRadiusMeters(), color: currentColor, weight: 2, opacity: 0.9, dashArray: '6,4', fillColor: currentColor, fillOpacity: currentOpacity * 0.7 }).addTo(map);
-          const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${name}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
+          const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${sanitize(name)}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
           pins.push({ id: Date.now() + i, lat, lng, radiusVal: parseFloat(document.getElementById('radius-slider').value), unit: currentUnit, color: currentColor, label: addrs[i], name, layer, labelMarker });
           bounds.extend(layer.getBounds()); imported++;
         }
@@ -314,7 +314,7 @@ function _buildFavItem(q, isFav) {
   const item = document.createElement('div');
   item.className = 'suggestion-item';
   item.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${q}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
+  item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitize(q)}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
   item.onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
   item.querySelector('[data-fav-addr]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
   return item;
@@ -387,7 +387,7 @@ async function findNearest(amenityType) {
         const lng = el.center ? el.center.lon : el.lon;
         const name = el.tags.name || amenityType;
         const dist = L.latLng(currentLat, currentLng).distanceTo(L.latLng(lat, lng));
-        nearestMarker = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div style="background:#ff3b30;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);transform:translateX(-50%);">${name}</div>`, iconSize: null, iconAnchor: [0, 0] }) }).addTo(map);
+        nearestMarker = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div style="background:#ff3b30;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);transform:translateX(-50%);">${sanitize(name)}</div>`, iconSize: null, iconAnchor: [0, 0] }) }).addTo(map);
         nearestLine = L.polyline([[currentLat, currentLng], [lat, lng]], { color: '#ff3b30', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(map);
         setStatus(`${name} — ${(dist / 1609.344).toFixed(2)} mi (${(dist / 1000).toFixed(2)} km)`, 'success');
         return;
