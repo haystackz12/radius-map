@@ -145,7 +145,13 @@ function drawCircle() {
 
   updateStats();
   updatePresetActive();
-  fetchElevation(currentLat, currentLng);
+  _debouncedElevation();
+}
+
+let _elevTimer;
+function _debouncedElevation() {
+  clearTimeout(_elevTimer);
+  _elevTimer = setTimeout(() => fetchElevation(currentLat, currentLng), 800);
 }
 
 function drawCenterMarker() {

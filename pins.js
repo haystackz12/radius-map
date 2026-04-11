@@ -361,7 +361,7 @@ function toggleConcentric() {
 function computeOverlaps() {
   overlapLayers.forEach(l => map.removeLayer(l));
   overlapLayers = [];
-  const allCircles = pins.map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
+  const allCircles = pins.filter(p => p.layer && typeof p.layer.getRadius === 'function').map(p => ({ lat: p.lat, lng: p.lng, r: p.layer.getRadius() }));
   if (circle) allCircles.push({ lat: currentLat, lng: currentLng, r: circle.getRadius() });
   for (let i = 0; i < allCircles.length; i++) {
     for (let j = i + 1; j < allCircles.length; j++) {
