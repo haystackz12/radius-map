@@ -155,6 +155,7 @@ function drawCenterMarker() {
 
 function removeIsochrone() {
   if (isochroneLayer) { map.removeLayer(isochroneLayer); isochroneLayer = null; }
+  if (typeof removeCompareCircle === 'function') removeCompareCircle();
 }
 
 let _isoTimer;
