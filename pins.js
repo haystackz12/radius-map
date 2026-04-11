@@ -15,8 +15,8 @@ async function pinCurrent() {
     layer = L.circle([currentLat, currentLng], {
       radius: getRadiusMeters(),
       color: currentColor,
-      weight: 2, opacity: 0.9,
-      fillColor: currentColor, fillOpacity: currentOpacity
+      weight: 2, opacity: 0.9, dashArray: '6,4',
+      fillColor: currentColor, fillOpacity: currentOpacity * 0.7
     }).addTo(map);
   }
   const labelMarker = L.marker([currentLat, currentLng], {
@@ -67,9 +67,11 @@ function renderPinList() {
   pins.forEach(p => {
     const item = document.createElement('div');
     item.className = 'pin-item';
+    const radiusDisplay = p.unit === 'ft' ? Math.round(p.radiusVal) + ' ' + p.unit : p.radiusVal.toFixed(1) + ' ' + p.unit;
+    item.title = `Saved at ${radiusDisplay} radius`;
     item.innerHTML = `<span class="pin-dot" style="background:${p.color}"></span>` +
       `<span class="pin-label pin-name-edit" title="Click to rename" data-id="${p.id}">${p.name || p.label}</span>` +
-      `<span class="pin-meta">${p.radiusVal.toFixed(1)} ${p.unit}</span>` +
+      `<span class="pin-meta">${radiusDisplay}</span>` +
       `<button class="pin-remove" aria-label="Remove">×</button>`;
     item.querySelector('.pin-remove').onclick = () => removePin(p.id);
     item.querySelector('.pin-name-edit').onclick = () => renamePinLabel(p.id);
@@ -109,8 +111,8 @@ async function rebuildPinLayers(newMode) {
     } else {
       const radiusM = p.unit === 'mi' ? p.radiusVal * 1609.344 : p.unit === 'ft' ? p.radiusVal * 0.3048 : p.radiusVal * 1000;
       p.layer = L.circle([p.lat, p.lng], {
-        radius: radiusM, color: p.color, weight: 2, opacity: 0.9,
-        fillColor: p.color, fillOpacity: currentOpacity
+        radius: radiusM, color: p.color, weight: 2, opacity: 0.9, dashArray: '6,4',
+        fillColor: p.color, fillOpacity: currentOpacity * 0.7
       }).addTo(map);
     }
   }
@@ -254,8 +256,8 @@ function handleCSVImport(file) {
           const radiusVal = parseFloat(document.getElementById('radius-slider').value);
           const radiusM = getRadiusMeters();
           const layer = L.circle([lat, lng], {
-            radius: radiusM, color: currentColor, weight: 2, opacity: 0.9,
-            fillColor: currentColor, fillOpacity: currentOpacity
+            radius: radiusM, color: currentColor, weight: 2, opacity: 0.9, dashArray: '6,4',
+            fillColor: currentColor, fillOpacity: currentOpacity * 0.7
           }).addTo(map);
           const name = addresses[i].split(',')[0].trim();
           const labelMarker = L.marker([lat, lng], {
