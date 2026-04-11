@@ -392,6 +392,9 @@ buildPresets();
 const urlParams = new URLSearchParams(location.search);
 const willDetect = !urlParams.has('lat');
 initMap(willDetect);
+if (_pendingTile) { setTileLayer(_pendingTile); if (_pendingTile === 'satellite') document.getElementById('map').classList.add('satellite-theme'); _pendingTile = null; }
+if (typeof restoreURLPins === 'function') restoreURLPins();
 if (willDetect) detectLocation();
+else if (radiusMode === 'drivetime') { drawCenterMarker(); fetchIsochrone(); }
 toggleFab('radius');
 updateHUD();

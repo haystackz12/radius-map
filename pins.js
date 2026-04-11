@@ -83,6 +83,22 @@ function renderPinList() {
   });
 }
 
+/* ── Restore pins from URL ── */
+function restoreURLPins() {
+  if (!_pendingPins || !_pendingPins.length) return;
+  _pendingPins.forEach(p => {
+    const lat = p.la, lng = p.ln, color = '#' + (p.c || '4f8ef7');
+    const radiusM = p.u === 'mi' ? p.r * 1609.344 : p.u === 'ft' ? p.r * 0.3048 : p.r * 1000;
+    const layer = L.circle([lat, lng], { radius: radiusM, color, weight: 2, opacity: 0.9, dashArray: '6,4', fillColor: color, fillOpacity: currentOpacity * 0.7 }).addTo(map);
+    const labelMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${p.n}</div>`, iconSize: null, iconAnchor: null }) }).addTo(map);
+    const pinData = { id: Date.now() + Math.random(), lat, lng, radiusVal: p.r, unit: p.u || 'mi', color, label: p.n, name: p.n, layer, labelMarker };
+    if (p.t) { pinData.travelTime = p.t; pinData.transportMode = p.tp; }
+    pins.push(pinData);
+  });
+  renderPinList();
+  _pendingPins = null;
+}
+
 /* ── Isochrone layer helper ── */
 async function fetchIsochroneLayer(lat, lng, color, opacity) {
   const key = window.ORS_API_KEY;

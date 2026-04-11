@@ -267,31 +267,17 @@ function setTileLayer(name) {
 }
 
 function updateMapBadge(name) {
-  let badge = document.getElementById('map-style-badge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.id = 'map-style-badge';
-    badge.className = 'map-style-badge';
-    document.getElementById('map').appendChild(badge);
-  }
-  const labels = { street: 'Street', satellite: 'Satellite', topo: 'Topo' };
-  badge.textContent = labels[name] || name;
+  let b = document.getElementById('map-style-badge');
+  if (!b) { b = document.createElement('div'); b.id = 'map-style-badge'; b.className = 'map-style-badge'; document.getElementById('map').appendChild(b); }
+  b.textContent = ({ street: 'Street', satellite: 'Satellite', topo: 'Topo' })[name] || name;
 }
 
 function showToast(msg) {
-  let toast = document.getElementById('toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.className = 'toast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.classList.remove('show');
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
-  });
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.remove('show');
+  requestAnimationFrame(() => { t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); });
 }
 
 function setStatus(msg, type = '') {
@@ -349,7 +335,23 @@ function restoreFromURL() {
     document.getElementById('radius-slider').min = ranges[unit].min;
   }
   if (!isNaN(r)) document.getElementById('radius-slider').value = r;
+  const color = params.get('color');
+  if (color && /^[0-9a-fA-F]{6}$/.test(color)) currentColor = '#' + color;
+  const op = parseInt(params.get('opacity'));
+  if (!isNaN(op) && op >= 0 && op <= 100) currentOpacity = op / 100;
+  const mode = params.get('mode');
+  if (mode === 'drivetime') { radiusMode = 'drivetime'; }
+  const time = parseInt(params.get('time'));
+  if (!isNaN(time) && time >= 5 && time <= 60) travelTimeMinutes = time;
+  const transport = params.get('transport');
+  if (['driving-car', 'foot-walking', 'cycling-regular'].includes(transport)) transportMode = transport;
+  const tile = params.get('tile');
+  if (tile && TILE_LAYERS[tile]) { /* applied after map init */ _pendingTile = tile; }
+  const pinsParam = params.get('pins');
+  if (pinsParam) { try { _pendingPins = JSON.parse(pinsParam); } catch {} }
 }
+let _pendingTile = null;
+let _pendingPins = null;
 
 document.getElementById('radius-slider').addEventListener('input', function() {
   drawCircle();

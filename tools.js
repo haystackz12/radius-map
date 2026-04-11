@@ -134,35 +134,36 @@ function toggleClickMode() {
   else setStatus('', '');
 }
 
-function toggleAbout() {
-  document.getElementById('about-overlay').classList.toggle('open');
-}
-
-function toggleHelp() {
-  document.getElementById('help-overlay').classList.toggle('open');
-}
-
-function toggleModal() {
-  document.getElementById('modal-overlay').classList.toggle('open');
-}
-
-function switchTab(name) {
-  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + name));
-}
-
-function toggleDrawer() {
-  document.querySelector('.panel').classList.toggle('open');
-}
 
 function copyCoords() {
   const txt = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
   navigator.clipboard.writeText(txt).then(() => { showToast('Coordinates copied!'); setStatus('Coordinates copied!', 'success'); });
 }
 
+function buildShareURL() {
+  const p = new URLSearchParams();
+  p.set('lat', currentLat.toFixed(6));
+  p.set('lng', currentLng.toFixed(6));
+  p.set('r', parseFloat(document.getElementById('radius-slider').value));
+  p.set('unit', currentUnit);
+  p.set('color', currentColor.replace('#', ''));
+  p.set('opacity', Math.round(currentOpacity * 100));
+  p.set('mode', radiusMode);
+  if (radiusMode === 'drivetime') { p.set('time', travelTimeMinutes); p.set('transport', transportMode); }
+  if (currentTileName !== 'street') p.set('tile', currentTileName);
+  if (pins.length) {
+    const pinData = pins.map(pin => {
+      const o = { la: +pin.lat.toFixed(5), ln: +pin.lng.toFixed(5), n: pin.name, r: pin.radiusVal, u: pin.unit, c: pin.color.replace('#', '') };
+      if (pin.travelTime) { o.t = pin.travelTime; o.tp = pin.transportMode; }
+      return o;
+    });
+    p.set('pins', JSON.stringify(pinData));
+  }
+  return `${location.origin}${location.pathname}?${p.toString()}`;
+}
+
 function copyShareLink() {
-  const val = parseFloat(document.getElementById('radius-slider').value);
-  const url = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
+  const url = buildShareURL();
   navigator.clipboard.writeText(url).then(() => { showToast('Share link copied!'); setStatus('Share link copied!', 'success'); });
 }
 
@@ -238,9 +239,7 @@ function updateBreadcrumb(address) {
 }
 
 function copyEmbed() {
-  const val = parseFloat(document.getElementById('radius-slider').value);
-  const shareUrl = `${location.origin}${location.pathname}?lat=${currentLat.toFixed(6)}&lng=${currentLng.toFixed(6)}&r=${val}&unit=${currentUnit}`;
-  const iframe = `<iframe src="${shareUrl}" width="600" height="450" style="border:none;border-radius:8px;" loading="lazy" allowfullscreen></iframe>`;
+  const iframe = `<iframe src="${buildShareURL()}" width="600" height="450" style="border:none;border-radius:8px;" loading="lazy" allowfullscreen></iframe>`;
   navigator.clipboard.writeText(iframe).then(() => { showToast('Embed code copied!'); setStatus('Embed code copied!', 'success'); });
 }
 
