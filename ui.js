@@ -89,7 +89,7 @@ function drivetimePopoverHTML() {
 }
 
 function toolsPopoverHTML() {
-  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button>`;
+  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn" data-action="reset" style="color:rgba(0,0,0,0.4);">↺  Reset Map</button>`;
 }
 
 function stylePopoverHTML() {
@@ -224,6 +224,7 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();
+  if (act.dataset.action === 'reset') { resetEverything(); renderPopover('tools'); }
 });
 
 document.getElementById('pop-style').addEventListener('click', function(e) {

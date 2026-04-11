@@ -185,7 +185,7 @@ function toggleFullscreen() {
 
 /* ── Reset ── */
 function resetEverything() {
-  if (!confirm('Reset everything? This will clear all pins, rings, and settings.')) return;
+  if (!confirm('Reset map to defaults? This clears all pins, zones and settings.')) return;
   pins.forEach(p => { map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
   pins = [];
   renderPinList();
