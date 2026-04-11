@@ -45,6 +45,8 @@ let transportMode = 'driving-car';
 let radiusMode = 'radius';
 let showCompareCircle = false;
 let compareCircleLayer = null;
+let nearestMarker = null;
+let nearestLine = null;
 
 async function detectLocation() {
   setStatus('Detecting your location…', 'loading');
@@ -149,20 +151,6 @@ function drawCenterMarker() {
     iconAnchor: [6, 6]
   });
   marker = L.marker([currentLat, currentLng], { icon }).addTo(map);
-}
-
-function drawCompareCircle() {
-  removeCompareCircle();
-  if (!showCompareCircle || radiusMode !== 'drivetime') return;
-  compareCircleLayer = L.circle([currentLat, currentLng], {
-    radius: getRadiusMeters(),
-    color: currentColor, weight: 2, opacity: 0.5, dashArray: '8,4',
-    fillColor: currentColor, fillOpacity: currentOpacity * 0.3
-  }).addTo(map);
-}
-
-function removeCompareCircle() {
-  if (compareCircleLayer) { map.removeLayer(compareCircleLayer); compareCircleLayer = null; }
 }
 
 function removeIsochrone() {
@@ -287,23 +275,6 @@ function updateMapBadge(name) {
   }
   const labels = { street: 'Street', satellite: 'Satellite', topo: 'Topo' };
   badge.textContent = labels[name] || name;
-}
-
-function buildColorOptions() {
-  const container = document.getElementById('color-options');
-  COLORS.forEach(c => {
-    const sw = document.createElement('div');
-    sw.className = 'color-swatch' + (c.hex === currentColor ? ' active' : '');
-    sw.style.background = c.hex;
-    sw.title = c.name;
-    sw.onclick = () => {
-      currentColor = c.hex;
-      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      drawCircle();
-    };
-    container.appendChild(sw);
-  });
 }
 
 function showToast(msg) {

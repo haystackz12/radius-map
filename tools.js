@@ -339,9 +339,55 @@ function showRecentSearches() {
   box.style.display = 'block';
 }
 
+/* ── Floating tool cancel pill ── */
+function showToolPill(label, onCancel) {
+  let pill = document.getElementById('tool-pill');
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.id = 'tool-pill';
+    pill.style.cssText = 'position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,122,255,0.92);color:#fff;font-family:system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,122,255,0.4);cursor:pointer;z-index:1002;display:flex;align-items:center;gap:8px;white-space:nowrap;backdrop-filter:blur(8px);';
+    document.getElementById('map').appendChild(pill);
+  }
+  pill.innerHTML = `<span>${label}</span><span style="background:rgba(255,255,255,0.25);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;">×</span>`;
+  pill.style.display = 'flex';
+  pill.onclick = onCancel;
+}
+
+function hideToolPill() {
+  const pill = document.getElementById('tool-pill');
+  if (pill) pill.style.display = 'none';
+}
+
 function clearRecentSearches(e) {
   if (e) e.stopPropagation();
   localStorage.removeItem('rm_recent_searches');
   document.getElementById('suggestions').style.display = 'none';
+}
+
+/* ── Nearest Place Finder (Overpass API) ── */
+function clearNearestResult() {
+  if (nearestMarker) { map.removeLayer(nearestMarker); nearestMarker = null; }
+  if (nearestLine) { map.removeLayer(nearestLine); nearestLine = null; }
+}
+
+async function findNearest(amenityType) {
+  clearNearestResult();
+  setStatus(`Finding nearest ${amenityType}…`, 'loading');
+  const osmType = { hospital:'hospital', pharmacy:'pharmacy', grocery:'supermarket', gas:'fuel', restaurant:'restaurant', school:'school', bank:'bank', hotel:'hotel' }[amenityType] || amenityType;
+  for (const r of [5000, 20000]) {
+    try {
+      const resp = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];node["amenity"="${osmType}"](around:${r},${currentLat},${currentLng});out 1;`)}`);
+      const data = await resp.json();
+      if (data.elements && data.elements.length) {
+        const el = data.elements[0], name = el.tags.name || osmType;
+        const dist = L.latLng(currentLat, currentLng).distanceTo(L.latLng(el.lat, el.lon));
+        nearestMarker = L.marker([el.lat, el.lon], { icon: L.divIcon({ className: '', html: `<div style="background:#ff3b30;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);transform:translateX(-50%);">${name}</div>`, iconSize: null, iconAnchor: [0, 0] }) }).addTo(map);
+        nearestLine = L.polyline([[currentLat, currentLng], [el.lat, el.lon]], { color: '#ff3b30', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(map);
+        setStatus(`${name} — ${(dist / 1609.344).toFixed(2)} mi (${(dist / 1000).toFixed(2)} km)`, 'success');
+        return;
+      }
+    } catch {}
+  }
+  setStatus(`No ${amenityType} found nearby`, 'error');
 }
 

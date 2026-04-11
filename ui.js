@@ -90,7 +90,8 @@ function drivetimePopoverHTML() {
 }
 
 function toolsPopoverHTML() {
-  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn" data-action="reset" style="color:rgba(0,0,0,0.4);">↺  Reset Map</button>`;
+  const placeOpts = [['hospital','🏥 Hospital'],['pharmacy','💊 Pharmacy'],['grocery','🛒 Grocery'],['gas','⛽ Gas Station'],['restaurant','🍽 Restaurant'],['school','🏫 School'],['bank','🏦 Bank'],['hotel','🏨 Hotel']].map(p => `<option value="${p[0]}">${p[1]}</option>`).join('');
+  return `<div class="pop-title">Tools</div><button class="action-btn" data-action="print">🖨  Print / Save PDF</button><button class="action-btn ${clickModeActive ? 'action-active' : ''}" data-action="setctr">🎯  ${clickModeActive ? 'Click map to set center…' : 'Set Map Center'}</button><button class="action-btn ${distanceModeActive ? 'action-active' : ''}" data-action="measure">📐  ${distanceModeActive ? 'Measuring… (tap to stop)' : 'Measure Distance'}</button><hr class="pop-divider"><div class="pop-title">Find Nearest</div><div style="display:flex;gap:4px;"><select id="nearest-select" style="flex:1;font-size:11px;padding:5px 6px;border-radius:7px;border:0.5px solid rgba(0,0,0,0.12);background:rgba(0,0,0,0.03);color:rgba(0,0,0,0.75);font-family:system-ui,sans-serif;outline:none;"><option value="">Select place…</option>${placeOpts}</select><button class="action-btn" data-action="find-nearest" style="width:auto;flex:0 0 auto;padding:5px 10px;">Go</button></div><hr class="pop-divider"><div class="pop-title">View</div><button class="action-btn" data-action="fit">⊡  Fit Circle in View</button><button class="action-btn" data-action="zoomin">＋  Zoom In</button><button class="action-btn" data-action="zoomout">－  Zoom Out</button><hr class="pop-divider"><button class="action-btn" data-action="reset" style="color:rgba(0,0,0,0.4);">↺  Reset Map</button>`;
 }
 
 function stylePopoverHTML() {
@@ -111,24 +112,7 @@ function settingsPopoverHTML() {
   return `<div class="pop-title">Appearance</div><div class="pop-title" style="font-size:9px;margin-bottom:6px;">Circle color</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${swatches}</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:10px;color:rgba(0,0,0,0.45);flex:1;">Fill opacity</span><input type="range" class="pop-slider" id="pop-opacity" min="0" max="40" step="1" value="${opVal}" style="flex:2;margin:0;"><span style="font-size:10px;color:#007AFF;width:28px;text-align:right;" id="pop-opacity-val">${opVal}%</span></div><hr class="pop-divider"><div class="pop-title">Pins</div><button class="action-btn" data-action="pin">📍  Pin this location</button><div style="font-size:9px;color:rgba(0,0,0,0.38);padding:2px 2px 6px;line-height:1.4;">Saves current circle. Search a new address to start a new radius.</div>${pinItems}${refreshBtn}<hr class="pop-divider"><div class="pop-title">Export</div><button class="action-btn" data-action="share">🔗  Copy share link</button><button class="action-btn" data-action="coords">📋  Copy coordinates</button><button class="action-btn" data-action="qr">⬛  Generate QR code</button><button class="action-btn" data-action="json">⬇  Download as JSON</button><button class="action-btn" data-action="embed">‹›  Copy embed code</button>`;
 }
 
-/* ── Floating tool cancel pill ── */
-function showToolPill(label, onCancel) {
-  let pill = document.getElementById('tool-pill');
-  if (!pill) {
-    pill = document.createElement('div');
-    pill.id = 'tool-pill';
-    pill.style.cssText = 'position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,122,255,0.92);color:#fff;font-family:system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,122,255,0.4);cursor:pointer;z-index:1002;display:flex;align-items:center;gap:8px;white-space:nowrap;backdrop-filter:blur(8px);';
-    document.getElementById('map').appendChild(pill);
-  }
-  pill.innerHTML = `<span>${label}</span><span style="background:rgba(255,255,255,0.25);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;">×</span>`;
-  pill.style.display = 'flex';
-  pill.onclick = onCancel;
-}
-
-function hideToolPill() {
-  const pill = document.getElementById('tool-pill');
-  if (pill) pill.style.display = 'none';
-}
+/* showToolPill, hideToolPill moved to tools.js */
 document.getElementById('pop-radius').addEventListener('click', function(e) {
   const modeBtn = e.target.closest('[data-mode]');
   if (modeBtn) {
@@ -225,10 +209,14 @@ document.getElementById('pop-tools').addEventListener('click', function(e) {
     }
     renderPopover('tools');
   }
+  if (act.dataset.action === 'find-nearest') {
+    const sel = document.getElementById('nearest-select');
+    if (sel && sel.value) findNearest(sel.value);
+  }
   if (act.dataset.action === 'fit') fitCircle();
   if (act.dataset.action === 'zoomin') map.zoomIn();
   if (act.dataset.action === 'zoomout') map.zoomOut();
-  if (act.dataset.action === 'reset') { resetEverything(); renderPopover('tools'); }
+  if (act.dataset.action === 'reset') { clearNearestResult(); resetEverything(); renderPopover('tools'); }
 });
 
 document.getElementById('pop-style').addEventListener('click', function(e) {

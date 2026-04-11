@@ -287,6 +287,21 @@ function handleCSVImport(file) {
   reader.readAsText(file);
 }
 
+/* ── Compare Circle ── */
+function drawCompareCircle() {
+  removeCompareCircle();
+  if (!showCompareCircle || radiusMode !== 'drivetime') return;
+  compareCircleLayer = L.circle([currentLat, currentLng], {
+    radius: getRadiusMeters(),
+    color: currentColor, weight: 2, opacity: 0.5, dashArray: '8,4',
+    fillColor: currentColor, fillOpacity: currentOpacity * 0.3
+  }).addTo(map);
+}
+
+function removeCompareCircle() {
+  if (compareCircleLayer) { map.removeLayer(compareCircleLayer); compareCircleLayer = null; }
+}
+
 /* ── Circle Helpers ── */
 function fitCircle() {
   if (circle) map.flyToBounds(circle.getBounds(), { padding: [40, 40] });
