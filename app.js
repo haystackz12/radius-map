@@ -137,6 +137,17 @@ function drawCircle() {
   fetchElevation(currentLat, currentLng);
 }
 
+function drawCenterMarker() {
+  if (marker) map.removeLayer(marker);
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:${currentColor};border:2px solid #fff;box-shadow:0 0 0 2px ${currentColor};"></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6]
+  });
+  marker = L.marker([currentLat, currentLng], { icon }).addTo(map);
+}
+
 function removeIsochrone() {
   if (isochroneLayer) { map.removeLayer(isochroneLayer); isochroneLayer = null; }
 }
@@ -167,6 +178,7 @@ async function fetchIsochrone() {
     isochroneLayer = L.geoJSON(geojson, {
       style: { color: currentColor, weight: 2, fillColor: currentColor, fillOpacity: currentOpacity }
     }).addTo(map);
+    drawCenterMarker();
     map.fitBounds(isochroneLayer.getBounds(), { padding: [40, 40] });
     const modeLabel = { 'driving-car': 'driving', 'foot-walking': 'walking', 'cycling-regular': 'cycling' }[transportMode];
     setStatus(`${travelTimeMinutes} min ${modeLabel} zone`, 'success');
