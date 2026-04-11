@@ -122,7 +122,13 @@ function saveCurrentMap() {
   let maps = getSavedMaps();
   maps.unshift({ name, state: captureFullState(), saved: new Date().toISOString() });
   if (maps.length > 10) maps = maps.slice(0, 10);
-  localStorage.setItem('rm_saved_maps', JSON.stringify(maps));
+  const json = JSON.stringify(maps);
+  try {
+    localStorage.setItem('rm_saved_maps', json);
+  } catch(e) {
+    setStatus('Storage full — delete some saved maps', 'error');
+    return;
+  }
   showToast('Map saved!');
   if (typeof renderPopover === 'function') renderPopover('settings');
 }
