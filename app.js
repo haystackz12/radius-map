@@ -317,6 +317,7 @@ function applyResult(r) {
   } else {
     drawCircle();
   }
+  if (typeof isMobile === 'function' && isMobile() && typeof setSheetState === 'function') setSheetState('half');
 }
 
 function showSuggestions(results) {
