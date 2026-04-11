@@ -115,6 +115,7 @@ Replaced left sidebar with Apple Maps–style FAB + popover interface. Map fills
 | Global mode switching | Mode toggle rebuilds all pin layers via `rebuildPinLayers()` — two-pass: remove all, then recreate sequentially |
 | Pin rebuild race condition | `rebuildPinLayers()` uses two-pass approach: first removes all layers, then rebuilds each pin sequentially with for...of + await |
 | Reset button missing | Restored in Tools popover — clears all pins/zones/settings, switches to radius mode, re-runs geolocation |
+| Pinned vs active circle | Pinned circles now render dashed (dashArray: '6,4') with reduced opacity (×0.7) to distinguish from solid active circle. Pin list shows saved radius tooltip. |
 
 ### Not started (deferred to Sprint 14)
 | Ticket | Description |
