@@ -299,6 +299,7 @@ function updateHUD() {
   document.getElementById('hud-ring2').textContent = s.ring2;
   const cl = document.getElementById('coords-label');
   if (cl) cl.textContent = `Lat: ${currentLat.toFixed(5)}  Lng: ${currentLng.toFixed(5)}`;
+  if (typeof refreshMobileSheet === 'function') refreshMobileSheet();
 }
 
 /* ── Search wiring ── */
