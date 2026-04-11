@@ -154,6 +154,7 @@ function removeIsochrone() {
 }
 
 let _isoTimer;
+let _isoGeneration = 0;
 function debouncedFetchIsochrone() {
   clearTimeout(_isoTimer);
   _isoTimer = setTimeout(fetchIsochrone, 600);
@@ -164,7 +165,10 @@ async function fetchIsochrone() {
   const key = window.ORS_API_KEY;
   if (!key) { setStatus('Drive time unavailable — configure ORS API key', 'error'); return; }
   setStatus('Calculating drive time zone…', 'loading');
+  const gen = ++_isoGeneration;
   const layer = await fetchIsochroneLayer(currentLat, currentLng, currentColor, currentOpacity);
+  if (gen !== _isoGeneration) return;
+  removeIsochrone();
   if (layer) {
     isochroneLayer = layer.addTo(map);
     drawCenterMarker();
