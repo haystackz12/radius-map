@@ -7,6 +7,7 @@ function setSheetState(state) {
   _sheetState = state;
   const sheet = document.getElementById('mobile-sheet');
   if (!sheet) return;
+  sheet.style.height = '';
   sheet.classList.remove('sheet-half', 'sheet-full');
   if (state === 'half') sheet.classList.add('sheet-half');
   if (state === 'full') sheet.classList.add('sheet-full');
