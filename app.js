@@ -89,7 +89,8 @@ function initMap(skipInitialDraw) {
     userHasSearched = true;
     currentLat = e.latlng.lat;
     currentLng = e.latlng.lng;
-    drawCircle();
+    if (radiusMode === 'drivetime') { drawCenterMarker(); fetchIsochrone(); }
+    else { drawCircle(); }
     updateStats();
     setStatus('Center set by click', 'success');
     hideEmptyState();
@@ -329,7 +330,12 @@ function applyResult(r) {
   updateClearBtn();
   hideEmptyState();
   updateBreadcrumb(r.address || null);
-  drawCircle();
+  if (radiusMode === 'drivetime') {
+    drawCenterMarker();
+    fetchIsochrone();
+  } else {
+    drawCircle();
+  }
 }
 
 function showSuggestions(results) {
