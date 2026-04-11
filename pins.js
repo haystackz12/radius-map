@@ -27,7 +27,9 @@ async function pinCurrent() {
       iconAnchor: null
     })
   }).addTo(map);
-  pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker });
+  const pinData = { id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker };
+  if (radiusMode === 'drivetime') { pinData.travelTime = travelTimeMinutes; pinData.transportMode = transportMode; }
+  pins.push(pinData);
   renderPinList();
   if (radiusMode === 'radius') computeOverlaps();
   setStatus('Pinned: ' + name, 'success');
@@ -68,10 +70,12 @@ function renderPinList() {
     const item = document.createElement('div');
     item.className = 'pin-item';
     const radiusDisplay = p.unit === 'ft' ? Math.round(p.radiusVal) + ' ' + p.unit : p.radiusVal.toFixed(1) + ' ' + p.unit;
-    item.title = `Saved at ${radiusDisplay} radius`;
+    const modeIcons = { 'driving-car': '\uD83D\uDE97', 'foot-walking': '\uD83D\uDEB6', 'cycling-regular': '\uD83D\uDEB2' };
+    const metaText = (radiusMode === 'drivetime' && p.travelTime) ? `${p.travelTime} min · ${modeIcons[p.transportMode] || '\uD83D\uDE97'}` : radiusDisplay;
+    item.title = p.travelTime ? `${p.travelTime} min ${p.transportMode || 'driving'}` : `Saved at ${radiusDisplay} radius`;
     item.innerHTML = `<span class="pin-dot" style="background:${p.color}"></span>` +
       `<span class="pin-label pin-name-edit" title="Click to rename" data-id="${p.id}">${p.name || p.label}</span>` +
-      `<span class="pin-meta">${radiusDisplay}</span>` +
+      `<span class="pin-meta">${metaText}</span>` +
       `<button class="pin-remove" aria-label="Remove">×</button>`;
     item.querySelector('.pin-remove').onclick = () => removePin(p.id);
     item.querySelector('.pin-name-edit').onclick = () => renamePinLabel(p.id);
@@ -108,6 +112,8 @@ async function rebuildPinLayers(newMode) {
     if (newMode === 'drivetime') {
       const isoLayer = await fetchIsochroneLayer(p.lat, p.lng, p.color, currentOpacity);
       p.layer = isoLayer ? isoLayer.addTo(map) : L.layerGroup().addTo(map);
+      p.travelTime = travelTimeMinutes;
+      p.transportMode = transportMode;
     } else {
       const radiusM = p.unit === 'mi' ? p.radiusVal * 1609.344 : p.unit === 'ft' ? p.radiusVal * 0.3048 : p.radiusVal * 1000;
       p.layer = L.circle([p.lat, p.lng], {
