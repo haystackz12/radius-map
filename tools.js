@@ -309,6 +309,16 @@ function toggleFavorite(addr) {
   localStorage.setItem('rm_favorites', JSON.stringify(favs));
 }
 
+function _buildFavItem(q, isFav) {
+  const item = document.createElement('div');
+  item.className = 'suggestion-item';
+  item.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  item.innerHTML = `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${q}</span><span style="color:${isFav ? '#f5a623' : 'rgba(0,0,0,0.2)'};font-size:14px;cursor:pointer;flex-shrink:0;" data-fav-addr>${isFav ? '★' : '☆'}</span>`;
+  item.querySelector('span:first-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
+  item.querySelector('[data-fav-addr]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
+  return item;
+}
+
 function showRecentSearches() {
   const favs = getFavorites();
   const recent = getRecentSearches().filter(q => !favs.includes(q));
@@ -317,23 +327,11 @@ function showRecentSearches() {
   box.innerHTML = '';
   if (favs.length) {
     const fh = document.createElement('div'); fh.className = 'recent-header'; fh.innerHTML = '<span>Favorites</span>'; box.appendChild(fh);
-    favs.forEach(q => {
-      const item = document.createElement('div'); item.className = 'suggestion-item'; item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '6px';
-      item.innerHTML = `<span style="color:#f5a623;font-size:14px;cursor:pointer;" data-fav="${encodeURIComponent(q)}">★</span><span style="flex:1;">${q}</span>`;
-      item.querySelector('span:last-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
-      item.querySelector('[data-fav]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
-      box.appendChild(item);
-    });
+    favs.forEach(q => box.appendChild(_buildFavItem(q, true)));
   }
   if (recent.length) {
     const rh = document.createElement('div'); rh.className = 'recent-header'; rh.innerHTML = '<span>Recent searches</span><button onclick="clearRecentSearches(event)">Clear</button>'; box.appendChild(rh);
-    recent.forEach(q => {
-      const item = document.createElement('div'); item.className = 'suggestion-item'; item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '6px';
-      item.innerHTML = `<span style="color:rgba(0,0,0,0.2);font-size:14px;cursor:pointer;" data-fav="${encodeURIComponent(q)}">☆</span><span style="flex:1;">${q}</span>`;
-      item.querySelector('span:last-child').onclick = () => { document.getElementById('address-input').value = q; searchAddress(); };
-      item.querySelector('[data-fav]').onclick = (e) => { e.stopPropagation(); toggleFavorite(q); showRecentSearches(); };
-      box.appendChild(item);
-    });
+    recent.forEach(q => box.appendChild(_buildFavItem(q, false)));
   }
   box.style.display = 'block';
 }
