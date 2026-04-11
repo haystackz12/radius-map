@@ -67,6 +67,12 @@ Drive time isochrone zones via OpenRouteService API. Global Radius/Drive Time mo
 | RM-061 | ✅ | **Per-pin travel time display** — Pins store travelTime and transportMode. Pin list shows "15 min · 🚗" in drivetime mode, radius in radius mode. "Refresh all pins" button re-fetches all pin layers at current settings. |
 | RM-062 | ✅ | **Nearest place finder** — "Find Nearest" section in Tools popover with 8 amenity types (Overpass API). Red marker + dashed line from center. 5km search radius, expands to 20km if empty. Name and distance in status bar. |
 
+### QA fixes
+| Fix | Description |
+|---|---|
+| Isochrone shrink with compare circle | `removeIsochrone()` now also calls `removeCompareCircle()` — both layers cleared before new fetch |
+| Overpass union queries | Expanded each amenity to check multiple OSM tags (node+way, amenity+shop+healthcare/tourism). Initial radius 10km→20km. `out center` for way elements. |
+
 ### Code housekeeping
 - Removed unused `buildColorOptions()` from app.js
 - Moved `showToolPill`/`hideToolPill` from ui.js to tools.js
@@ -75,18 +81,22 @@ Drive time isochrone zones via OpenRouteService API. Global Radius/Drive Time mo
 
 ---
 
-## Sprint 15 — Persistence & Data (Planned)
-**Goal:** Give users a reason to come back. Saved maps, favorites, richer data.
+## Sprint 15 — Persistence & Data (Current)
+**Goal:** Give users a reason to come back. Saved maps, favorites.
 
-### 🔲 IN QUEUE
+### In progress
 
 | Ticket | Priority | Description |
 |---|---|---|
-| RM-063 | High | **Full URL state encoding** — Encode ALL state in share URL: center, radius, unit, color, opacity, mode, travel time, transport mode, all pins (lat, lng, name, radius/travelTime, color). Restoring from URL rebuilds the entire session. |
-| RM-064 | High | **Saved maps (localStorage)** — "Save this map" button in Settings. Prompts for a name. Saves full state to localStorage. "My saved maps" list with restore and delete. Cap at 10 saved maps. |
-| RM-065 | Medium | **Address favorites** — Star icon next to searched addresses. Favorites appear top of recent searches dropdown. One click to re-center. Cap at 10. |
-| RM-066 | Medium | **Demographic overlay (US)** — Toggle in Style popover. Fetches population density by zip from Census API. Color-coded heat map layer. US only label. |
-| RM-067 | Low | **Population estimate (retry)** — Re-implement via Vercel serverless function proxy to avoid WorldPop CORS. Function builds GeoJSON, calls WorldPop, returns result. Display in HUD. |
+| RM-063 | High | **Full URL state encoding** — Encode all state in share URL. Restoring from URL rebuilds the entire session. |
+| RM-064 | High | **Saved maps (localStorage)** — Save/restore/delete maps, cap at 10. |
+| RM-065 | Medium | **Address favorites** — Star icon, favorites in recent searches dropdown, cap at 10. |
+
+### Deferred
+| Ticket | Description |
+|---|---|
+| RM-066 | Demographic overlay (US) — Census API |
+| RM-067 | Population estimate — Vercel serverless proxy for WorldPop |
 
 ---
 
