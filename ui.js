@@ -140,7 +140,7 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
     renderPopover('radius'); return;
   }
   const transport = e.target.closest('[data-transport]');
-  if (transport) { transportMode = transport.dataset.transport; debouncedFetchIsochrone(); renderPopover('radius'); return; }
+  if (transport) { transportMode = transport.dataset.transport; removeIsochrone(); drawCenterMarker(); debouncedFetchIsochrone(); renderPopover('radius'); return; }
   const timePre = e.target.closest('[data-time]');
   if (timePre) { travelTimeMinutes = parseInt(timePre.dataset.time); document.getElementById('travel-time-slider').value = travelTimeMinutes; debouncedFetchIsochrone(); updateHUD(); renderPopover('radius'); return; }
   const seg = e.target.closest('.seg-btn'); if (seg && seg.dataset.unit) { setUnit(seg.dataset.unit); renderPopover('radius'); updateHUD(); return; }
@@ -185,7 +185,7 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
 document.getElementById('pop-radius').addEventListener('input', function(e) {
   if (e.target.id === 'radius-slider-new') { document.getElementById('radius-slider').value = e.target.value; drawCircle(); updateHUD(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = currentUnit === 'ft' ? Math.round(parseFloat(e.target.value)) : parseFloat(e.target.value).toFixed(1); }
   if (e.target.id === 'ring2-slider') { document.getElementById('radius-slider-2').value = e.target.value; drawSecondCircle(); updateHUD(); }
-  if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = travelTimeMinutes; updateHUD(); }
+  if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); removeIsochrone(); drawCenterMarker(); const bn = document.getElementById('pop-bignum'); if (bn) bn.textContent = travelTimeMinutes; updateHUD(); }
 });
 document.getElementById('pop-radius').addEventListener('change', function(e) {
   if (e.target.id === 'travel-time-slider') { travelTimeMinutes = parseInt(e.target.value); debouncedFetchIsochrone(); updateHUD(); renderPopover('radius'); }
