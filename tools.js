@@ -371,18 +371,26 @@ function clearNearestResult() {
 }
 
 async function findNearest(amenityType) {
+  const _nw = (k,v,a) => `node["${k}"="${v}"](${a});way["${k}"="${v}"](${a})`;
+  function _q(r) {
+    const a = `around:${r},${currentLat},${currentLng}`;
+    const q = { hospital:`${_nw('amenity','hospital',a)};node["healthcare"="hospital"](${a})`, pharmacy:`${_nw('amenity','pharmacy',a)};node["shop"="pharmacy"](${a})`, grocery:`${_nw('amenity','supermarket',a)};node["shop"="supermarket"](${a});node["shop"="grocery"](${a});node["shop"="convenience"](${a})`, gas:`${_nw('amenity','fuel',a)};node["shop"="gas"](${a})`, restaurant:_nw('amenity','restaurant',a), school:_nw('amenity','school',a), bank:_nw('amenity','bank',a), hotel:`${_nw('tourism','hotel',a)};node["amenity"="hotel"](${a})` };
+    return `[out:json];(${q[amenityType] || _nw('amenity',amenityType,a)});out center 1;`;
+  }
   clearNearestResult();
   setStatus(`Finding nearest ${amenityType}…`, 'loading');
-  const osmType = { hospital:'hospital', pharmacy:'pharmacy', grocery:'supermarket', gas:'fuel', restaurant:'restaurant', school:'school', bank:'bank', hotel:'hotel' }[amenityType] || amenityType;
-  for (const r of [5000, 20000]) {
+  for (const r of [10000, 20000]) {
     try {
-      const resp = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];node["amenity"="${osmType}"](around:${r},${currentLat},${currentLng});out 1;`)}`);
+      const resp = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(_q(r))}`);
       const data = await resp.json();
       if (data.elements && data.elements.length) {
-        const el = data.elements[0], name = el.tags.name || osmType;
-        const dist = L.latLng(currentLat, currentLng).distanceTo(L.latLng(el.lat, el.lon));
-        nearestMarker = L.marker([el.lat, el.lon], { icon: L.divIcon({ className: '', html: `<div style="background:#ff3b30;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);transform:translateX(-50%);">${name}</div>`, iconSize: null, iconAnchor: [0, 0] }) }).addTo(map);
-        nearestLine = L.polyline([[currentLat, currentLng], [el.lat, el.lon]], { color: '#ff3b30', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(map);
+        const el = data.elements[0];
+        const lat = el.center ? el.center.lat : el.lat;
+        const lng = el.center ? el.center.lon : el.lon;
+        const name = el.tags.name || amenityType;
+        const dist = L.latLng(currentLat, currentLng).distanceTo(L.latLng(lat, lng));
+        nearestMarker = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div style="background:#ff3b30;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);transform:translateX(-50%);">${name}</div>`, iconSize: null, iconAnchor: [0, 0] }) }).addTo(map);
+        nearestLine = L.polyline([[currentLat, currentLng], [lat, lng]], { color: '#ff3b30', weight: 2, opacity: 0.7, dashArray: '6,6' }).addTo(map);
         setStatus(`${name} — ${(dist / 1609.344).toFixed(2)} mi (${(dist / 1000).toFixed(2)} km)`, 'success');
         return;
       }
@@ -390,4 +398,3 @@ async function findNearest(amenityType) {
   }
   setStatus(`No ${amenityType} found nearby`, 'error');
 }
-
