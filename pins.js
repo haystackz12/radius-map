@@ -83,6 +83,56 @@ function renderPinList() {
   });
 }
 
+/* ── Saved Maps (localStorage) ── */
+function captureFullState() {
+  const pinData = pins.map(p => {
+    const o = { la: p.lat, ln: p.lng, n: p.name, r: p.radiusVal, u: p.unit, c: p.color };
+    if (p.travelTime) { o.t = p.travelTime; o.tp = p.transportMode; }
+    return o;
+  });
+  return { lat: currentLat, lng: currentLng, radiusVal: parseFloat(document.getElementById('radius-slider').value), unit: currentUnit, color: currentColor, opacity: currentOpacity, mode: radiusMode, travelTime: travelTimeMinutes, transport: transportMode, tile: currentTileName, pins: pinData };
+}
+
+function getSavedMaps() { try { return JSON.parse(localStorage.getItem('rm_saved_maps') || '[]'); } catch { return []; } }
+
+function saveCurrentMap() {
+  const name = prompt('Name this map:');
+  if (!name) return;
+  let maps = getSavedMaps();
+  maps.unshift({ name, state: captureFullState(), saved: new Date().toISOString() });
+  if (maps.length > 10) maps = maps.slice(0, 10);
+  localStorage.setItem('rm_saved_maps', JSON.stringify(maps));
+  showToast('Map saved!');
+  if (typeof renderPopover === 'function') renderPopover('settings');
+}
+
+function restoreSavedMap(index) {
+  const maps = getSavedMaps();
+  if (!maps[index]) return;
+  const s = maps[index].state;
+  pins.forEach(p => { if (p.layer) map.removeLayer(p.layer); if (p.labelMarker) map.removeLayer(p.labelMarker); });
+  pins = []; removeIsochrone(); removeCompareCircle();
+  currentLat = s.lat; currentLng = s.lng; currentColor = s.color || '#4f8ef7'; currentOpacity = s.opacity || 0.15;
+  currentUnit = s.unit || 'mi'; radiusMode = s.mode || 'radius'; travelTimeMinutes = s.travelTime || 15; transportMode = s.transport || 'driving-car';
+  const sl = document.getElementById('radius-slider');
+  const rng = { mi: { max: 50, step: 0.1, min: 0.1 }, km: { max: 80, step: 0.1, min: 0.1 }, ft: { max: 26400, step: 10, min: 100 } };
+  if (rng[currentUnit]) { sl.max = rng[currentUnit].max; sl.step = rng[currentUnit].step; sl.min = rng[currentUnit].min; }
+  sl.value = s.radiusVal || 5; document.getElementById('opacity-slider').value = Math.round(currentOpacity * 100);
+  if (s.tile) { setTileLayer(s.tile); document.getElementById('map').classList.toggle('satellite-theme', s.tile === 'satellite'); }
+  if (s.pins && s.pins.length) { _pendingPins = s.pins; restoreURLPins(); }
+  userHasSearched = true;
+  if (radiusMode === 'drivetime') { drawCenterMarker(); fetchIsochrone(); } else { drawCircle(); }
+  if (typeof updateHUD === 'function') updateHUD();
+  showToast('Map restored!');
+  if (typeof renderPopover === 'function') renderPopover('settings');
+}
+
+function deleteSavedMap(index) {
+  const maps = getSavedMaps(); maps.splice(index, 1);
+  localStorage.setItem('rm_saved_maps', JSON.stringify(maps));
+  if (typeof renderPopover === 'function') renderPopover('settings');
+}
+
 /* ── Restore pins from URL ── */
 function restoreURLPins() {
   if (!_pendingPins || !_pendingPins.length) return;
@@ -242,65 +292,29 @@ function resetEverything() {
   if (typeof updateHUD === 'function') updateHUD();
 }
 
-/* ── CSV Import ── */
-function downloadCSVTemplate() {
-  const csv = 'Address\n1600 Pennsylvania Ave NW Washington DC\n221B Baker Street London\n1 Infinite Loop Cupertino CA\n';
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'drawradius-import-template.csv';
-  a.click();
+/* ── Print ── */
+function printMap() {
+  const token = window.MAPBOX_TOKEN;
+  if (!token || token === 'REPLACE_ME') { setStatus('Print unavailable — configure Mapbox token in config.js', 'error'); return; }
+  const overlays = [`pin-s+${currentColor.replace('#', '')}(${currentLng},${currentLat})`];
+  overlays.push(`geojson(${encodeURIComponent(JSON.stringify(buildCircleGeoJSON(currentLat, currentLng, getRadiusMeters(), currentColor, 32)))})`);
+  pins.slice(0, 4).forEach(p => {
+    overlays.push(`pin-s+${(p.color || '#4f8ef7').replace('#', '')}(${p.lng},${p.lat})`);
+    const rm = p.unit === 'mi' ? p.radiusVal * 1609.344 : p.unit === 'ft' ? p.radiusVal * 0.3048 : p.radiusVal * 1000;
+    overlays.push(`geojson(${encodeURIComponent(JSON.stringify(buildCircleGeoJSON(p.lat, p.lng, rm, p.color || '#4f8ef7', 32)))})`);
+  });
+  const w = window.open('', '_blank');
+  if (!w) { setStatus('Pop-up blocked', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><style>@page{size:landscape;margin:0}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100vh;object-fit:contain;page-break-inside:avoid}</style></head><body><img src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${overlays.join(',')}/auto/1200x800?access_token=${token}" onload="window.print();window.close()" onerror="document.body.innerHTML='<p style=padding:40px>Print failed.</p>'"></body></html>`);
+  w.document.close();
+  setStatus(pins.length > 4 ? `Printed active circle + 4 of ${pins.length} pins` : 'Print dialog opened', 'success');
 }
 
-let _csvImporting = false;
-let _csvProgress = '';
-
-function handleCSVImport(file) {
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
-    const start = /^(address|name|location|city)/i.test(lines[0]) ? 1 : 0;
-    const addresses = lines.slice(start).map(l => l.split(',')[0].trim()).filter(Boolean).slice(0, 20);
-    if (!addresses.length) { setStatus('No addresses found in CSV', 'error'); return; }
-    _csvImporting = true;
-    let imported = 0;
-    const bounds = L.latLngBounds([]);
-    for (let i = 0; i < addresses.length; i++) {
-      _csvProgress = `Geocoding ${i + 1} of ${addresses.length}…`;
-      if (typeof renderPopover === 'function' && activeFab === 'settings') renderPopover('settings');
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(addresses[i])}&limit=1`;
-        const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-        const data = await resp.json();
-        if (data.length) {
-          const r = data[0];
-          const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
-          const radiusVal = parseFloat(document.getElementById('radius-slider').value);
-          const radiusM = getRadiusMeters();
-          const layer = L.circle([lat, lng], {
-            radius: radiusM, color: currentColor, weight: 2, opacity: 0.9, dashArray: '6,4',
-            fillColor: currentColor, fillOpacity: currentOpacity * 0.7
-          }).addTo(map);
-          const name = addresses[i].split(',')[0].trim();
-          const labelMarker = L.marker([lat, lng], {
-            icon: L.divIcon({ className: 'pin-label-icon', html: `<div class="pin-map-label">${name}</div>`, iconSize: null, iconAnchor: null })
-          }).addTo(map);
-          pins.push({ id: Date.now() + i, lat, lng, radiusVal, unit: currentUnit, color: currentColor, label: addresses[i], name, layer, labelMarker });
-          bounds.extend(layer.getBounds());
-          imported++;
-        }
-      } catch {}
-      if (i < addresses.length - 1) await new Promise(res => setTimeout(res, 1100));
-    }
-    _csvImporting = false;
-    _csvProgress = '';
-    renderPinList();
-    computeOverlaps();
-    if (bounds.isValid()) map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 12 });
-    setStatus(`Imported ${imported} of ${addresses.length} locations`, 'success');
-    if (typeof renderPopover === 'function') renderPopover('settings');
-  };
-  reader.readAsText(file);
+function buildCircleGeoJSON(lat, lng, radiusM, color, points) {
+  const c = color || currentColor, n = points || 64, coords = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * 2 * Math.PI; coords.push([lng + (radiusM * Math.sin(a)) / (111320 * Math.cos(lat * Math.PI / 180)), lat + (radiusM * Math.cos(a)) / 111320]); }
+  coords.push(coords[0]);
+  return { type: 'Feature', properties: { stroke: c, 'stroke-width': 3, fill: c, 'fill-opacity': 0.2 }, geometry: { type: 'Polygon', coordinates: [coords] } };
 }
 
 /* ── Compare Circle ── */
