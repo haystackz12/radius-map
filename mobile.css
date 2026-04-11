@@ -1,54 +1,17 @@
-/* ── Mobile & Responsive — DrawRadius ── */
+/* ── Mobile Bottom Sheet — DrawRadius ── */
 
-/* ── RM-080: iOS Safe Area ── */
+/* Default: sheet hidden on desktop */
+#mobile-sheet { display: none; }
+
+/* Safe area for all screens */
 #search-bar { top: max(12px, env(safe-area-inset-top, 0px)); }
 #fab-stack { top: max(12px, env(safe-area-inset-top, 0px)); }
 
-/* ── RM-085: Disable backdrop blur on mobile (GPU perf) ── */
 @media (max-width: 768px) {
-  #stats-hud { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.97); }
-  #search-bar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.97); }
-  .popover { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .satellite-theme #stats-hud { background: rgba(18,26,18,0.97); }
+  /* Hide desktop UI */
+  #fab-stack, #pop-radius, #pop-tools, #pop-style, #pop-settings, #popover-backdrop, #stats-hud, #coords-label, #brand-badge { display: none !important; }
+  #mobile-sheet { display: block !important; }
+  /* Search bar full width */
+  #search-bar { top: max(10px, env(safe-area-inset-top, 10px)); left: 10px; right: 10px; width: auto; transform: none; border-radius: 14px; backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.97); }
   .satellite-theme #search-bar { background: rgba(18,26,18,0.97); }
-}
-
-/* ── RM-081: Touch targets ── */
-@media (max-width: 768px) {
-  .preset-btn { padding: 8px 12px; font-size: 12px; min-height: 36px; }
-  .action-btn { padding: 12px 10px; font-size: 13px; min-height: 44px; }
-  .seg-btn { padding: 8px 4px; font-size: 12px; min-height: 36px; }
-  .color-sw { width: 36px; height: 36px; }
-}
-
-/* ── RM-087: Font size floor ── */
-@media (max-width: 768px) {
-  .hud-key { font-size: 10px; }
-}
-
-/* ── RM-086: Landscape layout ── */
-@media (max-width: 768px) and (orientation: landscape) {
-  .popover { max-height: 80vw; bottom: calc(54px + env(safe-area-inset-bottom, 0px)); left: 60px; width: 280px; }
-  #stats-hud { height: calc(44px + env(safe-area-inset-bottom, 0px)); }
-  .hud-val { font-size: 11px; }
-  .hud-key { font-size: 7px; }
-  #search-bar { width: calc(100vw - 200px); }
-}
-
-/* ── RM-088: Swipe-to-close drag handle ── */
-@media (max-width: 768px) {
-  .popover.pop-open::before { content: ''; display: block; width: 36px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 2px; margin: 0 auto 12px; }
-}
-
-/* ── Portrait small screens (iPhone SE / 14) ── */
-@media (max-width: 480px) {
-  .popover { left: 12px; top: auto !important; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); max-height: 55vh; }
-  #search-bar { width: calc(100vw - 80px); }
-  .pop-slider::-webkit-slider-thumb { width: 24px; height: 24px; }
-  #stats-hud { grid-template-columns: repeat(4, minmax(0,1fr)); height: calc(44px + env(safe-area-inset-bottom, 0px)); }
-  .hud-stat:nth-child(n+5) { display: none; }
-  .hud-val { font-size: 11px; }
-  .hud-key { font-size: 8px; }
-  #brand-badge { bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
-  #coords-label { bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
 }
