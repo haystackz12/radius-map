@@ -2,7 +2,7 @@
 
 ## Session Closed ✅
 **Date:** 2026-04-10
-**Session:** Sprint 12 — Unfinished Business (fully closed)
+**Session:** Sprint 13 — Drive Time Zones (fully closed)
 
 ---
 
@@ -16,67 +16,61 @@
 
 ## What Was Done This Session
 
-### Sprint 12 features (all committed & pushed)
-- **RM-057** Reset button — Tools popover, confirmation dialog, full state reset + geolocation re-run
-- **RM-052** Custom radius text input — editable number input in Radius popover, validation with red flash
-- **RM-054** Fullscreen mode — Fullscreen API toggle in Tools popover
-- **RM-051** Undo/redo — 10-state stack, Ctrl+Z/Y, buttons in Tools popover
-- **RM-053** CSV address import — file picker + download template link, 1 req/sec geocoding, 20 row cap
-- **RM-055** Population estimate — built then removed (WorldPop CORS blocks browser calls)
+### Sprint 13 features
+- **RM-058** Drive time isochrone zones — ORS API, Radius/Drive time mode toggle, travel time slider (5–60 min, debounced 600ms), generation counter for stale responses
+- **RM-059** Walking and cycling modes — 3 transport profiles via segmented control
 
-### Sprint 12 QA fixes
-- **RM-051 fix** — pushUndo captured state after change, not before. Fixed with _lastState + _skipUndo guard.
-- **RM-053 fix** — Added download template link (drawradius-import-template.csv)
-- **RM-055 fix** — Removed WorldPop entirely, reverted HUD to 7 columns
+### Prep work
+- build.sh injects `ORS_API_KEY` env var alongside `MAPBOX_TOKEN`
+- File splits: tools.js + ui.js both brought under 400 lines; pins.js created
+
+### QA fixes (6 total)
+- Center pin missing in drivetime mode → `drawCenterMarker()` helper
+- Old isochrone persists on slider drag → immediate `removeIsochrone()` on input + post-await removal + generation counter
+- Search/click does nothing in drivetime → `applyResult()` and map click check `radiusMode`
+- Global mode switching → `rebuildPinLayers()` converts all pins on mode toggle
+- Pin rebuild race condition → two-pass: remove all layers first, then rebuild sequentially
+- Reset button missing → restored in Tools popover with updated confirmation
 
 ---
 
-## File Sizes (action needed)
-| File | Lines | Status |
+## Current File Structure
+
+| File | Lines | Purpose |
 |---|---|---|
-| `app.js` | 351 | OK |
-| `tools.js` | ~490 | **OVER 400 — needs split** |
-| `ui.js` | ~500 | **OVER 400 — needs split** |
-| `redesign.css` | 444 | **OVER 400 — needs split** |
-| `index.html` | 152 | OK |
+| `index.html` | 161 | Markup — FABs, popovers, HUD, search bar, splash, about modal |
+| `redesign.css` | 443 | All styles — FABs, popovers, HUD, search, satellite theme, splash, about, responsive |
+| `app.js` | 403 | Core — map init, circle draw, radius, search, geocoding, tiles, presets, colors, isochrone fetch |
+| `tools.js` | 347 | Tools — search, distance, click mode, elevation, reverse geocode, export, QR, print, recent searches |
+| `pins.js` | 338 | Pins — pin CRUD, undo/redo, fullscreen, reset, CSV import, overlaps, concentric, fetchIsochroneLayer, rebuildPinLayers |
+| `ui.js` | 404 | UI — FAB toggle, popover renderers, HUD, event delegation, keyboard shortcuts, splash, init |
+| `config.js` | 5 | Mapbox + ORS API tokens (gitignored, injected by build.sh at deploy) |
+| `build.sh` | 3 | Vercel build — injects MAPBOX_TOKEN and ORS_API_KEY into config.js |
 
----
-
-## Next Session — Sprint 13
-
-### Step 1 — File splits (mandatory before new features)
-- `tools.js` → split into `tools.js` + `pins.js` (pin/overlap/CSV logic)
-- `ui.js` → split into `ui.js` + `popovers.js` (popover renderers + event delegation)
-- `redesign.css` → split into `redesign.css` + `components.css` (modals, toast, splash, about)
-- Update `index.html` script/link tags
-- Update `vercel.json` builds array + ensure filesystem handler before catch-all
-
-### Step 2 — RM-055 population estimate with backend proxy
-- WorldPop API needs server-side proxy (Vercel serverless function or similar)
-- Re-add HUD column when proxy is ready
-
-### Step 3 — Drive time zones (RM-058 through RM-062)
-- OpenRouteService API key already obtained
-- See SPRINT.md Sprint 13 section for ticket details
-- RM-058: ORS isochrone API, driving profile, travel time slider
-- RM-059: Walking and cycling modes
-- RM-060: Side-by-side radius + isochrone
-- RM-061: Isochrone per pinned location
-- RM-062: Nearest place finder (Overpass API)
+**Note:** `redesign.css` (443), `app.js` (403), and `ui.js` (404) are slightly over the 400-line cap. Minor trims or a CSS split may be needed before Sprint 14.
 
 ---
 
 ## Critical Technical Notes
 
-**Undo/redo implementation:**
-- `_lastState` tracks the previous state; `pushUndo()` pushes it before updating to current
-- `_skipUndo` flag prevents re-entry when `applyState()` calls `drawCircle()`
-- Stack capped at 10 states; redo stack cleared on new actions
+**Drive time mode (radiusMode):**
+- Global setting: `radiusMode` is `'radius'` or `'drivetime'`
+- Affects active circle, all pins, search results, and map clicks
+- `rebuildPinLayers(newMode)` switches all pins: two-pass (remove all, then rebuild sequentially)
+- `fetchIsochroneLayer(lat, lng, color, opacity)` is the shared ORS API helper in pins.js
+- `fetchIsochrone()` uses a generation counter (`_isoGeneration`) to discard stale responses
+- Slider `input` event calls `removeIsochrone()` immediately; `change` event triggers debounced fetch
+- `drawCenterMarker()` keeps the blue dot visible in both modes
+
+**ORS API key:**
+- Local: set in config.js (gitignored)
+- Vercel: `ORS_API_KEY` env var → injected by build.sh
+- Free tier: 2,000 requests/day
+- Uses [lng, lat] order (not [lat, lng])
 
 **Mapbox token (print feature):**
-- Local: real token in config.js (gitignored local change)
-- Vercel: `MAPBOX_TOKEN` env var → injected by build.sh at deploy
-- Never commit real token — GitHub push protection blocks it
+- Local: real token in config.js (gitignored)
+- Vercel: `MAPBOX_TOKEN` env var → injected by build.sh
 
 **Backdrop pattern:**
 - `#popover-backdrop` at z-index 998, behind popovers (999) and FABs (1000)
@@ -84,7 +78,20 @@
 
 **vercel.json:**
 - `{ "handle": "filesystem" }` MUST appear before SPA catch-all route
-- New .js/.css files must be added to builds array
+- New .js/.css files must be added — but current vercel.json uses buildCommand so all files are served
+
+---
+
+## Next Session — Sprint 14
+
+### Planning needed
+Discuss priorities with Mike. Candidates:
+- **RM-060** Side-by-side comparison — radius circle + isochrone simultaneously
+- **RM-061** Isochrone per pinned location
+- **RM-062** Nearest place finder (Overpass API)
+- **RM-055** Population estimate with backend proxy (deferred from Sprint 12)
+- File size trims (redesign.css, app.js, ui.js slightly over 400)
+- Mobile QA pass on drive time mode
 
 ---
 

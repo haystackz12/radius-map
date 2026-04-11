@@ -92,22 +92,47 @@ Replaced left sidebar with Apple Maps–style FAB + popover interface. Map fills
 
 ---
 
-## Sprint 13 — Drive Time Zones (Planned)
-See SPRINT12.md for full ORS isochrone spec. OpenRouteService API key already obtained.
+## Sprint 13 — Drive Time Zones ✅ COMPLETE
+**Goal:** Add drive time isochrone zones via OpenRouteService API as a global map mode.
 
+### Shipped
+| Ticket | Status | Description |
+|---|---|---|
+| RM-058 | ✅ | **Drive time zone** — ORS isochrone API, Radius/Drive time mode toggle, travel time slider (5–60 min), debounced fetch, generation counter for stale response handling |
+| RM-059 | ✅ | **Walking and cycling modes** — 3 transport profiles (driving-car, foot-walking, cycling-regular), segmented control in popover |
+
+### Prep work
+- build.sh updated to inject `ORS_API_KEY` env var at deploy
+- tools.js (512→347) and ui.js (482→399) split — `pins.js` created for pin management, undo/redo, CSV, reset, overlaps, concentric helpers
+- `fetchIsochroneLayer()` shared helper in pins.js
+
+### QA fixes
+| Fix | Description |
+|---|---|
+| Center pin missing | `drawCenterMarker()` helper added — redraws blue dot after isochrone renders |
+| Old isochrone persists | `removeIsochrone()` on slider input + `removeIsochrone()` post-await in `fetchIsochrone()` + generation counter to discard stale responses |
+| Search in drivetime no-op | `applyResult()` and map click handler now check `radiusMode` and call `fetchIsochrone()` |
+| Global mode switching | Mode toggle rebuilds all pin layers via `rebuildPinLayers()` — two-pass: remove all, then recreate sequentially |
+| Pin rebuild race condition | `rebuildPinLayers()` uses two-pass approach: first removes all layers, then rebuilds each pin sequentially with for...of + await |
+| Reset button missing | Restored in Tools popover — clears all pins/zones/settings, switches to radius mode, re-runs geolocation |
+
+### Not started (deferred to Sprint 14)
 | Ticket | Description |
 |---|---|
-| RM-058 | Drive time zone — ORS isochrone API, driving profile, travel time slider |
-| RM-059 | Walking and cycling modes — 3 transport profiles |
 | RM-060 | Side-by-side comparison — radius circle + isochrone simultaneously |
 | RM-061 | Isochrone per pinned location |
 | RM-062 | Nearest place finder — Overpass API |
 
 ---
 
+## Sprint 14 — (Planning)
+TBD — discuss priorities with Mike.
+
+---
+
 ## File Size Policy
 - Hard cap: 400 lines per file
-- Current files: `index.html`, `redesign.css`, `app.js`, `tools.js`, `ui.js`, `config.js`
+- Current files: `index.html`, `redesign.css`, `app.js`, `tools.js`, `pins.js`, `ui.js`, `config.js`
 - Deploy after every ticket: `git add -A && git commit -m "feat: RM-0XX description" && git push origin main`
 - New static files → add to `vercel.json` builds array
 - `{ "handle": "filesystem" }` must appear before SPA catch-all in vercel.json routes
@@ -118,3 +143,6 @@ See SPRINT12.md for full ORS isochrone spec. OpenRouteService API key already ob
 - Claude Code sometimes marks tickets complete without implementing them — always verify in the actual codebase
 - After any major refactor, re-audit all previous features still work
 - Session docs are only reliable if Claude Code updates them based on actual code, not assumed progress
+- Drive time mode must be treated as a global setting — all pins, active circle, and searches must respect the current mode
+- Async API calls need generation counters to prevent stale responses from overwriting newer state
+- File splits should happen before feature work, not after — avoids cascading merge conflicts
