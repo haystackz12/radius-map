@@ -1,16 +1,24 @@
 /* ── Pin Management ── */
-function pinCurrent() {
+async function pinCurrent() {
   const val = parseFloat(document.getElementById('radius-slider').value);
   const label = document.getElementById('address-input').value.trim() ||
                 `${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
   const defaultName = label.split(',')[0].trim();
   const name = prompt('Name this pin:', defaultName) || defaultName;
-  const layer = L.circle([currentLat, currentLng], {
-    radius: getRadiusMeters(),
-    color: currentColor,
-    weight: 2, opacity: 0.9,
-    fillColor: currentColor, fillOpacity: currentOpacity
-  }).addTo(map);
+  let layer;
+  if (radiusMode === 'drivetime') {
+    setStatus('Calculating drive time for pin…', 'loading');
+    const isoLayer = await fetchIsochroneLayer(currentLat, currentLng, currentColor, currentOpacity);
+    if (isoLayer) { layer = isoLayer.addTo(map); }
+    else { setStatus('Could not calculate drive time for pin', 'error'); return; }
+  } else {
+    layer = L.circle([currentLat, currentLng], {
+      radius: getRadiusMeters(),
+      color: currentColor,
+      weight: 2, opacity: 0.9,
+      fillColor: currentColor, fillOpacity: currentOpacity
+    }).addTo(map);
+  }
   const labelMarker = L.marker([currentLat, currentLng], {
     icon: L.divIcon({
       className: 'pin-label-icon',
@@ -21,7 +29,7 @@ function pinCurrent() {
   }).addTo(map);
   pins.push({ id: Date.now(), lat: currentLat, lng: currentLng, radiusVal: val, unit: currentUnit, color: currentColor, label, name, layer, labelMarker });
   renderPinList();
-  computeOverlaps();
+  if (radiusMode === 'radius') computeOverlaps();
   setStatus('Pinned: ' + name, 'success');
 }
 
@@ -67,6 +75,43 @@ function renderPinList() {
     item.querySelector('.pin-name-edit').onclick = () => renamePinLabel(p.id);
     list.appendChild(item);
   });
+}
+
+/* ── Isochrone layer helper ── */
+async function fetchIsochroneLayer(lat, lng, color, opacity) {
+  const key = window.ORS_API_KEY;
+  if (!key) return null;
+  try {
+    const resp = await fetch(`https://api.openrouteservice.org/v2/isochrones/${transportMode}`, {
+      method: 'POST',
+      headers: { 'Authorization': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locations: [[lng, lat]], range: [travelTimeMinutes * 60], range_type: 'time' })
+    });
+    if (!resp.ok) return null;
+    const geojson = await resp.json();
+    return L.geoJSON(geojson, { style: { color: color, weight: 2, fillColor: color, fillOpacity: opacity } });
+  } catch { return null; }
+}
+
+/* ── Rebuild pin layers on mode switch ── */
+async function rebuildPinLayers(newMode) {
+  if (!pins.length) return;
+  setStatus(newMode === 'drivetime' ? 'Calculating drive time zones…' : 'Rebuilding radius circles…', 'loading');
+  for (const p of pins) {
+    if (p.layer) map.removeLayer(p.layer);
+    if (newMode === 'drivetime') {
+      const isoLayer = await fetchIsochroneLayer(p.lat, p.lng, p.color, currentOpacity);
+      p.layer = isoLayer ? isoLayer.addTo(map) : L.layerGroup().addTo(map);
+    } else {
+      const radiusM = p.unit === 'mi' ? p.radiusVal * 1609.344 : p.unit === 'ft' ? p.radiusVal * 0.3048 : p.radiusVal * 1000;
+      p.layer = L.circle([p.lat, p.lng], {
+        radius: radiusM, color: p.color, weight: 2, opacity: 0.9,
+        fillColor: p.color, fillOpacity: currentOpacity
+      }).addTo(map);
+    }
+  }
+  if (newMode === 'radius') computeOverlaps();
+  setStatus(newMode === 'drivetime' ? 'Drive time zones ready' : 'Radius circles ready', 'success');
 }
 
 /* ── Undo / Redo ── */

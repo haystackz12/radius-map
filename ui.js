@@ -53,7 +53,7 @@ function renderPopover(name) {
 
 function radiusPopoverHTML() {
   const mode = typeof radiusMode !== 'undefined' ? radiusMode : 'radius';
-  const modeToggle = `<div class="seg-ctrl" style="margin-bottom:10px;"><div class="seg-btn ${mode === 'radius' ? 'active' : ''}" data-mode="radius">Radius</div><div class="seg-btn ${mode === 'drivetime' ? 'active' : ''}" data-mode="drivetime">Drive time</div></div>`;
+  const modeToggle = `<div class="pop-title">Map mode</div><div class="seg-ctrl" style="margin-bottom:10px;"><div class="seg-btn ${mode === 'radius' ? 'active' : ''}" data-mode="radius">Radius</div><div class="seg-btn ${mode === 'drivetime' ? 'active' : ''}" data-mode="drivetime">Drive time</div></div>`;
   if (mode === 'drivetime') return modeToggle + drivetimePopoverHTML();
   const r = parseFloat(document.getElementById('radius-slider').value);
   const u = currentUnit;
@@ -135,6 +135,7 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
       radiusMode = newMode;
       if (radiusMode === 'radius') { removeIsochrone(); drawCircle(); }
       else { if (circle) map.removeLayer(circle); if (marker) map.removeLayer(marker); debouncedFetchIsochrone(); }
+      rebuildPinLayers(newMode);
       updateHUD();
     }
     renderPopover('radius'); return;

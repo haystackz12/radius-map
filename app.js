@@ -164,27 +164,15 @@ async function fetchIsochrone() {
   const key = window.ORS_API_KEY;
   if (!key) { setStatus('Drive time unavailable — configure ORS API key', 'error'); return; }
   setStatus('Calculating drive time zone…', 'loading');
-  try {
-    const resp = await fetch(`https://api.openrouteservice.org/v2/isochrones/${transportMode}`, {
-      method: 'POST',
-      headers: { 'Authorization': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        locations: [[currentLng, currentLat]],
-        range: [travelTimeMinutes * 60],
-        range_type: 'time'
-      })
-    });
-    if (!resp.ok) throw new Error('API error ' + resp.status);
-    const geojson = await resp.json();
-    isochroneLayer = L.geoJSON(geojson, {
-      style: { color: currentColor, weight: 2, fillColor: currentColor, fillOpacity: currentOpacity }
-    }).addTo(map);
+  const layer = await fetchIsochroneLayer(currentLat, currentLng, currentColor, currentOpacity);
+  if (layer) {
+    isochroneLayer = layer.addTo(map);
     drawCenterMarker();
     map.fitBounds(isochroneLayer.getBounds(), { padding: [40, 40] });
     const modeLabel = { 'driving-car': 'driving', 'foot-walking': 'walking', 'cycling-regular': 'cycling' }[transportMode];
     setStatus(`${travelTimeMinutes} min ${modeLabel} zone`, 'success');
     if (typeof updateHUD === 'function') updateHUD();
-  } catch(e) {
+  } else {
     setStatus('Drive time unavailable — check API key or try again', 'error');
   }
 }
