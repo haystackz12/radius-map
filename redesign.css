@@ -141,6 +141,8 @@ body {
   width: 216px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: rgba(255,255,255,0.96);
   border: 0.5px solid rgba(0,0,0,0.11);
   border-radius: 16px;
