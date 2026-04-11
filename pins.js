@@ -97,8 +97,12 @@ async function fetchIsochroneLayer(lat, lng, color, opacity) {
 async function rebuildPinLayers(newMode) {
   if (!pins.length) return;
   setStatus(newMode === 'drivetime' ? 'Calculating drive time zones…' : 'Rebuilding radius circles…', 'loading');
+  // First pass: remove all existing pin layers from map
   for (const p of pins) {
-    if (p.layer) map.removeLayer(p.layer);
+    if (p.layer) { map.removeLayer(p.layer); p.layer = null; }
+  }
+  // Second pass: rebuild each pin sequentially
+  for (const p of pins) {
     if (newMode === 'drivetime') {
       const isoLayer = await fetchIsochroneLayer(p.lat, p.lng, p.color, currentOpacity);
       p.layer = isoLayer ? isoLayer.addTo(map) : L.layerGroup().addTo(map);

@@ -133,8 +133,12 @@ document.getElementById('pop-radius').addEventListener('click', function(e) {
     const newMode = modeBtn.dataset.mode;
     if (newMode !== radiusMode) {
       radiusMode = newMode;
-      if (radiusMode === 'radius') { removeIsochrone(); drawCircle(); }
-      else { if (circle) map.removeLayer(circle); if (marker) map.removeLayer(marker); debouncedFetchIsochrone(); }
+      // Clean up both active layers before switching
+      removeIsochrone();
+      if (circle) { map.removeLayer(circle); circle = null; }
+      if (marker) { map.removeLayer(marker); marker = null; }
+      if (radiusMode === 'radius') { drawCircle(); }
+      else { debouncedFetchIsochrone(); }
       rebuildPinLayers(newMode);
       updateHUD();
     }
